@@ -1,0 +1,21 @@
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Node / Angular
+**/node_modules/
+**/dist/
+**/.angular/
+npm-debug.log*
+yarn-error.log*
+
+# .NET
+**/bin/
+**/obj/
+
+# Local secrets
+backend/.env
+**/*.user
+**/*.suo
