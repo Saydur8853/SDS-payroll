@@ -1,0 +1,8 @@
+<main class="dashboard">
+  <section class="card">
+    <h1>Dashboard</h1>
+    <p *ngIf="loading">Loading...</p>
+    <div class="count" *ngIf="!loading">{{ companyCount }}</div>
+    <p class="label" *ngIf="!loading">Total Companies</p>
+  </section>
+</main>

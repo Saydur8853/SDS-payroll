@@ -1,0 +1,43 @@
+:host {
+  display: block;
+  min-height: 100%;
+}
+
+.dashboard {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 20% 15%, #dbeafe, transparent 30%),
+    radial-gradient(circle at 90% 10%, #dcfce7, transparent 28%),
+    #f3f5f9;
+  padding: 1rem;
+}
+
+.card {
+  width: min(420px, 100%);
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 14px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
+h1 {
+  margin: 0 0 0.75rem;
+  color: #0f172a;
+}
+
+.count {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #14532d;
+  line-height: 1;
+}
+
+.label {
+  margin: 0.5rem 0 0;
+  color: #475569;
+  font-weight: 600;
+}

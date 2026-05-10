@@ -1,19 +1,12 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
 import { AppComponent } from './app.component';
-import { CompanyService } from './services/company.service';
+import { provideRouter } from '@angular/router';
 
 describe('AppComponent', () => {
-  const companyServiceMock = {
-    getAll: jasmine.createSpy('getAll').and.returnValue(of([])),
-    create: jasmine.createSpy('create'),
-    createWithLogoUpload: jasmine.createSpy('createWithLogoUpload')
-  };
-
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [{ provide: CompanyService, useValue: companyServiceMock }]
+      providers: [provideRouter([])]
     }).compileComponents();
   });
 
@@ -23,10 +16,10 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render main title', () => {
+  it('should render top navigation', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Payroll Company Setup');
+    expect(compiled.querySelector('router-outlet')).toBeTruthy();
   });
 });

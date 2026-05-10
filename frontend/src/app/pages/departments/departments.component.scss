@@ -1,0 +1,86 @@
+:host {
+  display: block;
+  min-height: 100%;
+}
+
+.page {
+  min-height: 100%;
+  padding: 1rem;
+  display: grid;
+  gap: 1rem;
+  background: #f3f5f9;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+h1, h2 {
+  margin: 0 0 0.8rem;
+}
+
+.create-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+
+input {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+}
+
+.item {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn.tiny {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+.btn.primary {
+  color: #fff;
+  background: #14532d;
+}
+
+.btn.secondary {
+  background: #e5e7eb;
+}
+
+.btn.danger {
+  color: #fff;
+  background: #b91c1c;
+}
+
+.message {
+  margin: 0.5rem 0 0;
+  color: #475569;
+}

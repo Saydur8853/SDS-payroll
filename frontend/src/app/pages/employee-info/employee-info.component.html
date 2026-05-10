@@ -1,0 +1,163 @@
+<main class="page">
+  <section class="panel">
+    <h1>Employee Info</h1>
+
+    <div class="form-grid">
+      <label>
+        <span class="label-text">Employee Code <span class="required-star">*</span></span>
+        <input type="text" [(ngModel)]="employeeCode" />
+      </label>
+      <label>
+        <span class="label-text">Full Name <span class="required-star">*</span></span>
+        <input type="text" [(ngModel)]="fullName" />
+      </label>
+      <label>
+        Email
+        <input type="email" [(ngModel)]="email" />
+      </label>
+      <label>
+        Phone
+        <input type="text" [(ngModel)]="phone" />
+      </label>
+      <label>
+        Department
+        <select [(ngModel)]="department" (ngModelChange)="onDepartmentChange($event)">
+          <option value="">Select Department</option>
+          <option *ngFor="let item of departments" [value]="item.name">{{ item.name }}</option>
+          <option [value]="addDepartmentValue" class="add-option">➕ Add New Department</option>
+        </select>
+      </label>
+      <label>
+        Designation
+        <select [(ngModel)]="designation" (ngModelChange)="onDesignationChange($event)">
+          <option value="">Select Designation</option>
+          <option *ngFor="let item of designations" [value]="item.name">{{ item.name }}</option>
+          <option [value]="addDesignationValue" class="add-option">➕ Add New Designation</option>
+        </select>
+      </label>
+      <label>
+        Address
+        <input type="text" [(ngModel)]="address" />
+      </label>
+      <label>
+        <span class="label-text">Joining Date <span class="required-star">*</span></span>
+        <input type="date" [(ngModel)]="joiningDate" />
+      </label>
+    </div>
+
+    <div class="dynamic-header">
+      <h2>Dynamic Attributes</h2>
+      <button type="button" class="btn secondary" (click)="addDynamicAttributeRow()">Add Attribute</button>
+    </div>
+    <div class="dynamic-list">
+      <div class="dynamic-row" *ngFor="let entry of dynamicEntries; let i = index">
+        <div class="key-field">
+          <input
+            type="text"
+            placeholder="Attribute key"
+            [(ngModel)]="entry.key"
+            (input)="onAttributeKeyInput(i)"
+            [attr.list]="'employee-attribute-suggestions-' + i" />
+          <datalist [id]="'employee-attribute-suggestions-' + i">
+            <option *ngFor="let suggestion of attributeSuggestionsByRow[i]" [value]="suggestion"></option>
+          </datalist>
+        </div>
+        <input type="text" placeholder="Value" [(ngModel)]="entry.value" />
+        <button type="button" class="btn secondary" (click)="removeDynamicAttributeRow(i)">Remove</button>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn primary" [disabled]="saving" (click)="saveEmployee()">
+        {{ saving ? 'Saving...' : 'Save Employee' }}
+      </button>
+    </div>
+
+    <p class="message">{{ message }}</p>
+  </section>
+
+  <section class="panel">
+    <h2>Employees</h2>
+
+    <div class="employee-card" *ngFor="let employee of employees">
+      <div class="employee-header">
+        <div>
+          <h3>{{ employee.fullName }}</h3>
+          <p>{{ employee.employeeCode }} | {{ employee.department }} | {{ employee.designation }}</p>
+          <p>{{ employee.email }} | {{ employee.phone }}</p>
+          <p>Joining: {{ employee.joiningDate }}</p>
+        </div>
+        <div class="employee-actions">
+          <button type="button" class="btn tiny secondary" (click)="startEdit(employee)">Edit</button>
+          <button
+            type="button"
+            class="btn tiny danger"
+            [disabled]="deletingEmployeeId === employee.id"
+            (click)="deleteEmployee(employee)">
+            {{ deletingEmployeeId === employee.id ? 'Deleting...' : 'Delete' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="edit-panel" *ngIf="editingEmployeeId === employee.id">
+        <input type="text" [(ngModel)]="editEmployeeCode" placeholder="Employee code" />
+        <input type="text" [(ngModel)]="editFullName" placeholder="Full name" />
+        <input type="email" [(ngModel)]="editEmail" placeholder="Email" />
+        <input type="text" [(ngModel)]="editPhone" placeholder="Phone" />
+        <select [(ngModel)]="editDepartment" (ngModelChange)="onEditDepartmentChange($event)">
+          <option value="">Select Department</option>
+          <option *ngFor="let item of departments" [value]="item.name">{{ item.name }}</option>
+          <option [value]="addDepartmentValue" class="add-option">➕ Add New Department</option>
+        </select>
+        <select [(ngModel)]="editDesignation" (ngModelChange)="onEditDesignationChange($event)">
+          <option value="">Select Designation</option>
+          <option *ngFor="let item of designations" [value]="item.name">{{ item.name }}</option>
+          <option [value]="addDesignationValue" class="add-option">➕ Add New Designation</option>
+        </select>
+        <input type="text" [(ngModel)]="editAddress" placeholder="Address" />
+        <input type="date" [(ngModel)]="editJoiningDate" />
+        <div class="edit-dynamic-list">
+          <h4>Dynamic Attributes</h4>
+          <div class="edit-dynamic-row" *ngFor="let entry of editDynamicEntries; let idx = index">
+            <input type="text" [(ngModel)]="entry.key" placeholder="Attribute key" />
+            <input type="text" [(ngModel)]="entry.value" placeholder="Attribute value" />
+            <button type="button" class="btn tiny danger" (click)="removeEditDynamicAttributeRow(idx)">Remove</button>
+          </div>
+          <button type="button" class="btn tiny secondary" (click)="addEditDynamicAttributeRow()">Add Attribute</button>
+        </div>
+        <div class="edit-actions">
+          <button type="button" class="btn tiny primary" (click)="saveEdit(employee)">Save</button>
+          <button type="button" class="btn tiny secondary" (click)="cancelEdit()">Cancel</button>
+        </div>
+      </div>
+
+      <ul>
+        <li *ngFor="let item of employee.dynamicAttributes | keyvalue">
+          <span><strong>{{ item.key }}:</strong> {{ item.value }}</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<div class="modal-backdrop" *ngIf="showDepartmentModal">
+  <div class="modal">
+    <h3>Add New Department</h3>
+    <input type="text" [(ngModel)]="newDepartmentName" placeholder="Department name" />
+    <div class="modal-actions">
+      <button type="button" class="btn primary" (click)="createDepartment()">Save</button>
+      <button type="button" class="btn secondary" (click)="closeDepartmentModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="showDesignationModal">
+  <div class="modal">
+    <h3>Add New Designation</h3>
+    <input type="text" [(ngModel)]="newDesignationName" placeholder="Designation name" />
+    <div class="modal-actions">
+      <button type="button" class="btn primary" (click)="createDesignation()">Save</button>
+      <button type="button" class="btn secondary" (click)="closeDesignationModal()">Cancel</button>
+    </div>
+  </div>
+</div>

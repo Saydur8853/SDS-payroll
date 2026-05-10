@@ -1,0 +1,30 @@
+<main class="page">
+  <section class="panel">
+    <h1>Departments</h1>
+    <div class="create-row">
+      <input type="text" [(ngModel)]="newName" placeholder="New department name" />
+      <button type="button" class="btn primary" (click)="create()">Add</button>
+    </div>
+    <p class="message">{{ message }}</p>
+  </section>
+
+  <section class="panel">
+    <h2>Department List</h2>
+    <div class="item" *ngFor="let item of items">
+      <div *ngIf="editingId !== item.id" class="item-row">
+        <span>{{ item.name }}</span>
+        <div class="actions">
+          <button type="button" class="btn tiny secondary" (click)="startEdit(item)">Edit</button>
+          <button type="button" class="btn tiny danger" (click)="delete(item)">Delete</button>
+        </div>
+      </div>
+      <div *ngIf="editingId === item.id" class="item-row">
+        <input type="text" [(ngModel)]="editName" />
+        <div class="actions">
+          <button type="button" class="btn tiny primary" (click)="saveEdit(item)">Save</button>
+          <button type="button" class="btn tiny secondary" (click)="cancelEdit()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
