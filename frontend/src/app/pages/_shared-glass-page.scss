@@ -1,0 +1,623 @@
+/* ───────────────────────────────────────────────────────────
+   Shared Glassmorphism Page Styles
+   Import this in every page component SCSS
+   ─────────────────────────────────────────────────────────── */
+
+:host {
+  display: block;
+  min-height: 100%;
+}
+
+/* ── Page Layout ───────────────────────────────────────── */
+
+.page {
+  min-height: 100%;
+  margin: 0;
+  padding: 2rem 2.25rem;
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  align-content: start;
+}
+
+/* ── Glass Panel ───────────────────────────────────────── */
+
+.panel {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  pointer-events: none;
+}
+
+/* ── Typography ────────────────────────────────────────── */
+
+h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #e2e8f0, #fff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+h2 {
+  margin: 1rem 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+h4 {
+  margin: 0 0 0.45rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+p {
+  margin: 0.15rem 0;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+/* ── Form Elements ─────────────────────────────────────── */
+
+.form-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: 1fr;
+}
+
+label {
+  display: grid;
+  gap: 0.3rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #e2e8f0;
+}
+
+input, select, textarea {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.9rem;
+  color: #fff;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: rgba(124, 58, 237, 0.5);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+input.invalid-input {
+  border-color: rgba(239, 68, 68, 0.6);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+select {
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+select option {
+  background: #1e1b4b;
+  color: #e2e8f0;
+}
+
+option.add-option {
+  color: #a78bfa;
+  font-weight: 700;
+}
+
+/* ── Buttons ───────────────────────────────────────────── */
+
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 0.55rem 1rem;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn.tiny {
+  padding: 0.4rem 0.7rem;
+  font-size: 0.82rem;
+  border-radius: 8px;
+}
+
+.btn.primary {
+  color: #fff;
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  box-shadow: 0 2px 10px rgba(124, 58, 237, 0.25);
+}
+
+.btn.primary:hover {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn.secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.btn.danger {
+  color: #fff;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.2);
+}
+
+.btn.danger:hover {
+  background: linear-gradient(135deg, #f87171, #ef4444);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn.danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn.muted {
+  color: #fff;
+  background: rgba(100, 116, 139, 0.4);
+  border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.btn.muted:hover {
+  background: rgba(100, 116, 139, 0.55);
+}
+
+/* ── Dynamic Attributes ────────────────────────────────── */
+
+.dynamic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.dynamic-header h2 {
+  margin: 0;
+}
+
+.dynamic-list {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.dynamic-row {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: start;
+}
+
+.key-field {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.suggestion-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.chip {
+  background: rgba(124, 58, 237, 0.12);
+  color: #a78bfa;
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.chip:hover {
+  background: rgba(124, 58, 237, 0.25);
+  color: #c4b5fd;
+}
+
+/* ── Actions Row ───────────────────────────────────────── */
+
+.actions {
+  margin-top: 0.9rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ── Message ───────────────────────────────────────────── */
+
+.message {
+  margin-top: 0.7rem;
+  color: #fbbf24;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+/* ── Item Cards (Departments, Designations, etc.) ──────── */
+
+.item {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.item:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.item-row > span {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* ── Create Row (Departments, Designations) ────────────── */
+
+.create-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  align-items: end;
+}
+
+/* ── Entity Cards (Companies, Employees) ───────────────── */
+
+.company-card,
+.employee-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 1rem 1.15rem;
+  margin-bottom: 0.75rem;
+  transition: all 0.25s ease;
+}
+
+.company-card:hover,
+.employee-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.company-card h3, .employee-card h3 {
+  margin: 0 0 0.3rem;
+}
+
+.company-actions, .employee-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.company-header, .employee-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+/* ── Edit Panel ────────────────────────────────────────── */
+
+.edit-panel {
+  margin: 0.75rem 0 0.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: grid;
+  gap: 0.5rem;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+}
+
+.edit-dynamic-list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.edit-dynamic-list h4 {
+  margin: 0.3rem 0 0.15rem;
+}
+
+.edit-dynamic-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.45rem;
+}
+
+/* ── Company attributes list ───────────────────────────── */
+
+.company-card ul {
+  margin: 0.4rem 0 0;
+  padding-left: 1rem;
+  list-style: none;
+}
+
+.company-card ul li {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  padding: 0.15rem 0;
+}
+
+.company-card ul li strong {
+  color: var(--text-primary);
+}
+
+.company-card a {
+  color: var(--accent-secondary);
+  text-decoration: none;
+}
+
+.company-card a:hover {
+  text-decoration: underline;
+}
+
+/* ── Filters ───────────────────────────────────────────── */
+
+.filters-grid {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  margin: 0.7rem 0 0.5rem;
+}
+
+.filters-grid > label {
+  min-width: 0;
+}
+
+.filters-grid input,
+.filters-grid select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.filters-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* ── List Toolbar / Meta ───────────────────────────────── */
+
+.list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.list-meta {
+  margin: 0.2rem 0 0.45rem;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+}
+
+.export-tools {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.export-button {
+  min-width: 130px;
+}
+
+.list-state {
+  margin: 0.2rem 0 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ── Pagination ────────────────────────────────────────── */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+/* ── Employee Dynamic Attributes ───────────────────────── */
+
+.employee-dynamic-attributes {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.employee-dynamic-attributes p {
+  margin: 0.15rem 0;
+  font-size: 0.85rem;
+}
+
+.employee-dynamic-attributes strong {
+  color: var(--text-primary);
+}
+
+/* ── Modals ────────────────────────────────────────────── */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  width: min(460px, 92vw);
+  background: rgba(30, 27, 75, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: grid;
+  gap: 0.85rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+}
+
+.modal h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #fff;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* ── Shift Modal ───────────────────────────────────────── */
+
+.shift-modal-form {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.shift-modal-name {
+  max-width: 100%;
+}
+
+.shift-modal-groups {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.shift-modal-group {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.65rem;
+}
+
+.shift-modal-group h4 {
+  margin: 0 0 0.45rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.shift-modal-fields {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+/* ── Validation warnings ───────────────────────────────── */
+
+.required-star {
+  color: #f87171;
+  font-weight: 700;
+}
+
+.label-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.field-warning {
+  color: #f87171;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+
+@media (max-width: 800px) {
+  .page {
+    padding: 1.25rem;
+    grid-template-columns: 1fr;
+  }
+
+  .dynamic-row, .edit-dynamic-row {
+    grid-template-columns: 1fr;
+  }
+
+  .shift-modal-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .company-header, .employee-header {
+    flex-direction: column;
+  }
+}

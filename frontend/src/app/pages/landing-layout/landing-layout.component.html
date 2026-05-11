@@ -1,17 +1,79 @@
 <main class="layout">
-  <aside class="sidebar">
-    <h1>SDS Payroll</h1>
-    <nav class="menu">
-      <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
-      <a routerLink="/company-info" routerLinkActive="active">Company Info</a>
-      <a routerLink="/employee-info" routerLinkActive="active">Employee Info</a>
-      <a routerLink="/departments" routerLinkActive="active">Departments</a>
-      <a routerLink="/designations" routerLinkActive="active">Designations</a>
-      <a routerLink="/shifts" routerLinkActive="active">Shift Info</a>
+  <!-- Animated background orbs -->
+  <div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <aside class="sidebar" id="main-sidebar">
+    <!-- Brand -->
+    <div class="brand">
+      <div class="brand-icon">
+        <span class="material-symbols-rounded">paid</span>
+      </div>
+      <div class="brand-text">
+        <h1>SDS Payroll</h1>
+        <span class="brand-tagline">Management System</span>
+      </div>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <!-- Navigation -->
+    <nav class="menu" aria-label="Main Navigation">
+      <span class="menu-label">MAIN</span>
+
+      <a routerLink="/dashboard" routerLinkActive="active" id="nav-dashboard">
+        <span class="material-symbols-rounded">dashboard</span>
+        <span class="nav-text">Dashboard</span>
+        <span class="active-indicator"></span>
+      </a>
+
+      <a routerLink="/company-info" routerLinkActive="active" id="nav-company">
+        <span class="material-symbols-rounded">apartment</span>
+        <span class="nav-text">Company Info</span>
+        <span class="active-indicator"></span>
+      </a>
+
+      <a routerLink="/employee-info" routerLinkActive="active" id="nav-employee">
+        <span class="material-symbols-rounded">badge</span>
+        <span class="nav-text">Employee Info</span>
+        <span class="active-indicator"></span>
+      </a>
+
+      <span class="menu-label">ORGANIZATION</span>
+
+      <a routerLink="/departments" routerLinkActive="active" id="nav-departments">
+        <span class="material-symbols-rounded">account_tree</span>
+        <span class="nav-text">Departments</span>
+        <span class="active-indicator"></span>
+      </a>
+
+      <a routerLink="/designations" routerLinkActive="active" id="nav-designations">
+        <span class="material-symbols-rounded">workspace_premium</span>
+        <span class="nav-text">Designations</span>
+        <span class="active-indicator"></span>
+      </a>
+
+      <a routerLink="/shifts" routerLinkActive="active" id="nav-shifts">
+        <span class="material-symbols-rounded">schedule</span>
+        <span class="nav-text">Shift Info</span>
+        <span class="active-indicator"></span>
+      </a>
     </nav>
+
+    <!-- Footer -->
+    <div class="sidebar-footer">
+      <div class="sidebar-divider"></div>
+      <div class="footer-info">
+        <span class="material-symbols-rounded">info</span>
+        <span>v1.0.0</span>
+      </div>
+    </div>
   </aside>
 
-  <section class="content">
+  <section class="content" id="main-content">
     <router-outlet />
   </section>
 </main>

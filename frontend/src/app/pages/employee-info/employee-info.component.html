@@ -1,315 +1,148 @@
-<main class="page">
-  <section class="panel">
-    <h1>Employee Info</h1>
-
-    <div class="form-grid">
-      <label>
-        <span class="label-text">Employee Code <span class="required-star">*</span></span>
-        <input type="text" [(ngModel)]="employeeCode" />
-      </label>
-      <label>
-        <span class="label-text">Full Name <span class="required-star">*</span></span>
-        <input type="text" [(ngModel)]="fullName" />
-      </label>
-      <label>
-        Email
-        <input type="email" [(ngModel)]="email" [class.invalid-input]="isCreateEmailInvalid()" />
-        <small class="field-warning" *ngIf="isCreateEmailInvalid()">Please enter a valid email format.</small>
-      </label>
-      <label>
-        Phone
-        <input type="text" [(ngModel)]="phone" [class.invalid-input]="isCreatePhoneInvalid()" />
-        <small class="field-warning" *ngIf="isCreatePhoneInvalid()">
-          Phone number must be at least 10 digits and contain only numbers.
-        </small>
-      </label>
-      <label>
-        Department
-        <select [(ngModel)]="department" (ngModelChange)="onDepartmentChange($event)">
-          <option value="">Select Department</option>
-          <option *ngFor="let item of departments" [value]="item.name">{{ item.name }}</option>
-          <option [value]="addDepartmentValue" class="add-option">+ Add New Department</option>
-        </select>
-      </label>
-      <label>
-        Designation
-        <select [(ngModel)]="designation" (ngModelChange)="onDesignationChange($event)">
-          <option value="">Select Designation</option>
-          <option *ngFor="let item of designations" [value]="item.name">{{ item.name }}</option>
-          <option [value]="addDesignationValue" class="add-option">+ Add New Designation</option>
-        </select>
-      </label>
-      <label>
-        Status
-        <select [(ngModel)]="employmentStatus" (ngModelChange)="onStatusChange($event)">
-          <option value="">Select Status</option>
-          <option *ngFor="let item of statusOptions" [value]="item">{{ item }}</option>
-          <option [value]="addStatusValue" class="add-option">+ Add New Status</option>
-        </select>
-      </label>
-      <label>
-        Address
-        <input type="text" [(ngModel)]="address" />
-      </label>
-      <label>
-        Father's Name
-        <input type="text" [(ngModel)]="fatherName" />
-      </label>
-      <label>
-        Mother's Name
-        <input type="text" [(ngModel)]="motherName" />
-      </label>
-      <label>
-        Husband/Wife Name
-        <input type="text" [(ngModel)]="spouseName" />
-      </label>
-      <label>
-        Father's Phone
-        <input type="text" [(ngModel)]="fatherPhone" />
-      </label>
-      <label>
-        Mother's Phone
-        <input type="text" [(ngModel)]="motherPhone" />
-      </label>
-      <label>
-        Husband/Wife Phone
-        <input type="text" [(ngModel)]="spousePhone" />
-      </label>
-      <label>
-        Gender
-        <select [(ngModel)]="gender">
-          <option value="">Select Gender</option>
-          <option *ngFor="let item of genderOptions" [value]="item">{{ item }}</option>
-        </select>
-      </label>
-      <label>
-        Religion
-        <select [(ngModel)]="religion">
-          <option value="">Select Religion</option>
-          <option *ngFor="let item of religionOptions" [value]="item">{{ item }}</option>
-        </select>
-      </label>
-      <label>
-        Marital Status
-        <select [(ngModel)]="maritalStatus">
-          <option value="">Select Marital Status</option>
-          <option *ngFor="let item of maritalStatusOptions" [value]="item">{{ item }}</option>
-        </select>
-      </label>
-      <label>
-        Blood Group
-        <select [(ngModel)]="bloodGroup">
-          <option value="">Select Blood Group</option>
-          <option *ngFor="let item of bloodGroupOptions" [value]="item">{{ item }}</option>
-        </select>
-      </label>
-      <label>
-        National ID
-        <input type="text" [(ngModel)]="nationalId" />
-      </label>
-      <label>
-        Photo URL
-        <input type="text" [(ngModel)]="photoUrl" />
-      </label>
-      <label>
-        Signature URL
-        <input type="text" [(ngModel)]="signatureUrl" />
-      </label>
-      <label>
-        Working Time
-        <select [(ngModel)]="workingTime" (ngModelChange)="onWorkingTimeChange($event)">
-          <option value="">Select Working Time</option>
-          <option *ngFor="let item of shifts" [value]="item.name">{{ item.name }}</option>
-          <option [value]="addShiftValue" class="add-option">+ Add New Shift</option>
-        </select>
-      </label>
-      <label>
-        Salary Rule
-        <input type="text" [(ngModel)]="salaryRule" />
-      </label>
-      <label>
-        Gross Salary
-        <input type="number" [(ngModel)]="grossSalary" />
-      </label>
-      <label>
-        Basic Salary
-        <input type="number" [(ngModel)]="basicSalary" />
-      </label>
-      <label>
-        Weekend
-        <input type="text" [(ngModel)]="weekend" placeholder="e.g. Friday, Saturday" />
-      </label>
-      <label>
-        Salary Account
-        <input type="text" [(ngModel)]="salaryAccount" />
-      </label>
-      <label>
-        Date of Birth
-        <input
-          type="date"
-          [(ngModel)]="dateOfBirth"
-          [max]="maxAllowedDate"
-          [class.invalid-input]="isCreateDobFuture() || isCreateDobUnderMinimumAge()" />
-        <small class="field-warning" *ngIf="isCreateDobFuture()">Date of birth cannot be after current date.</small>
-        <small class="field-warning" *ngIf="!isCreateDobFuture() && isCreateDobUnderMinimumAge()">
-          Minimum age is 18 years.
-        </small>
-      </label>
-      <label>
-        <span class="label-text">Joining Date <span class="required-star">*</span></span>
-        <input type="date" [(ngModel)]="joiningDate" />
-      </label>
-    </div>
-
-    <div class="dynamic-header">
-      <h2>Dynamic Attributes</h2>
-      <button type="button" class="btn secondary" (click)="addDynamicAttributeRow()">Add Attribute</button>
-    </div>
-    <div class="dynamic-list">
-      <div class="dynamic-row" *ngFor="let entry of dynamicEntries; let i = index">
-        <div class="key-field">
-          <input
-            type="text"
-            placeholder="Attribute key"
-            [(ngModel)]="entry.key"
-            (input)="onAttributeKeyInput(i)"
-            [attr.list]="'employee-attribute-suggestions-' + i" />
-          <datalist [id]="'employee-attribute-suggestions-' + i">
-            <option *ngFor="let suggestion of attributeSuggestionsByRow[i]" [value]="suggestion"></option>
-          </datalist>
-        </div>
-        <input type="text" placeholder="Value" [(ngModel)]="entry.value" />
-        <button type="button" class="btn secondary" (click)="removeDynamicAttributeRow(i)">Remove</button>
+<main class="page emp-page">
+  <!-- ─── CREATE FORM PANEL ────────────────────────────── -->
+  <section class="panel form-panel">
+    <div class="panel-header">
+      <div class="panel-icon icon-cyan">
+        <span class="material-symbols-rounded">person_add</span>
+      </div>
+      <div>
+        <h1>Add New Employee</h1>
+        <p class="panel-subtitle">Fill in the details below to register a new employee</p>
       </div>
     </div>
 
-    <div class="actions">
-      <button type="button" class="btn primary" [disabled]="saving" (click)="saveEmployee()">
-        {{ saving ? 'Saving...' : 'Save Employee' }}
-      </button>
-    </div>
-
-    <p class="message">{{ message }}</p>
-  </section>
-
-  <section class="panel">
-    <h2>Employees</h2>
-
-    <div class="filters-grid">
-      <label>
-        Search
-        <input
-          type="text"
-          [(ngModel)]="searchText"
-          placeholder="Emp code / name / phone"
-          (keyup.enter)="applyFilters()" />
-      </label>
-      <label>
-        Department
-        <select [(ngModel)]="filterDepartment">
-          <option value="">All Departments</option>
-          <option *ngFor="let item of departments" [value]="item.name">{{ item.name }}</option>
-        </select>
-      </label>
-      <label>
-        Designation
-        <select [(ngModel)]="filterDesignation">
-          <option value="">All Designations</option>
-          <option *ngFor="let item of designations" [value]="item.name">{{ item.name }}</option>
-        </select>
-      </label>
-      <label>
-        Joining From
-        <input type="date" [(ngModel)]="filterJoiningDateFrom" />
-      </label>
-      <label>
-        Joining To
-        <input type="date" [(ngModel)]="filterJoiningDateTo" />
-      </label>
-      <label>
-        Page Size
-        <select [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
-          <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
-        </select>
-      </label>
-    </div>
-
-    <div class="filters-actions">
-      <button type="button" class="btn tiny primary" (click)="applyFilters()">Apply</button>
-      <button type="button" class="btn tiny secondary" (click)="resetFilters()">Reset</button>
-    </div>
-
-    <div class="list-toolbar">
-      <p class="list-meta">
-        Showing {{ pageStartIndex }}-{{ pageEndIndex }} of {{ totalCount }} employees
-      </p>
-      <div class="export-tools">
-        <button type="button" class="btn tiny primary export-button" [disabled]="exporting || loadingEmployees" (click)="downloadEmployees()">
-          {{ exporting ? 'Exporting...' : 'Save as CSV' }}
-        </button>
+    <!-- ── Section: Basic Info ─────────────────────────── -->
+    <div class="form-section">
+      <div class="section-label">
+        <span class="material-symbols-rounded">badge</span>
+        <span>Basic Information</span>
       </div>
-    </div>
-
-    <p *ngIf="loadingEmployees" class="list-state">Loading employees...</p>
-    <p *ngIf="!loadingEmployees && totalCount === 0" class="list-state">No employees found for current search/filter.</p>
-
-    <div class="employee-card" *ngFor="let employee of employees; trackBy: trackByEmployeeId">
-      <div class="employee-header">
-        <div>
-          <h3>{{ employee.fullName }}</h3>
-          <p>
-            <strong>Code:</strong> {{ employee.employeeCode || '-' }} |
-            <strong>Department:</strong> {{ employee.department || '-' }} |
-            <strong>Designation:</strong> {{ employee.designation || '-' }}
-          </p>
-          <p>
-            <strong>Email:</strong> {{ employee.email || '-' }} |
-            <strong>Phone:</strong> {{ employee.phone || '-' }}
-          </p>
-          <p>
-            <strong>Status:</strong> {{ employee.employmentStatus || '-' }} |
-            <strong>Gender:</strong> {{ employee.gender || '-' }} |
-            <strong>Blood:</strong> {{ employee.bloodGroup || '-' }}
-          </p>
-          <p><strong>DOB:</strong> {{ formatDisplayDate(employee.dateOfBirth) }} | {{ getCurrentAge(employee.dateOfBirth) }}</p>
-          <p><strong>Joining:</strong> {{ formatDisplayDate(employee.joiningDate) }} | {{ getLengthOfService(employee.joiningDate) }}</p>
-        </div>
-        <div class="employee-actions">
-          <button type="button" class="btn tiny secondary" (click)="startEdit(employee)">Edit</button>
-          <button
-            type="button"
-            class="btn tiny danger"
-            [disabled]="deletingEmployeeId === employee.id"
-            (click)="deleteEmployee(employee)">
-            {{ deletingEmployeeId === employee.id ? 'Deleting...' : 'Delete' }}
-          </button>
-        </div>
-      </div>
-
-      <div class="edit-panel" *ngIf="editingEmployeeId === employee.id">
+      <div class="field-grid cols-3">
         <label>
           <span class="label-text">Employee Code <span class="required-star">*</span></span>
-          <input type="text" [(ngModel)]="editEmployeeCode" />
+          <input type="text" [(ngModel)]="employeeCode" placeholder="e.g. EMP-001" />
         </label>
         <label>
           <span class="label-text">Full Name <span class="required-star">*</span></span>
-          <input type="text" [(ngModel)]="editFullName" />
+          <input type="text" [(ngModel)]="fullName" placeholder="Enter full name" />
+        </label>
+        <label>
+          <span class="label-text">Joining Date <span class="required-star">*</span></span>
+          <input type="date" [(ngModel)]="joiningDate" />
         </label>
         <label>
           Email
-          <input type="email" [(ngModel)]="editEmail" [class.invalid-input]="isEditEmailInvalid()" />
-          <small class="field-warning" *ngIf="isEditEmailInvalid()">Please enter a valid email format.</small>
+          <input type="email" [(ngModel)]="email" placeholder="email@example.com" [class.invalid-input]="isCreateEmailInvalid()" />
+          <small class="field-warning" *ngIf="isCreateEmailInvalid()">Please enter a valid email format.</small>
         </label>
         <label>
           Phone
-          <input type="text" [(ngModel)]="editPhone" [class.invalid-input]="isEditPhoneInvalid()" />
-          <small class="field-warning" *ngIf="isEditPhoneInvalid()">
-            Phone number must be at least 10 digits and contain only numbers.
-          </small>
+          <input type="text" [(ngModel)]="phone" placeholder="01XXXXXXXXX" [class.invalid-input]="isCreatePhoneInvalid()" />
+          <small class="field-warning" *ngIf="isCreatePhoneInvalid()">Phone must be at least 10 digits.</small>
         </label>
         <label>
+          National ID
+          <input type="text" [(ngModel)]="nationalId" placeholder="National ID number" />
+        </label>
+      </div>
+    </div>
+
+    <!-- ── Section: Personal Details ───────────────────── -->
+    <div class="form-section">
+      <div class="section-label">
+        <span class="material-symbols-rounded">person</span>
+        <span>Personal Details</span>
+      </div>
+      <div class="field-grid cols-4">
+        <label>
+          Gender
+          <select [(ngModel)]="gender">
+            <option value="">Select Gender</option>
+            <option *ngFor="let item of genderOptions" [value]="item">{{ item }}</option>
+          </select>
+        </label>
+        <label>
+          Religion
+          <select [(ngModel)]="religion">
+            <option value="">Select Religion</option>
+            <option *ngFor="let item of religionOptions" [value]="item">{{ item }}</option>
+          </select>
+        </label>
+        <label>
+          Marital Status
+          <select [(ngModel)]="maritalStatus">
+            <option value="">Select Status</option>
+            <option *ngFor="let item of maritalStatusOptions" [value]="item">{{ item }}</option>
+          </select>
+        </label>
+        <label>
+          Blood Group
+          <select [(ngModel)]="bloodGroup">
+            <option value="">Select Group</option>
+            <option *ngFor="let item of bloodGroupOptions" [value]="item">{{ item }}</option>
+          </select>
+        </label>
+        <label>
+          Date of Birth
+          <input
+            type="date"
+            [(ngModel)]="dateOfBirth"
+            [max]="maxAllowedDate"
+            [class.invalid-input]="isCreateDobFuture() || isCreateDobUnderMinimumAge()" />
+          <small class="field-warning" *ngIf="isCreateDobFuture()">DOB cannot be in the future.</small>
+          <small class="field-warning" *ngIf="!isCreateDobFuture() && isCreateDobUnderMinimumAge()">Minimum age is 18 years.</small>
+        </label>
+        <label class="span-3">
+          Address
+          <input type="text" [(ngModel)]="address" placeholder="Full address" />
+        </label>
+      </div>
+    </div>
+
+    <!-- ── Section: Family Info ─────────────────────────── -->
+    <div class="form-section">
+      <div class="section-label">
+        <span class="material-symbols-rounded">family_restroom</span>
+        <span>Family Information</span>
+      </div>
+      <div class="field-grid cols-3">
+        <label>
+          Father's Name
+          <input type="text" [(ngModel)]="fatherName" />
+        </label>
+        <label>
+          Mother's Name
+          <input type="text" [(ngModel)]="motherName" />
+        </label>
+        <label>
+          Spouse Name
+          <input type="text" [(ngModel)]="spouseName" />
+        </label>
+        <label>
+          Father's Phone
+          <input type="text" [(ngModel)]="fatherPhone" />
+        </label>
+        <label>
+          Mother's Phone
+          <input type="text" [(ngModel)]="motherPhone" />
+        </label>
+        <label>
+          Spouse Phone
+          <input type="text" [(ngModel)]="spousePhone" />
+        </label>
+      </div>
+    </div>
+
+    <!-- ── Section: Employment Details ──────────────────── -->
+    <div class="form-section">
+      <div class="section-label">
+        <span class="material-symbols-rounded">work</span>
+        <span>Employment Details</span>
+      </div>
+      <div class="field-grid cols-3">
+        <label>
           Department
-          <select [(ngModel)]="editDepartment" (ngModelChange)="onEditDepartmentChange($event)">
+          <select [(ngModel)]="department" (ngModelChange)="onDepartmentChange($event)">
             <option value="">Select Department</option>
             <option *ngFor="let item of departments" [value]="item.name">{{ item.name }}</option>
             <option [value]="addDepartmentValue" class="add-option">+ Add New Department</option>
@@ -317,7 +150,7 @@
         </label>
         <label>
           Designation
-          <select [(ngModel)]="editDesignation" (ngModelChange)="onEditDesignationChange($event)">
+          <select [(ngModel)]="designation" (ngModelChange)="onDesignationChange($event)">
             <option value="">Select Designation</option>
             <option *ngFor="let item of designations" [value]="item.name">{{ item.name }}</option>
             <option [value]="addDesignationValue" class="add-option">+ Add New Designation</option>
@@ -325,83 +158,25 @@
         </label>
         <label>
           Status
-          <select [(ngModel)]="editEmploymentStatus" (ngModelChange)="onEditStatusChange($event)">
+          <select [(ngModel)]="employmentStatus" (ngModelChange)="onStatusChange($event)">
             <option value="">Select Status</option>
             <option *ngFor="let item of statusOptions" [value]="item">{{ item }}</option>
             <option [value]="addStatusValue" class="add-option">+ Add New Status</option>
           </select>
         </label>
-        <label>
-          Address
-          <input type="text" [(ngModel)]="editAddress" />
-        </label>
-        <label>
-          Father's Name
-          <input type="text" [(ngModel)]="editFatherName" />
-        </label>
-        <label>
-          Mother's Name
-          <input type="text" [(ngModel)]="editMotherName" />
-        </label>
-        <label>
-          Husband/Wife Name
-          <input type="text" [(ngModel)]="editSpouseName" />
-        </label>
-        <label>
-          Father's Phone
-          <input type="text" [(ngModel)]="editFatherPhone" />
-        </label>
-        <label>
-          Mother's Phone
-          <input type="text" [(ngModel)]="editMotherPhone" />
-        </label>
-        <label>
-          Husband/Wife Phone
-          <input type="text" [(ngModel)]="editSpousePhone" />
-        </label>
-        <label>
-          Gender
-          <select [(ngModel)]="editGender">
-            <option value="">Select Gender</option>
-            <option *ngFor="let item of genderOptions" [value]="item">{{ item }}</option>
-          </select>
-        </label>
-        <label>
-          Religion
-          <select [(ngModel)]="editReligion">
-            <option value="">Select Religion</option>
-            <option *ngFor="let item of religionOptions" [value]="item">{{ item }}</option>
-          </select>
-        </label>
-        <label>
-          Marital Status
-          <select [(ngModel)]="editMaritalStatus">
-            <option value="">Select Marital Status</option>
-            <option *ngFor="let item of maritalStatusOptions" [value]="item">{{ item }}</option>
-          </select>
-        </label>
-        <label>
-          Blood Group
-          <select [(ngModel)]="editBloodGroup">
-            <option value="">Select Blood Group</option>
-            <option *ngFor="let item of bloodGroupOptions" [value]="item">{{ item }}</option>
-          </select>
-        </label>
-        <label>
-          National ID
-          <input type="text" [(ngModel)]="editNationalId" />
-        </label>
-        <label>
-          Photo URL
-          <input type="text" [(ngModel)]="editPhotoUrl" />
-        </label>
-        <label>
-          Signature URL
-          <input type="text" [(ngModel)]="editSignatureUrl" />
-        </label>
+      </div>
+    </div>
+
+    <!-- ── Section: Salary & Schedule ───────────────────── -->
+    <div class="form-section">
+      <div class="section-label">
+        <span class="material-symbols-rounded">payments</span>
+        <span>Salary & Schedule</span>
+      </div>
+      <div class="field-grid cols-3">
         <label>
           Working Time
-          <select [(ngModel)]="editWorkingTime" (ngModelChange)="onEditWorkingTimeChange($event)">
+          <select [(ngModel)]="workingTime" (ngModelChange)="onWorkingTimeChange($event)">
             <option value="">Select Working Time</option>
             <option *ngFor="let item of shifts" [value]="item.name">{{ item.name }}</option>
             <option [value]="addShiftValue" class="add-option">+ Add New Shift</option>
@@ -409,55 +184,377 @@
         </label>
         <label>
           Salary Rule
-          <input type="text" [(ngModel)]="editSalaryRule" />
+          <input type="text" [(ngModel)]="salaryRule" placeholder="e.g. Monthly" />
         </label>
         <label>
           Gross Salary
-          <input type="number" [(ngModel)]="editGrossSalary" />
+          <input type="number" [(ngModel)]="grossSalary" placeholder="0.00" />
         </label>
         <label>
           Basic Salary
-          <input type="number" [(ngModel)]="editBasicSalary" />
+          <input type="number" [(ngModel)]="basicSalary" placeholder="0.00" />
         </label>
         <label>
           Weekend
-          <input type="text" [(ngModel)]="editWeekend" />
+          <input type="text" [(ngModel)]="weekend" placeholder="e.g. Friday, Saturday" />
         </label>
         <label>
           Salary Account
-          <input type="text" [(ngModel)]="editSalaryAccount" />
+          <input type="text" [(ngModel)]="salaryAccount" placeholder="Account number" />
+        </label>
+      </div>
+    </div>
+
+    <!-- ── Section: Media ──────────────────────────────── -->
+    <div class="form-section">
+      <div class="section-label">
+        <span class="material-symbols-rounded">image</span>
+        <span>Media</span>
+      </div>
+      <div class="field-grid cols-2">
+        <label>
+          Photo URL
+          <input type="text" [(ngModel)]="photoUrl" placeholder="https://..." />
         </label>
         <label>
-          Date of Birth
+          Signature URL
+          <input type="text" [(ngModel)]="signatureUrl" placeholder="https://..." />
+        </label>
+      </div>
+    </div>
+
+    <!-- ── Section: Dynamic Attributes ──────────────────── -->
+    <div class="form-section">
+      <div class="section-label">
+        <span class="material-symbols-rounded">tune</span>
+        <span>Dynamic Attributes</span>
+        <button type="button" class="btn tiny secondary section-action" (click)="addDynamicAttributeRow()">
+          <span class="material-symbols-rounded" style="font-size:16px">add</span> Add
+        </button>
+      </div>
+      <div class="dynamic-list">
+        <div class="dynamic-row" *ngFor="let entry of dynamicEntries; let i = index">
+          <div class="key-field">
+            <input
+              type="text"
+              placeholder="Attribute key"
+              [(ngModel)]="entry.key"
+              (input)="onAttributeKeyInput(i)"
+              [attr.list]="'employee-attribute-suggestions-' + i" />
+            <datalist [id]="'employee-attribute-suggestions-' + i">
+              <option *ngFor="let suggestion of attributeSuggestionsByRow[i]" [value]="suggestion"></option>
+            </datalist>
+          </div>
+          <input type="text" placeholder="Value" [(ngModel)]="entry.value" />
+          <button type="button" class="btn tiny danger icon-btn" (click)="removeDynamicAttributeRow(i)">
+            <span class="material-symbols-rounded" style="font-size:16px">close</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Save Actions ────────────────────────────────── -->
+    <div class="form-footer">
+      <button type="button" class="btn primary save-btn" [disabled]="saving" (click)="saveEmployee()">
+        <span class="material-symbols-rounded" style="font-size:18px">save</span>
+        {{ saving ? 'Saving...' : 'Save Employee' }}
+      </button>
+      <p class="message" *ngIf="message">{{ message }}</p>
+    </div>
+  </section>
+
+  <!-- ─── EMPLOYEE LIST PANEL ──────────────────────────── -->
+  <section class="panel list-panel">
+    <div class="panel-header">
+      <div class="panel-icon icon-purple">
+        <span class="material-symbols-rounded">groups</span>
+      </div>
+      <div>
+        <h2 style="margin:0">Employees</h2>
+        <p class="panel-subtitle">Browse and manage employee records</p>
+      </div>
+    </div>
+
+    <!-- ── Filters ─────────────────────────────────────── -->
+    <div class="filter-bar">
+      <div class="filters-grid">
+        <label>
+          Search
           <input
-            type="date"
-            [(ngModel)]="editDateOfBirth"
-            [max]="maxAllowedDate"
-            [class.invalid-input]="isEditDobFuture() || isEditDobUnderMinimumAge()" />
-          <small class="field-warning" *ngIf="isEditDobFuture()">Date of birth cannot be after current date.</small>
-          <small class="field-warning" *ngIf="!isEditDobFuture() && isEditDobUnderMinimumAge()">
-            Minimum age is 18 years.
-          </small>
+            type="text"
+            [(ngModel)]="searchText"
+            placeholder="Code / name / phone"
+            (keyup.enter)="applyFilters()" />
         </label>
         <label>
-          <span class="label-text">Joining Date <span class="required-star">*</span></span>
-          <input type="date" [(ngModel)]="editJoiningDate" />
+          Department
+          <select [(ngModel)]="filterDepartment">
+            <option value="">All Departments</option>
+            <option *ngFor="let item of departments" [value]="item.name">{{ item.name }}</option>
+          </select>
         </label>
+        <label>
+          Designation
+          <select [(ngModel)]="filterDesignation">
+            <option value="">All Designations</option>
+            <option *ngFor="let item of designations" [value]="item.name">{{ item.name }}</option>
+          </select>
+        </label>
+        <label>
+          From
+          <input type="date" [(ngModel)]="filterJoiningDateFrom" />
+        </label>
+        <label>
+          To
+          <input type="date" [(ngModel)]="filterJoiningDateTo" />
+        </label>
+        <label>
+          Per Page
+          <select [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
+            <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+          </select>
+        </label>
+      </div>
+      <div class="filters-actions">
+        <button type="button" class="btn tiny primary" (click)="applyFilters()">
+          <span class="material-symbols-rounded" style="font-size:16px">search</span> Apply
+        </button>
+        <button type="button" class="btn tiny secondary" (click)="resetFilters()">
+          <span class="material-symbols-rounded" style="font-size:16px">restart_alt</span> Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- ── List Toolbar ────────────────────────────────── -->
+    <div class="list-toolbar">
+      <p class="list-meta">
+        Showing {{ pageStartIndex }}-{{ pageEndIndex }} of {{ totalCount }} employees
+      </p>
+      <div class="export-tools">
+        <button type="button" class="btn tiny primary export-button" [disabled]="exporting || loadingEmployees" (click)="downloadEmployees()">
+          <span class="material-symbols-rounded" style="font-size:16px">download</span>
+          {{ exporting ? 'Exporting...' : 'Save as CSV' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Loading / Empty ─────────────────────────────── -->
+    <p *ngIf="loadingEmployees" class="list-state">Loading employees...</p>
+    <p *ngIf="!loadingEmployees && totalCount === 0" class="list-state">No employees found for current search/filter.</p>
+
+    <!-- ── Employee Cards ──────────────────────────────── -->
+    <div class="employee-card" *ngFor="let employee of employees; trackBy: trackByEmployeeId">
+      <div class="employee-header">
+        <div class="emp-info">
+          <h3>{{ employee.fullName }}</h3>
+          <div class="emp-meta-grid">
+            <span><strong>Code:</strong> {{ employee.employeeCode || '-' }}</span>
+            <span><strong>Dept:</strong> {{ employee.department || '-' }}</span>
+            <span><strong>Desig:</strong> {{ employee.designation || '-' }}</span>
+            <span><strong>Email:</strong> {{ employee.email || '-' }}</span>
+            <span><strong>Phone:</strong> {{ employee.phone || '-' }}</span>
+            <span><strong>Status:</strong> {{ employee.employmentStatus || '-' }}</span>
+            <span><strong>Gender:</strong> {{ employee.gender || '-' }}</span>
+            <span><strong>Blood:</strong> {{ employee.bloodGroup || '-' }}</span>
+            <span><strong>DOB:</strong> {{ formatDisplayDate(employee.dateOfBirth) }} | {{ getCurrentAge(employee.dateOfBirth) }}</span>
+            <span><strong>Joining:</strong> {{ formatDisplayDate(employee.joiningDate) }} | {{ getLengthOfService(employee.joiningDate) }}</span>
+          </div>
+        </div>
+        <div class="employee-actions">
+          <button type="button" class="btn tiny secondary" (click)="startEdit(employee)">
+            <span class="material-symbols-rounded" style="font-size:16px">edit</span> Edit
+          </button>
+          <button
+            type="button"
+            class="btn tiny danger"
+            [disabled]="deletingEmployeeId === employee.id"
+            (click)="deleteEmployee(employee)">
+            <span class="material-symbols-rounded" style="font-size:16px">delete</span>
+            {{ deletingEmployeeId === employee.id ? 'Deleting...' : 'Delete' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Inline Edit ────────────────────────────────── -->
+      <div class="edit-panel" *ngIf="editingEmployeeId === employee.id">
+        <div class="field-grid cols-3">
+          <label>
+            <span class="label-text">Employee Code <span class="required-star">*</span></span>
+            <input type="text" [(ngModel)]="editEmployeeCode" />
+          </label>
+          <label>
+            <span class="label-text">Full Name <span class="required-star">*</span></span>
+            <input type="text" [(ngModel)]="editFullName" />
+          </label>
+          <label>
+            Email
+            <input type="email" [(ngModel)]="editEmail" [class.invalid-input]="isEditEmailInvalid()" />
+            <small class="field-warning" *ngIf="isEditEmailInvalid()">Invalid email format.</small>
+          </label>
+          <label>
+            Phone
+            <input type="text" [(ngModel)]="editPhone" [class.invalid-input]="isEditPhoneInvalid()" />
+            <small class="field-warning" *ngIf="isEditPhoneInvalid()">At least 10 digits.</small>
+          </label>
+          <label>
+            Department
+            <select [(ngModel)]="editDepartment" (ngModelChange)="onEditDepartmentChange($event)">
+              <option value="">Select Department</option>
+              <option *ngFor="let item of departments" [value]="item.name">{{ item.name }}</option>
+              <option [value]="addDepartmentValue" class="add-option">+ Add New</option>
+            </select>
+          </label>
+          <label>
+            Designation
+            <select [(ngModel)]="editDesignation" (ngModelChange)="onEditDesignationChange($event)">
+              <option value="">Select Designation</option>
+              <option *ngFor="let item of designations" [value]="item.name">{{ item.name }}</option>
+              <option [value]="addDesignationValue" class="add-option">+ Add New</option>
+            </select>
+          </label>
+          <label>
+            Status
+            <select [(ngModel)]="editEmploymentStatus" (ngModelChange)="onEditStatusChange($event)">
+              <option value="">Select Status</option>
+              <option *ngFor="let item of statusOptions" [value]="item">{{ item }}</option>
+              <option [value]="addStatusValue" class="add-option">+ Add New</option>
+            </select>
+          </label>
+          <label>
+            Address
+            <input type="text" [(ngModel)]="editAddress" />
+          </label>
+          <label>
+            Father's Name
+            <input type="text" [(ngModel)]="editFatherName" />
+          </label>
+          <label>
+            Mother's Name
+            <input type="text" [(ngModel)]="editMotherName" />
+          </label>
+          <label>
+            Spouse Name
+            <input type="text" [(ngModel)]="editSpouseName" />
+          </label>
+          <label>
+            Father's Phone
+            <input type="text" [(ngModel)]="editFatherPhone" />
+          </label>
+          <label>
+            Mother's Phone
+            <input type="text" [(ngModel)]="editMotherPhone" />
+          </label>
+          <label>
+            Spouse Phone
+            <input type="text" [(ngModel)]="editSpousePhone" />
+          </label>
+          <label>
+            Gender
+            <select [(ngModel)]="editGender">
+              <option value="">Select Gender</option>
+              <option *ngFor="let item of genderOptions" [value]="item">{{ item }}</option>
+            </select>
+          </label>
+          <label>
+            Religion
+            <select [(ngModel)]="editReligion">
+              <option value="">Select Religion</option>
+              <option *ngFor="let item of religionOptions" [value]="item">{{ item }}</option>
+            </select>
+          </label>
+          <label>
+            Marital Status
+            <select [(ngModel)]="editMaritalStatus">
+              <option value="">Select Status</option>
+              <option *ngFor="let item of maritalStatusOptions" [value]="item">{{ item }}</option>
+            </select>
+          </label>
+          <label>
+            Blood Group
+            <select [(ngModel)]="editBloodGroup">
+              <option value="">Select Group</option>
+              <option *ngFor="let item of bloodGroupOptions" [value]="item">{{ item }}</option>
+            </select>
+          </label>
+          <label>
+            National ID
+            <input type="text" [(ngModel)]="editNationalId" />
+          </label>
+          <label>
+            Photo URL
+            <input type="text" [(ngModel)]="editPhotoUrl" />
+          </label>
+          <label>
+            Signature URL
+            <input type="text" [(ngModel)]="editSignatureUrl" />
+          </label>
+          <label>
+            Working Time
+            <select [(ngModel)]="editWorkingTime" (ngModelChange)="onEditWorkingTimeChange($event)">
+              <option value="">Select Working Time</option>
+              <option *ngFor="let item of shifts" [value]="item.name">{{ item.name }}</option>
+              <option [value]="addShiftValue" class="add-option">+ Add New</option>
+            </select>
+          </label>
+          <label>
+            Salary Rule
+            <input type="text" [(ngModel)]="editSalaryRule" />
+          </label>
+          <label>
+            Gross Salary
+            <input type="number" [(ngModel)]="editGrossSalary" />
+          </label>
+          <label>
+            Basic Salary
+            <input type="number" [(ngModel)]="editBasicSalary" />
+          </label>
+          <label>
+            Weekend
+            <input type="text" [(ngModel)]="editWeekend" />
+          </label>
+          <label>
+            Salary Account
+            <input type="text" [(ngModel)]="editSalaryAccount" />
+          </label>
+          <label>
+            Date of Birth
+            <input
+              type="date"
+              [(ngModel)]="editDateOfBirth"
+              [max]="maxAllowedDate"
+              [class.invalid-input]="isEditDobFuture() || isEditDobUnderMinimumAge()" />
+            <small class="field-warning" *ngIf="isEditDobFuture()">DOB cannot be in the future.</small>
+            <small class="field-warning" *ngIf="!isEditDobFuture() && isEditDobUnderMinimumAge()">Min age 18.</small>
+          </label>
+          <label>
+            <span class="label-text">Joining Date <span class="required-star">*</span></span>
+            <input type="date" [(ngModel)]="editJoiningDate" />
+          </label>
+        </div>
+
         <div class="edit-dynamic-list">
           <h4>Dynamic Attributes</h4>
           <div class="edit-dynamic-row" *ngFor="let entry of editDynamicEntries; let idx = index">
-            <input type="text" [(ngModel)]="entry.key" placeholder="Attribute key" />
-            <input type="text" [(ngModel)]="entry.value" placeholder="Attribute value" />
-            <button type="button" class="btn tiny danger" (click)="removeEditDynamicAttributeRow(idx)">Remove</button>
+            <input type="text" [(ngModel)]="entry.key" placeholder="Key" />
+            <input type="text" [(ngModel)]="entry.value" placeholder="Value" />
+            <button type="button" class="btn tiny danger icon-btn" (click)="removeEditDynamicAttributeRow(idx)">
+              <span class="material-symbols-rounded" style="font-size:16px">close</span>
+            </button>
           </div>
-          <button type="button" class="btn tiny secondary" (click)="addEditDynamicAttributeRow()">Add Attribute</button>
+          <button type="button" class="btn tiny secondary" (click)="addEditDynamicAttributeRow()">
+            <span class="material-symbols-rounded" style="font-size:16px">add</span> Add Attribute
+          </button>
         </div>
+
         <div class="edit-actions">
-          <button type="button" class="btn tiny primary" (click)="saveEdit(employee)">Save</button>
+          <button type="button" class="btn tiny primary" (click)="saveEdit(employee)">
+            <span class="material-symbols-rounded" style="font-size:16px">save</span> Save
+          </button>
           <button type="button" class="btn tiny secondary" (click)="cancelEdit()">Cancel</button>
         </div>
       </div>
 
+      <!-- ── Dynamic Attributes Display ────────────────── -->
       <div class="employee-dynamic-attributes" *ngIf="(employee.dynamicAttributes | keyvalue).length > 0">
         <p *ngFor="let item of employee.dynamicAttributes | keyvalue">
           <strong>{{ item.key }}:</strong> {{ item.value }}
@@ -465,17 +562,20 @@
       </div>
     </div>
 
+    <!-- ── Pagination ──────────────────────────────────── -->
     <div class="pagination" *ngIf="totalCount > 0">
       <button type="button" class="btn tiny secondary" [disabled]="!hasPreviousPage || loadingEmployees" (click)="goToPage(page - 1)">
-        Previous
+        <span class="material-symbols-rounded" style="font-size:16px">chevron_left</span> Previous
       </button>
       <span>Page {{ page }} of {{ totalPages || 1 }}</span>
       <button type="button" class="btn tiny secondary" [disabled]="!hasNextPage || loadingEmployees" (click)="goToPage(page + 1)">
-        Next
+        Next <span class="material-symbols-rounded" style="font-size:16px">chevron_right</span>
       </button>
     </div>
   </section>
 </main>
+
+<!-- ─── MODALS ─────────────────────────────────────────── -->
 
 <div class="modal-backdrop" *ngIf="showDepartmentModal">
   <div class="modal">
@@ -516,49 +616,28 @@
     <div class="shift-modal-form">
       <label class="shift-modal-name">
         Shift Name
-        <input type="text" [(ngModel)]="newShiftName" placeholder="Shift name (e.g. Morning Shift)" />
+        <input type="text" [(ngModel)]="newShiftName" placeholder="e.g. Morning Shift" />
       </label>
-
       <div class="shift-modal-groups">
         <div class="shift-modal-group">
           <h4>In Session</h4>
           <div class="shift-modal-fields">
-            <label>
-              In Time
-              <input type="time" [(ngModel)]="newShiftInTime" />
-            </label>
-            <label>
-              In Time Grace
-              <input type="time" [(ngModel)]="newShiftInTimeGrace" />
-            </label>
+            <label>In Time <input type="time" [(ngModel)]="newShiftInTime" /></label>
+            <label>In Time Grace <input type="time" [(ngModel)]="newShiftInTimeGrace" /></label>
           </div>
         </div>
-
         <div class="shift-modal-group">
           <h4>Out Session</h4>
           <div class="shift-modal-fields">
-            <label>
-              Out Time
-              <input type="time" [(ngModel)]="newShiftOutTime" />
-            </label>
-            <label>
-              Out Time Grace
-              <input type="time" [(ngModel)]="newShiftOutTimeGrace" />
-            </label>
+            <label>Out Time <input type="time" [(ngModel)]="newShiftOutTime" /></label>
+            <label>Out Time Grace <input type="time" [(ngModel)]="newShiftOutTimeGrace" /></label>
           </div>
         </div>
-
         <div class="shift-modal-group">
           <h4>Break Session</h4>
           <div class="shift-modal-fields">
-            <label>
-              Break Start Time
-              <input type="time" [(ngModel)]="newShiftBreakStartTime" />
-            </label>
-            <label>
-              Break End Time
-              <input type="time" [(ngModel)]="newShiftBreakEndTime" />
-            </label>
+            <label>Break Start <input type="time" [(ngModel)]="newShiftBreakStartTime" /></label>
+            <label>Break End <input type="time" [(ngModel)]="newShiftBreakEndTime" /></label>
           </div>
         </div>
       </div>

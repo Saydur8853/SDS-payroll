@@ -1,8 +1,109 @@
-<main class="dashboard">
-  <section class="card">
-    <h1>Dashboard</h1>
-    <p *ngIf="loading">Loading...</p>
-    <div class="count" *ngIf="!loading">{{ companyCount }}</div>
-    <p class="label" *ngIf="!loading">Total Companies</p>
+<main class="dashboard" id="dashboard-page">
+  <!-- Header -->
+  <header class="dash-header">
+    <div class="header-left">
+      <h1>Dashboard</h1>
+      <p class="header-subtitle">Welcome back — here's your overview</p>
+    </div>
+    <div class="header-right">
+      <div class="date-badge">
+        <span class="material-symbols-rounded">calendar_today</span>
+        <span>{{ today | date:'mediumDate' }}</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Stats Grid -->
+  <section class="stats-grid" *ngIf="!loading">
+    <!-- Company Card -->
+    <div class="glass-card stat-card" id="stat-companies">
+      <div class="card-icon icon-purple">
+        <span class="material-symbols-rounded">apartment</span>
+      </div>
+      <div class="card-body">
+        <span class="stat-value">{{ companyCount }}</span>
+        <span class="stat-label">Total Companies</span>
+      </div>
+      <div class="card-glow glow-purple"></div>
+    </div>
+
+    <!-- Employee Card -->
+    <div class="glass-card stat-card" id="stat-employees">
+      <div class="card-icon icon-cyan">
+        <span class="material-symbols-rounded">group</span>
+      </div>
+      <div class="card-body">
+        <span class="stat-value">{{ employeeCount }}</span>
+        <span class="stat-label">Total Employees</span>
+      </div>
+      <div class="card-glow glow-cyan"></div>
+    </div>
+
+    <!-- Department Card -->
+    <div class="glass-card stat-card" id="stat-departments">
+      <div class="card-icon icon-emerald">
+        <span class="material-symbols-rounded">account_tree</span>
+      </div>
+      <div class="card-body">
+        <span class="stat-value">{{ departmentCount }}</span>
+        <span class="stat-label">Departments</span>
+      </div>
+      <div class="card-glow glow-emerald"></div>
+    </div>
+
+    <!-- Designation Card -->
+    <div class="glass-card stat-card" id="stat-designations">
+      <div class="card-icon icon-amber">
+        <span class="material-symbols-rounded">workspace_premium</span>
+      </div>
+      <div class="card-body">
+        <span class="stat-value">{{ designationCount }}</span>
+        <span class="stat-label">Designations</span>
+      </div>
+      <div class="card-glow glow-amber"></div>
+    </div>
+
+    <!-- Shifts Card -->
+    <div class="glass-card stat-card" id="stat-shifts">
+      <div class="card-icon icon-rose">
+        <span class="material-symbols-rounded">schedule</span>
+      </div>
+      <div class="card-body">
+        <span class="stat-value">{{ shiftCount }}</span>
+        <span class="stat-label">Active Shifts</span>
+      </div>
+      <div class="card-glow glow-rose"></div>
+    </div>
+  </section>
+
+  <!-- Loading State -->
+  <section class="loading-state" *ngIf="loading">
+    <div class="glass-card loader-card">
+      <div class="spinner"></div>
+      <p>Loading dashboard data...</p>
+    </div>
+  </section>
+
+  <!-- Quick Actions -->
+  <section class="quick-actions" *ngIf="!loading">
+    <h2 class="section-title">Quick Actions</h2>
+    <div class="actions-grid">
+      <a routerLink="/company-info" class="glass-card action-card" id="action-company">
+        <span class="material-symbols-rounded">add_business</span>
+        <span>Manage Companies</span>
+      </a>
+      <a routerLink="/employee-info" class="glass-card action-card" id="action-employee">
+        <span class="material-symbols-rounded">person_add</span>
+        <span>Manage Employees</span>
+      </a>
+      <a routerLink="/departments" class="glass-card action-card" id="action-departments">
+        <span class="material-symbols-rounded">domain_add</span>
+        <span>Manage Departments</span>
+      </a>
+      <a routerLink="/shifts" class="glass-card action-card" id="action-shifts">
+        <span class="material-symbols-rounded">more_time</span>
+        <span>Manage Shifts</span>
+      </a>
+    </div>
   </section>
 </main>

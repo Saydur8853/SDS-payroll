@@ -1,60 +1,275 @@
+/* ───────────────────────────────────────────────────────────
+   Landing Layout — Glassmorphism Sidebar + Content
+   ─────────────────────────────────────────────────────────── */
+
 :host {
   display: block;
   height: 100vh;
   width: 100%;
   overflow: hidden;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
 }
+
+/* ── Animated Background Orbs ──────────────────────────── */
+
+.bg-orbs {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.35;
+  animation: float 20s ease-in-out infinite;
+}
+
+.orb-1 {
+  width: 500px;
+  height: 500px;
+  background: #7c3aed;
+  top: -10%;
+  left: -5%;
+  animation-duration: 22s;
+}
+
+.orb-2 {
+  width: 400px;
+  height: 400px;
+  background: #06b6d4;
+  bottom: -15%;
+  right: -8%;
+  animation-duration: 18s;
+  animation-delay: -7s;
+}
+
+.orb-3 {
+  width: 350px;
+  height: 350px;
+  background: #ec4899;
+  top: 50%;
+  left: 40%;
+  animation-duration: 25s;
+  animation-delay: -12s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25%      { transform: translate(40px, -30px) scale(1.05); }
+  50%      { transform: translate(-20px, 20px) scale(0.95); }
+  75%      { transform: translate(30px, 40px) scale(1.02); }
+}
+
+/* ── Layout Grid ───────────────────────────────────────── */
 
 .layout {
   height: 100%;
   width: 100%;
   display: grid;
-  grid-template-columns: 240px 1fr;
-  background: #e5e7eb;
+  grid-template-columns: 270px 1fr;
   overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
+
+/* ── Sidebar ───────────────────────────────────────────── */
 
 .sidebar {
-  background: #0f172a;
-  color: #e2e8f0;
-  padding: 1rem;
-  border-right: 1px solid #1e293b;
+  display: flex;
+  flex-direction: column;
+  background: rgba(15, 12, 41, 0.55);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-right: 1px solid var(--glass-border);
+  padding: 1.25rem 1rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
 }
 
-.sidebar h1 {
-  margin: 0 0 1rem;
-  font-size: 1.1rem;
-  color: #f8fafc;
+/* Subtle inner glow on sidebar */
+.sidebar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+    rgba(124, 58, 237, 0.06) 0%,
+    transparent 40%,
+    rgba(6, 182, 212, 0.04) 100%
+  );
+  pointer-events: none;
 }
+
+/* ── Brand ─────────────────────────────────────────────── */
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.brand-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #7c3aed, #06b6d4);
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.35);
+}
+
+.brand-icon .material-symbols-rounded {
+  font-size: 22px;
+}
+
+.brand-text h1 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #e2e8f0, #fff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.brand-tagline {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── Divider ───────────────────────────────────────────── */
+
+.sidebar-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+  margin: 1rem 0;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Navigation Menu ───────────────────────────────────── */
 
 .menu {
-  display: grid;
-  gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.menu-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  padding: 0.75rem 0.75rem 0.35rem;
+  text-transform: uppercase;
 }
 
 .menu a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   text-decoration: none;
-  color: #cbd5e1;
-  padding: 0.55rem 0.65rem;
-  border-radius: 8px;
-  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 0.88rem;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
 
+.menu a .material-symbols-rounded {
+  font-size: 20px;
+  transition: color 0.25s ease;
+}
+
+.menu a .nav-text {
+  flex: 1;
+}
+
+.active-indicator {
+  display: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  box-shadow: 0 0 8px var(--accent-primary);
+}
+
+/* Hover */
 .menu a:hover {
-  background: #1e293b;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-primary);
 }
 
-.menu a.active {
-  background: #14532d;
-  color: #ffffff;
+.menu a:hover .material-symbols-rounded {
+  color: var(--accent-secondary);
 }
+
+/* Active */
+.menu a.active {
+  background: rgba(124, 58, 237, 0.15);
+  color: #fff;
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.12);
+}
+
+.menu a.active .material-symbols-rounded {
+  color: #a78bfa;
+}
+
+.menu a.active .active-indicator {
+  display: block;
+}
+
+/* ── Sidebar Footer ───────────────────────────────────── */
+
+.sidebar-footer {
+  margin-top: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.footer-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  padding: 0.25rem 0.5rem;
+}
+
+.footer-info .material-symbols-rounded {
+  font-size: 16px;
+}
+
+/* ── Content Area ──────────────────────────────────────── */
 
 .content {
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  position: relative;
 }
+
+/* ── Responsive ────────────────────────────────────────── */
 
 @media (max-width: 900px) {
   :host {
@@ -69,10 +284,36 @@
 
   .sidebar {
     border-right: none;
-    border-bottom: 1px solid #1e293b;
+    border-bottom: 1px solid var(--glass-border);
+    padding: 1rem;
   }
 
   .menu {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
   }
+
+  .menu-label {
+    display: none;
+  }
+
+  .menu a {
+    padding: 0.5rem 0.65rem;
+    font-size: 0.82rem;
+  }
+
+  .menu a .nav-text {
+    display: none;
+  }
+
+  .brand-tagline {
+    display: none;
+  }
+
+  .sidebar-footer {
+    display: none;
+  }
+
+  .orb { display: none; }
 }
