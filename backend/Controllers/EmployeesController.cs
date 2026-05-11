@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Payroll.Api.Data;
 using Payroll.Api.Dtos;
 using Payroll.Api.Models;
+using System.Text;
+using System.Text.Json;
 
 namespace Payroll.Api.Controllers;
 
@@ -10,6 +12,8 @@ namespace Payroll.Api.Controllers;
 [Route("api/[controller]")]
 public class EmployeesController(AppDbContext dbContext) : ControllerBase
 {
+    private static readonly string[] DefaultEmploymentStatuses = ["Active", "Inactive", "Maternity"];
+
     [HttpGet("attribute-suggestions")]
     public async Task<ActionResult<IEnumerable<string>>> GetAttributeSuggestions(
         [FromQuery] string? query,
@@ -50,14 +54,100 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<EmployeeResponse>>> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResponse<EmployeeResponse>>> GetAll(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null,
+        [FromQuery] string? department = null,
+        [FromQuery] string? designation = null,
+        [FromQuery] DateOnly? joiningDateFrom = null,
+        [FromQuery] DateOnly? joiningDateTo = null,
+        CancellationToken cancellationToken = default)
     {
-        var employees = await dbContext.Employees
-            .AsNoTracking()
+        if (joiningDateFrom.HasValue && joiningDateTo.HasValue && joiningDateFrom > joiningDateTo)
+        {
+            return BadRequest("joiningDateFrom cannot be later than joiningDateTo.");
+        }
+
+        var safePage = Math.Max(page, 1);
+        var safePageSize = Math.Clamp(pageSize, 5, 100);
+
+        var query = ApplyEmployeeFilters(
+            dbContext.Employees.AsNoTracking().AsQueryable(),
+            search,
+            department,
+            designation,
+            joiningDateFrom,
+            joiningDateTo);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var totalPages = totalCount == 0 ? 0 : (int)Math.Ceiling(totalCount / (double)safePageSize);
+
+        var employees = await query
             .OrderBy(x => x.FullName)
+            .ThenBy(x => x.EmployeeCode)
+            .Skip((safePage - 1) * safePageSize)
+            .Take(safePageSize)
             .ToListAsync(cancellationToken);
 
-        return Ok(employees.Select(MapToResponse));
+        return Ok(new PagedResponse<EmployeeResponse>
+        {
+            Items = employees.Select(MapToResponse).ToArray(),
+            TotalCount = totalCount,
+            Page = safePage,
+            PageSize = safePageSize,
+            TotalPages = totalPages
+        });
+    }
+
+    [HttpGet("status-options")]
+    public async Task<ActionResult<IEnumerable<string>>> GetStatusOptions(CancellationToken cancellationToken)
+    {
+        var dbStatuses = await dbContext.Employees
+            .AsNoTracking()
+            .Where(x => x.EmploymentStatus != null && x.EmploymentStatus.Trim() != string.Empty)
+            .Select(x => x.EmploymentStatus!)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        var allStatuses = DefaultEmploymentStatuses
+            .Concat(dbStatuses)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        return Ok(allStatuses);
+    }
+
+    [HttpGet("export")]
+    public async Task<IActionResult> Export(
+        [FromQuery] string? search = null,
+        [FromQuery] string? department = null,
+        [FromQuery] string? designation = null,
+        [FromQuery] DateOnly? joiningDateFrom = null,
+        [FromQuery] DateOnly? joiningDateTo = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (joiningDateFrom.HasValue && joiningDateTo.HasValue && joiningDateFrom > joiningDateTo)
+        {
+            return BadRequest("joiningDateFrom cannot be later than joiningDateTo.");
+        }
+
+        var employees = await ApplyEmployeeFilters(
+                dbContext.Employees.AsNoTracking().AsQueryable(),
+                search,
+                department,
+                designation,
+                joiningDateFrom,
+                joiningDateTo)
+            .OrderBy(x => x.FullName)
+            .ThenBy(x => x.EmployeeCode)
+            .ToListAsync(cancellationToken);
+
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+        var fileName = $"employees_{timestamp}.csv";
+        var bytes = BuildCsv(employees);
+        return File(bytes, "text/csv", fileName);
     }
 
     [HttpGet("{id:guid}")]
@@ -91,6 +181,27 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
             Department = request.Department?.Trim(),
             Designation = request.Designation?.Trim(),
             Address = request.Address?.Trim(),
+            FatherName = request.FatherName?.Trim(),
+            MotherName = request.MotherName?.Trim(),
+            SpouseName = request.SpouseName?.Trim(),
+            FatherPhone = request.FatherPhone?.Trim(),
+            MotherPhone = request.MotherPhone?.Trim(),
+            SpousePhone = request.SpousePhone?.Trim(),
+            Gender = request.Gender?.Trim(),
+            Religion = request.Religion?.Trim(),
+            MaritalStatus = request.MaritalStatus?.Trim(),
+            BloodGroup = request.BloodGroup?.Trim(),
+            NationalId = request.NationalId?.Trim(),
+            EmploymentStatus = request.EmploymentStatus?.Trim(),
+            PhotoUrl = request.PhotoUrl?.Trim(),
+            SignatureUrl = request.SignatureUrl?.Trim(),
+            WorkingTime = request.WorkingTime?.Trim(),
+            SalaryRule = request.SalaryRule?.Trim(),
+            GrossSalary = request.GrossSalary,
+            BasicSalary = request.BasicSalary,
+            Weekend = request.Weekend?.Trim(),
+            SalaryAccount = request.SalaryAccount?.Trim(),
+            DateOfBirth = request.DateOfBirth,
             JoiningDate = request.JoiningDate,
             DynamicAttributes = CanonicalizeDynamicAttributes(request.DynamicAttributes, existingKeys.Keys)
         };
@@ -120,6 +231,27 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
         employee.Department = request.Department?.Trim();
         employee.Designation = request.Designation?.Trim();
         employee.Address = request.Address?.Trim();
+        employee.FatherName = request.FatherName?.Trim();
+        employee.MotherName = request.MotherName?.Trim();
+        employee.SpouseName = request.SpouseName?.Trim();
+        employee.FatherPhone = request.FatherPhone?.Trim();
+        employee.MotherPhone = request.MotherPhone?.Trim();
+        employee.SpousePhone = request.SpousePhone?.Trim();
+        employee.Gender = request.Gender?.Trim();
+        employee.Religion = request.Religion?.Trim();
+        employee.MaritalStatus = request.MaritalStatus?.Trim();
+        employee.BloodGroup = request.BloodGroup?.Trim();
+        employee.NationalId = request.NationalId?.Trim();
+        employee.EmploymentStatus = request.EmploymentStatus?.Trim();
+        employee.PhotoUrl = request.PhotoUrl?.Trim();
+        employee.SignatureUrl = request.SignatureUrl?.Trim();
+        employee.WorkingTime = request.WorkingTime?.Trim();
+        employee.SalaryRule = request.SalaryRule?.Trim();
+        employee.GrossSalary = request.GrossSalary;
+        employee.BasicSalary = request.BasicSalary;
+        employee.Weekend = request.Weekend?.Trim();
+        employee.SalaryAccount = request.SalaryAccount?.Trim();
+        employee.DateOfBirth = request.DateOfBirth;
         employee.JoiningDate = request.JoiningDate;
         employee.UpdatedAtUtc = DateTime.UtcNow;
 
@@ -254,6 +386,27 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
             Department = employee.Department,
             Designation = employee.Designation,
             Address = employee.Address,
+            FatherName = employee.FatherName,
+            MotherName = employee.MotherName,
+            SpouseName = employee.SpouseName,
+            FatherPhone = employee.FatherPhone,
+            MotherPhone = employee.MotherPhone,
+            SpousePhone = employee.SpousePhone,
+            Gender = employee.Gender,
+            Religion = employee.Religion,
+            MaritalStatus = employee.MaritalStatus,
+            BloodGroup = employee.BloodGroup,
+            NationalId = employee.NationalId,
+            EmploymentStatus = employee.EmploymentStatus,
+            PhotoUrl = employee.PhotoUrl,
+            SignatureUrl = employee.SignatureUrl,
+            WorkingTime = employee.WorkingTime,
+            SalaryRule = employee.SalaryRule,
+            GrossSalary = employee.GrossSalary,
+            BasicSalary = employee.BasicSalary,
+            Weekend = employee.Weekend,
+            SalaryAccount = employee.SalaryAccount,
+            DateOfBirth = employee.DateOfBirth,
             JoiningDate = employee.JoiningDate,
             DynamicAttributes = employee.DynamicAttributes,
             CreatedAtUtc = employee.CreatedAtUtc,
@@ -363,5 +516,155 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
         }
 
         return costs[b.Length];
+    }
+
+    private static IQueryable<Employee> ApplyEmployeeFilters(
+        IQueryable<Employee> query,
+        string? search,
+        string? department,
+        string? designation,
+        DateOnly? joiningDateFrom,
+        DateOnly? joiningDateTo)
+    {
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var rawTerm = search.Trim();
+            var likeTerm = $"%{rawTerm}%";
+            query = query.Where(x =>
+                EF.Functions.ILike(x.EmployeeCode, rawTerm) ||
+                EF.Functions.ILike(x.FullName, likeTerm) ||
+                (x.Phone != null && EF.Functions.ILike(x.Phone, rawTerm)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(department))
+        {
+            var term = department.Trim();
+            query = query.Where(x => x.Department != null && EF.Functions.ILike(x.Department, term));
+        }
+
+        if (!string.IsNullOrWhiteSpace(designation))
+        {
+            var term = designation.Trim();
+            query = query.Where(x => x.Designation != null && EF.Functions.ILike(x.Designation, term));
+        }
+
+        if (joiningDateFrom.HasValue)
+        {
+            query = query.Where(x => x.JoiningDate >= joiningDateFrom.Value);
+        }
+
+        if (joiningDateTo.HasValue)
+        {
+            query = query.Where(x => x.JoiningDate <= joiningDateTo.Value);
+        }
+
+        return query;
+    }
+
+    private static byte[] BuildCsv(IEnumerable<Employee> employees)
+    {
+        var employeeList = employees.ToList();
+        var dynamicKeys = employeeList
+            .SelectMany(x => x.DynamicAttributes.Keys)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        var builder = new StringBuilder();
+        var staticHeaders = new[]
+        {
+            "EmployeeCode",
+            "FullName",
+            "Email",
+            "Phone",
+            "Department",
+            "Designation",
+            "Address",
+            "FatherName",
+            "MotherName",
+            "SpouseName",
+            "FatherPhone",
+            "MotherPhone",
+            "SpousePhone",
+            "Gender",
+            "Religion",
+            "MaritalStatus",
+            "BloodGroup",
+            "NationalId",
+            "EmploymentStatus",
+            "PhotoUrl",
+            "SignatureUrl",
+            "WorkingTime",
+            "SalaryRule",
+            "GrossSalary",
+            "BasicSalary",
+            "Weekend",
+            "SalaryAccount",
+            "DateOfBirth",
+            "JoiningDate"
+        };
+        var allHeaders = staticHeaders.Concat(dynamicKeys);
+        builder.AppendLine(string.Join(",", allHeaders.Select(EscapeCsv)));
+
+        foreach (var employee in employeeList)
+        {
+            var staticColumns = new[]
+            {
+                employee.EmployeeCode,
+                employee.FullName,
+                employee.Email ?? string.Empty,
+                employee.Phone ?? string.Empty,
+                employee.Department ?? string.Empty,
+                employee.Designation ?? string.Empty,
+                employee.Address ?? string.Empty,
+                employee.FatherName ?? string.Empty,
+                employee.MotherName ?? string.Empty,
+                employee.SpouseName ?? string.Empty,
+                employee.FatherPhone ?? string.Empty,
+                employee.MotherPhone ?? string.Empty,
+                employee.SpousePhone ?? string.Empty,
+                employee.Gender ?? string.Empty,
+                employee.Religion ?? string.Empty,
+                employee.MaritalStatus ?? string.Empty,
+                employee.BloodGroup ?? string.Empty,
+                employee.NationalId ?? string.Empty,
+                employee.EmploymentStatus ?? string.Empty,
+                employee.PhotoUrl ?? string.Empty,
+                employee.SignatureUrl ?? string.Empty,
+                employee.WorkingTime ?? string.Empty,
+                employee.SalaryRule ?? string.Empty,
+                employee.GrossSalary?.ToString("0.##") ?? string.Empty,
+                employee.BasicSalary?.ToString("0.##") ?? string.Empty,
+                employee.Weekend ?? string.Empty,
+                employee.SalaryAccount ?? string.Empty,
+                employee.DateOfBirth?.ToString("yyyy-MM-dd") ?? string.Empty,
+                employee.JoiningDate.ToString("yyyy-MM-dd")
+            };
+
+            var dynamicValues = dynamicKeys.Select(key =>
+                employee.DynamicAttributes.TryGetValue(key, out var value)
+                    ? value ?? string.Empty
+                    : string.Empty);
+
+            builder.AppendLine(string.Join(",", staticColumns.Concat(dynamicValues).Select(EscapeCsv)));
+        }
+
+        return Encoding.UTF8.GetBytes(builder.ToString());
+    }
+
+    private static string EscapeCsv(string value)
+    {
+        if (value.Contains('"'))
+        {
+            value = value.Replace("\"", "\"\"");
+        }
+
+        if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
+        {
+            return $"\"{value}\"";
+        }
+
+        return value;
     }
 }

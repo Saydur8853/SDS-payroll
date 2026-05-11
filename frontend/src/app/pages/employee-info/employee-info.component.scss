@@ -78,6 +78,11 @@ input {
   font-size: 0.95rem;
 }
 
+input.invalid-input {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
 select {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -212,9 +217,79 @@ option.add-option {
   gap: 0.45rem;
 }
 
-.employee-card ul {
-  margin: 0.45rem 0 0;
-  padding-left: 1rem;
+.filters-grid {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  margin: 0.7rem 0 0.35rem;
+}
+
+.filters-grid > label {
+  min-width: 0;
+}
+
+.filters-grid input,
+.filters-grid select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.filters-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.list-meta {
+  margin: 0.2rem 0 0.7rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.list-toolbar .list-meta {
+  margin: 0.2rem 0 0.45rem;
+}
+
+.export-tools {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  margin-top: 0.35rem;
+}
+
+.export-button {
+  min-width: 140px;
+  margin-bottom: 5px;
+}
+
+.list-state {
+  margin: 0.2rem 0 0.8rem;
+  color: var(--muted);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.employee-dynamic-attributes {
+  margin-top: 0.45rem;
+}
+
+.employee-dynamic-attributes p {
+  margin: 0.2rem 0;
 }
 
 .modal-backdrop {
@@ -246,6 +321,38 @@ option.add-option {
   gap: 0.5rem;
 }
 
+.shift-modal-form {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.shift-modal-name {
+  max-width: 100%;
+}
+
+.shift-modal-groups {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.shift-modal-group {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.55rem;
+  background: #f8fafc;
+}
+
+.shift-modal-group h4 {
+  margin: 0 0 0.45rem;
+  font-size: 0.9rem;
+}
+
+.shift-modal-fields {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: 1fr 1fr;
+}
+
 @media (max-width: 700px) {
   .page {
     padding: 1rem;
@@ -258,6 +365,10 @@ option.add-option {
   .edit-dynamic-row {
     grid-template-columns: 1fr;
   }
+
+  .shift-modal-fields {
+    grid-template-columns: 1fr;
+  }
 }
 .required-star {
   color: #dc2626;
@@ -267,4 +378,10 @@ option.add-option {
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
+}
+
+.field-warning {
+  color: #dc2626;
+  font-size: 0.8rem;
+  font-weight: 600;
 }

@@ -6,6 +6,7 @@ import { EmployeeService } from '../../services/employee.service';
 import { Employee } from '../../models/employee.model';
 import { LookupItem } from '../../models/lookup.model';
 import { LookupService } from '../../services/lookup.service';
+import { ShiftService } from '../../services/shift.service';
 
 @Component({
   selector: 'app-employee-info',
@@ -16,10 +17,19 @@ import { LookupService } from '../../services/lookup.service';
 export class EmployeeInfoComponent implements OnInit {
   private readonly addDepartmentOption = '__add_new_department__';
   private readonly addDesignationOption = '__add_new_designation__';
+  private readonly addStatusOption = '__add_new_status__';
+  private readonly addShiftOption = '__add_new_shift__';
+  private readonly emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  private readonly phoneRegex = /^\d{10,}$/;
+  private readonly monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  private readonly minimumAgeYears = 18;
 
   employees: Employee[] = [];
   departments: LookupItem[] = [];
   designations: LookupItem[] = [];
+  shifts: LookupItem[] = [];
+  statusOptions: string[] = [];
+  loadingEmployees = false;
 
   employeeCode = '';
   fullName = '';
@@ -27,7 +37,28 @@ export class EmployeeInfoComponent implements OnInit {
   phone = '';
   department = '';
   designation = '';
+  employmentStatus = '';
   address = '';
+  fatherName = '';
+  motherName = '';
+  spouseName = '';
+  fatherPhone = '';
+  motherPhone = '';
+  spousePhone = '';
+  gender = '';
+  religion = '';
+  maritalStatus = '';
+  bloodGroup = '';
+  nationalId = '';
+  photoUrl = '';
+  signatureUrl = '';
+  workingTime = '';
+  salaryRule = '';
+  grossSalary: number | null = null;
+  basicSalary: number | null = null;
+  weekend = '';
+  salaryAccount = '';
+  dateOfBirth = '';
   joiningDate = '';
   dynamicEntries: Array<{ key: string; value: string }> = [{ key: '', value: '' }];
   attributeSuggestionsByRow: Record<number, string[]> = {};
@@ -43,14 +74,61 @@ export class EmployeeInfoComponent implements OnInit {
   editPhone = '';
   editDepartment = '';
   editDesignation = '';
+  editEmploymentStatus = '';
   editAddress = '';
+  editFatherName = '';
+  editMotherName = '';
+  editSpouseName = '';
+  editFatherPhone = '';
+  editMotherPhone = '';
+  editSpousePhone = '';
+  editGender = '';
+  editReligion = '';
+  editMaritalStatus = '';
+  editBloodGroup = '';
+  editNationalId = '';
+  editPhotoUrl = '';
+  editSignatureUrl = '';
+  editWorkingTime = '';
+  editSalaryRule = '';
+  editGrossSalary: number | null = null;
+  editBasicSalary: number | null = null;
+  editWeekend = '';
+  editSalaryAccount = '';
+  editDateOfBirth = '';
   editJoiningDate = '';
   editDynamicEntries: Array<{ key: string; value: string }> = [];
 
   showDepartmentModal = false;
   showDesignationModal = false;
+  showStatusModal = false;
+  showShiftModal = false;
   newDepartmentName = '';
   newDesignationName = '';
+  newStatusName = '';
+  newShiftName = '';
+  newShiftInTime = '';
+  newShiftOutTime = '';
+  newShiftInTimeGrace = '';
+  newShiftOutTimeGrace = '';
+  newShiftBreakStartTime = '';
+  newShiftBreakEndTime = '';
+
+  searchText = '';
+  filterDepartment = '';
+  filterDesignation = '';
+  filterJoiningDateFrom = '';
+  filterJoiningDateTo = '';
+  page = 1;
+  pageSize = 20;
+  totalCount = 0;
+  totalPages = 0;
+  readonly pageSizeOptions = [10, 20, 50];
+  readonly genderOptions = ['Male', 'Female', 'Other'];
+  readonly maritalStatusOptions = ['Single', 'Married', 'Divorced', 'Widowed'];
+  readonly bloodGroupOptions = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+  readonly religionOptions = ['Islam', 'Hinduism', 'Christianity', 'Buddhism', 'Other'];
+  exporting = false;
 
   ngOnInit(): void {
     this.loadEmployees();
@@ -118,6 +196,41 @@ export class EmployeeInfoComponent implements OnInit {
     }
   }
 
+  onStatusChange(value: string): void {
+    if (value === this.addStatusOption) {
+      this.showStatusModal = true;
+      this.employmentStatus = '';
+    } else {
+      this.employmentStatus = value;
+    }
+  }
+
+  onEditStatusChange(value: string): void {
+    if (value === this.addStatusOption) {
+      this.showStatusModal = true;
+    } else {
+      this.editEmploymentStatus = value;
+    }
+  }
+
+  onWorkingTimeChange(value: string): void {
+    if (value === this.addShiftOption) {
+      this.showShiftModal = true;
+      this.workingTime = '';
+    } else {
+      this.workingTime = value;
+    }
+  }
+
+  onEditWorkingTimeChange(value: string): void {
+    if (value === this.addShiftOption) {
+      this.showShiftModal = true;
+      this.editWorkingTime = '';
+    } else {
+      this.editWorkingTime = value;
+    }
+  }
+
   closeDepartmentModal(): void {
     this.showDepartmentModal = false;
     this.newDepartmentName = '';
@@ -126,6 +239,22 @@ export class EmployeeInfoComponent implements OnInit {
   closeDesignationModal(): void {
     this.showDesignationModal = false;
     this.newDesignationName = '';
+  }
+
+  closeStatusModal(): void {
+    this.showStatusModal = false;
+    this.newStatusName = '';
+  }
+
+  closeShiftModal(): void {
+    this.showShiftModal = false;
+    this.newShiftName = '';
+    this.newShiftInTime = '';
+    this.newShiftOutTime = '';
+    this.newShiftInTimeGrace = '';
+    this.newShiftOutTimeGrace = '';
+    this.newShiftBreakStartTime = '';
+    this.newShiftBreakEndTime = '';
   }
 
   createDepartment(): void {
@@ -172,9 +301,81 @@ export class EmployeeInfoComponent implements OnInit {
     });
   }
 
+  createStatus(): void {
+    const name = this.newStatusName.trim();
+    if (!name) {
+      this.message = 'Status name is required.';
+      return;
+    }
+
+    if (!this.statusOptions.some(x => x.toLowerCase() === name.toLowerCase())) {
+      this.statusOptions = [...this.statusOptions, name].sort((a, b) => a.localeCompare(b));
+    }
+
+    this.employmentStatus = name;
+    if (this.editingEmployeeId) {
+      this.editEmploymentStatus = name;
+    }
+
+    this.closeStatusModal();
+  }
+
+  createShift(): void {
+    const name = this.newShiftName.trim();
+    if (!name) {
+      this.message = 'Shift name is required.';
+      return;
+    }
+
+    if (!this.newShiftInTime || !this.newShiftOutTime || !this.newShiftInTimeGrace || !this.newShiftOutTimeGrace || !this.newShiftBreakStartTime || !this.newShiftBreakEndTime) {
+      this.message = 'All shift time fields are required.';
+      return;
+    }
+
+    this.shiftService.create({
+      name,
+      inTime: this.newShiftInTime,
+      outTime: this.newShiftOutTime,
+      inTimeGrace: this.newShiftInTimeGrace,
+      outTimeGrace: this.newShiftOutTimeGrace,
+      breakStartTime: this.newShiftBreakStartTime,
+      breakEndTime: this.newShiftBreakEndTime
+    }).subscribe({
+      next: (created) => {
+        const displayName = created.displayName;
+        this.shifts = [...this.shifts, { id: created.id, name: displayName }]
+          .sort((a, b) => a.name.localeCompare(b.name));
+        this.workingTime = displayName;
+        if (this.editingEmployeeId) {
+          this.editWorkingTime = displayName;
+        }
+        this.closeShiftModal();
+      },
+      error: () => {
+        this.message = 'Failed to create shift.';
+      }
+    });
+  }
+
   saveEmployee(): void {
     if (!this.employeeCode.trim() || !this.fullName.trim() || !this.joiningDate) {
       this.message = 'Employee code, name and joining date are required.';
+      return;
+    }
+    if (!this.isEmailValid(this.email)) {
+      this.message = 'Please enter a valid email format.';
+      return;
+    }
+    if (!this.isPhoneValid(this.phone)) {
+      this.message = 'Phone number must be at least 10 digits and contain only numbers.';
+      return;
+    }
+    if (this.isDateInFuture(this.dateOfBirth)) {
+      this.message = 'Date of birth cannot be after current date.';
+      return;
+    }
+    if (this.isUnderMinimumAge(this.dateOfBirth)) {
+      this.message = `Minimum age is ${this.minimumAgeYears} years.`;
       return;
     }
 
@@ -186,7 +387,28 @@ export class EmployeeInfoComponent implements OnInit {
       phone: this.phone.trim() || null,
       department: this.department.trim() || null,
       designation: this.designation.trim() || null,
+      employmentStatus: this.employmentStatus.trim() || null,
       address: this.address.trim() || null,
+      fatherName: this.fatherName.trim() || null,
+      motherName: this.motherName.trim() || null,
+      spouseName: this.spouseName.trim() || null,
+      fatherPhone: this.fatherPhone.trim() || null,
+      motherPhone: this.motherPhone.trim() || null,
+      spousePhone: this.spousePhone.trim() || null,
+      gender: this.gender.trim() || null,
+      religion: this.religion.trim() || null,
+      maritalStatus: this.maritalStatus.trim() || null,
+      bloodGroup: this.bloodGroup.trim() || null,
+      nationalId: this.nationalId.trim() || null,
+      photoUrl: this.photoUrl.trim() || null,
+      signatureUrl: this.signatureUrl.trim() || null,
+      workingTime: this.workingTime.trim() || null,
+      salaryRule: this.salaryRule.trim() || null,
+      grossSalary: this.normalizeOptionalNumber(this.grossSalary),
+      basicSalary: this.normalizeOptionalNumber(this.basicSalary),
+      weekend: this.weekend.trim() || null,
+      salaryAccount: this.salaryAccount.trim() || null,
+      dateOfBirth: this.dateOfBirth || null,
       joiningDate: this.joiningDate,
       dynamicAttributes: this.buildDynamicAttributesPayload(this.dynamicEntries)
     }).subscribe({
@@ -212,8 +434,36 @@ export class EmployeeInfoComponent implements OnInit {
     this.editPhone = employee.phone ?? '';
     this.editDepartment = employee.department ?? '';
     this.editDesignation = employee.designation ?? '';
+    this.editEmploymentStatus = employee.employmentStatus ?? '';
     this.editAddress = employee.address ?? '';
+    this.editFatherName = employee.fatherName ?? '';
+    this.editMotherName = employee.motherName ?? '';
+    this.editSpouseName = employee.spouseName ?? '';
+    this.editFatherPhone = employee.fatherPhone ?? '';
+    this.editMotherPhone = employee.motherPhone ?? '';
+    this.editSpousePhone = employee.spousePhone ?? '';
+    this.editGender = employee.gender ?? '';
+    this.editReligion = employee.religion ?? '';
+    this.editMaritalStatus = employee.maritalStatus ?? '';
+    this.editBloodGroup = employee.bloodGroup ?? '';
+    this.editNationalId = employee.nationalId ?? '';
+    this.editPhotoUrl = employee.photoUrl ?? '';
+    this.editSignatureUrl = employee.signatureUrl ?? '';
+    this.editWorkingTime = employee.workingTime ?? '';
+    this.editSalaryRule = employee.salaryRule ?? '';
+    this.editGrossSalary = employee.grossSalary ?? null;
+    this.editBasicSalary = employee.basicSalary ?? null;
+    this.editWeekend = employee.weekend ?? '';
+    this.editSalaryAccount = employee.salaryAccount ?? '';
+    this.editDateOfBirth = employee.dateOfBirth ?? '';
     this.editJoiningDate = employee.joiningDate;
+    if (this.editWorkingTime && !this.shifts.some(x => x.name.toLowerCase() === this.editWorkingTime.toLowerCase())) {
+      this.shifts = [...this.shifts, { id: `legacy-${employee.id}`, name: this.editWorkingTime }]
+        .sort((a, b) => a.name.localeCompare(b.name));
+    }
+    if (this.editEmploymentStatus && !this.statusOptions.some(x => x.toLowerCase() === this.editEmploymentStatus.toLowerCase())) {
+      this.statusOptions = [...this.statusOptions, this.editEmploymentStatus].sort((a, b) => a.localeCompare(b));
+    }
     this.editDynamicEntries = Object.entries(employee.dynamicAttributes).map(([key, value]) => ({
       key,
       value: value ?? ''
@@ -225,6 +475,8 @@ export class EmployeeInfoComponent implements OnInit {
 
   cancelEdit(): void {
     this.editingEmployeeId = null;
+    this.editEmploymentStatus = '';
+    this.editDateOfBirth = '';
     this.editDynamicEntries = [];
   }
 
@@ -245,6 +497,22 @@ export class EmployeeInfoComponent implements OnInit {
       this.message = 'Employee code, name and joining date are required.';
       return;
     }
+    if (!this.isEmailValid(this.editEmail)) {
+      this.message = 'Please enter a valid email format.';
+      return;
+    }
+    if (!this.isPhoneValid(this.editPhone)) {
+      this.message = 'Phone number must be at least 10 digits and contain only numbers.';
+      return;
+    }
+    if (this.isDateInFuture(this.editDateOfBirth)) {
+      this.message = 'Date of birth cannot be after current date.';
+      return;
+    }
+    if (this.isUnderMinimumAge(this.editDateOfBirth)) {
+      this.message = `Minimum age is ${this.minimumAgeYears} years.`;
+      return;
+    }
 
     try {
       await firstValueFrom(this.employeeService.update(employee.id, {
@@ -254,7 +522,28 @@ export class EmployeeInfoComponent implements OnInit {
         phone: this.editPhone.trim() || null,
         department: this.editDepartment.trim() || null,
         designation: this.editDesignation.trim() || null,
+        employmentStatus: this.editEmploymentStatus.trim() || null,
         address: this.editAddress.trim() || null,
+        fatherName: this.editFatherName.trim() || null,
+        motherName: this.editMotherName.trim() || null,
+        spouseName: this.editSpouseName.trim() || null,
+        fatherPhone: this.editFatherPhone.trim() || null,
+        motherPhone: this.editMotherPhone.trim() || null,
+        spousePhone: this.editSpousePhone.trim() || null,
+        gender: this.editGender.trim() || null,
+        religion: this.editReligion.trim() || null,
+        maritalStatus: this.editMaritalStatus.trim() || null,
+        bloodGroup: this.editBloodGroup.trim() || null,
+        nationalId: this.editNationalId.trim() || null,
+        photoUrl: this.editPhotoUrl.trim() || null,
+        signatureUrl: this.editSignatureUrl.trim() || null,
+        workingTime: this.editWorkingTime.trim() || null,
+        salaryRule: this.editSalaryRule.trim() || null,
+        grossSalary: this.normalizeOptionalNumber(this.editGrossSalary),
+        basicSalary: this.normalizeOptionalNumber(this.editBasicSalary),
+        weekend: this.editWeekend.trim() || null,
+        salaryAccount: this.editSalaryAccount.trim() || null,
+        dateOfBirth: this.editDateOfBirth || null,
         joiningDate: this.editJoiningDate
       }));
 
@@ -280,6 +569,9 @@ export class EmployeeInfoComponent implements OnInit {
     this.employeeService.delete(employee.id).subscribe({
       next: () => {
         this.message = 'Employee deleted successfully.';
+        if (this.employees.length === 1 && this.page > 1) {
+          this.page -= 1;
+        }
         this.loadEmployees();
       },
       error: () => {
@@ -292,14 +584,118 @@ export class EmployeeInfoComponent implements OnInit {
   }
 
   private loadEmployees(): void {
-    this.employeeService.getAll().subscribe({
+    this.loadingEmployees = true;
+    this.employeeService.getAll({
+      page: this.page,
+      pageSize: this.pageSize,
+      search: this.searchText,
+      department: this.filterDepartment,
+      designation: this.filterDesignation,
+      joiningDateFrom: this.filterJoiningDateFrom,
+      joiningDateTo: this.filterJoiningDateTo
+    }).subscribe({
       next: (data) => {
-        this.employees = data;
+        this.employees = data.items;
+        this.totalCount = data.totalCount;
+        this.page = data.page;
+        this.pageSize = data.pageSize;
+        this.totalPages = data.totalPages;
       },
-      error: () => {
-        this.message = 'Failed to load employees.';
+      error: (error) => {
+        const apiMessage = typeof error?.error === 'string' ? error.error : null;
+        this.message = apiMessage ?? 'Failed to load employees.';
+        this.loadingEmployees = false;
+      },
+      complete: () => {
+        this.loadingEmployees = false;
       }
     });
+  }
+
+  applyFilters(): void {
+    this.page = 1;
+    this.loadEmployees();
+  }
+
+  resetFilters(): void {
+    this.searchText = '';
+    this.filterDepartment = '';
+    this.filterDesignation = '';
+    this.filterJoiningDateFrom = '';
+    this.filterJoiningDateTo = '';
+    this.pageSize = 20;
+    this.page = 1;
+    this.loadEmployees();
+  }
+
+  onPageSizeChange(pageSize: string | number): void {
+    const parsed = Number(pageSize);
+    this.pageSize = Number.isFinite(parsed) && parsed > 0 ? parsed : 20;
+    this.page = 1;
+    this.loadEmployees();
+  }
+
+  goToPage(pageNumber: number): void {
+    if (pageNumber < 1 || (this.totalPages > 0 && pageNumber > this.totalPages) || pageNumber === this.page) {
+      return;
+    }
+
+    this.page = pageNumber;
+    this.loadEmployees();
+  }
+
+  downloadEmployees(): void {
+    if (this.exporting) {
+      return;
+    }
+
+    this.exporting = true;
+    this.employeeService.export({
+      search: this.searchText,
+      department: this.filterDepartment,
+      designation: this.filterDesignation,
+      joiningDateFrom: this.filterJoiningDateFrom,
+      joiningDateTo: this.filterJoiningDateTo
+    }).subscribe({
+      next: (blob) => {
+        const timestamp = this.buildExportTimestamp();
+        const fileName = `employees_${timestamp}.csv`;
+        this.saveBlob(blob, fileName);
+      },
+      error: (error) => {
+        const apiMessage = typeof error?.error === 'string' ? error.error : null;
+        this.message = apiMessage ?? 'Failed to export employees.';
+      },
+      complete: () => {
+        this.exporting = false;
+      }
+    });
+  }
+
+  get hasPreviousPage(): boolean {
+    return this.page > 1;
+  }
+
+  get hasNextPage(): boolean {
+    return this.totalPages > 0 && this.page < this.totalPages;
+  }
+
+  get pageStartIndex(): number {
+    if (this.totalCount === 0) {
+      return 0;
+    }
+    return (this.page - 1) * this.pageSize + 1;
+  }
+
+  get pageEndIndex(): number {
+    if (this.totalCount === 0) {
+      return 0;
+    }
+    return Math.min(this.page * this.pageSize, this.totalCount);
+  }
+
+  trackByEmployeeId(_: number, employee: Employee): string {
+    return employee.id;
   }
 
   private loadLookups(): void {
@@ -312,6 +708,18 @@ export class EmployeeInfoComponent implements OnInit {
     this.lookupService.getDesignations().subscribe({
       next: (items) => {
         this.designations = items;
+      }
+    });
+
+    this.lookupService.getShifts().subscribe({
+      next: (items) => {
+        this.shifts = items;
+      }
+    });
+
+    this.employeeService.getStatusOptions().subscribe({
+      next: (items) => {
+        this.statusOptions = items;
       }
     });
   }
@@ -333,11 +741,68 @@ export class EmployeeInfoComponent implements OnInit {
     this.phone = '';
     this.department = '';
     this.designation = '';
+    this.employmentStatus = '';
     this.address = '';
+    this.fatherName = '';
+    this.motherName = '';
+    this.spouseName = '';
+    this.fatherPhone = '';
+    this.motherPhone = '';
+    this.spousePhone = '';
+    this.gender = '';
+    this.religion = '';
+    this.maritalStatus = '';
+    this.bloodGroup = '';
+    this.nationalId = '';
+    this.photoUrl = '';
+    this.signatureUrl = '';
+    this.workingTime = '';
+    this.salaryRule = '';
+    this.grossSalary = null;
+    this.basicSalary = null;
+    this.weekend = '';
+    this.salaryAccount = '';
+    this.dateOfBirth = '';
     this.joiningDate = '';
     this.dynamicEntries = [{ key: '', value: '' }];
     this.attributeSuggestionsByRow = {};
     this.onAttributeKeyInput(0);
+  }
+
+  isCreateEmailInvalid(): boolean {
+    return !!this.email.trim() && !this.isEmailValid(this.email);
+  }
+
+  isEditEmailInvalid(): boolean {
+    return !!this.editEmail.trim() && !this.isEmailValid(this.editEmail);
+  }
+
+  isCreatePhoneInvalid(): boolean {
+    return !!this.phone.trim() && !this.isPhoneValid(this.phone);
+  }
+
+  isEditPhoneInvalid(): boolean {
+    return !!this.editPhone.trim() && !this.isPhoneValid(this.editPhone);
+  }
+
+  isCreateDobFuture(): boolean {
+    return this.isDateInFuture(this.dateOfBirth);
+  }
+
+  isEditDobFuture(): boolean {
+    return this.isDateInFuture(this.editDateOfBirth);
+  }
+
+  isCreateDobUnderMinimumAge(): boolean {
+    return this.isUnderMinimumAge(this.dateOfBirth);
+  }
+
+  isEditDobUnderMinimumAge(): boolean {
+    return this.isUnderMinimumAge(this.editDateOfBirth);
+  }
+
+  get maxAllowedDate(): string {
+    return this.toIsoDate(this.getTodayDateOnly());
   }
 
   get addDepartmentValue(): string {
@@ -348,8 +813,188 @@ export class EmployeeInfoComponent implements OnInit {
     return this.addDesignationOption;
   }
 
+  get addStatusValue(): string {
+    return this.addStatusOption;
+  }
+
+  get addShiftValue(): string {
+    return this.addShiftOption;
+  }
+
   constructor(
     private readonly employeeService: EmployeeService,
-    private readonly lookupService: LookupService
+    private readonly lookupService: LookupService,
+    private readonly shiftService: ShiftService
   ) {}
+
+  private isEmailValid(email: string): boolean {
+    const trimmed = email.trim();
+    return !trimmed || this.emailRegex.test(trimmed);
+  }
+
+  private isPhoneValid(phone: string): boolean {
+    const trimmed = phone.trim();
+    return !trimmed || this.phoneRegex.test(trimmed);
+  }
+
+  formatDisplayDate(value?: string | null): string {
+    const parsed = this.parseDateOnly(value);
+    if (!parsed) {
+      return '-';
+    }
+
+    const day = parsed.getDate().toString().padStart(2, '0');
+    const month = this.monthNames[parsed.getMonth()];
+    const year = parsed.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
+
+  getCurrentAge(value?: string | null): string {
+    const dob = this.parseDateOnly(value);
+    if (!dob) {
+      return '-';
+    }
+
+    const today = this.getTodayDateOnly();
+    const duration = this.getDuration(dob, today);
+    if (!duration) {
+      return 'Invalid DOB';
+    }
+
+    return `${duration.years} years - ${duration.months} months - ${duration.days} days`;
+  }
+
+  getLengthOfService(value?: string | null): string {
+    const joining = this.parseDateOnly(value);
+    if (!joining) {
+      return '-';
+    }
+
+    const today = this.getTodayDateOnly();
+    const duration = this.getDuration(joining, today);
+    if (!duration) {
+      return 'Not started yet';
+    }
+
+    return `${duration.years} years - ${duration.months} months - ${duration.days} days`;
+  }
+
+  private parseDateOnly(value?: string | null): Date | null {
+    const source = value?.trim();
+    if (!source) {
+      return null;
+    }
+
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(source);
+    if (!match) {
+      return null;
+    }
+
+    const year = Number(match[1]);
+    const monthIndex = Number(match[2]) - 1;
+    const day = Number(match[3]);
+    const date = new Date(year, monthIndex, day);
+
+    if (
+      date.getFullYear() !== year ||
+      date.getMonth() !== monthIndex ||
+      date.getDate() !== day
+    ) {
+      return null;
+    }
+
+    return date;
+  }
+
+  private getTodayDateOnly(): Date {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }
+
+  private getDuration(from: Date, to: Date): { years: number; months: number; days: number } | null {
+    if (from > to) {
+      return null;
+    }
+
+    let years = to.getFullYear() - from.getFullYear();
+    let months = to.getMonth() - from.getMonth();
+    let days = to.getDate() - from.getDate();
+
+    if (days < 0) {
+      months -= 1;
+      const previousMonth = to.getMonth() === 0 ? 11 : to.getMonth() - 1;
+      const previousMonthYear = to.getMonth() === 0 ? to.getFullYear() - 1 : to.getFullYear();
+      days += this.getDaysInMonth(previousMonthYear, previousMonth);
+    }
+
+    if (months < 0) {
+      years -= 1;
+      months += 12;
+    }
+
+    return { years, months, days };
+  }
+
+  private getDaysInMonth(year: number, monthIndex: number): number {
+    return new Date(year, monthIndex + 1, 0).getDate();
+  }
+
+  private isDateInFuture(value?: string | null): boolean {
+    const date = this.parseDateOnly(value);
+    if (!date) {
+      return false;
+    }
+
+    return date > this.getTodayDateOnly();
+  }
+
+  private isUnderMinimumAge(value?: string | null): boolean {
+    const dob = this.parseDateOnly(value);
+    if (!dob) {
+      return false;
+    }
+
+    const duration = this.getDuration(dob, this.getTodayDateOnly());
+    if (!duration) {
+      return false;
+    }
+
+    return duration.years < this.minimumAgeYears;
+  }
+
+  private toIsoDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private normalizeOptionalNumber(value: number | string | null | undefined): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private buildExportTimestamp(): string {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const hh = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
+    const sec = String(now.getSeconds()).padStart(2, '0');
+    return `${yyyy}${mm}${dd}_${hh}${min}${sec}`;
+  }
+
+  private saveBlob(blob: Blob, fileName: string): void {
+    const objectUrl = window.URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = fileName;
+    anchor.click();
+    window.URL.revokeObjectURL(objectUrl);
+  }
 }

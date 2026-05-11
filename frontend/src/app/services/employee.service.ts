@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { CreateEmployeeRequest, Employee } from '../models/employee.model';
+import { CreateEmployeeRequest, Employee, EmployeeSearchParams, PagedResponse } from '../models/employee.model';
 
 @Injectable({
   providedIn: 'root'
@@ -11,14 +11,64 @@ export class EmployeeService {
 
   constructor(private readonly http: HttpClient) {}
 
-  getAll(): Observable<Employee[]> {
-    return this.http.get<Employee[]>(this.apiUrl);
+  getAll(params: EmployeeSearchParams): Observable<PagedResponse<Employee>> {
+    const queryParams: Record<string, string> = {
+      page: String(params.page ?? 1),
+      pageSize: String(params.pageSize ?? 20)
+    };
+
+    if (params.search?.trim()) {
+      queryParams['search'] = params.search.trim();
+    }
+    if (params.department?.trim()) {
+      queryParams['department'] = params.department.trim();
+    }
+    if (params.designation?.trim()) {
+      queryParams['designation'] = params.designation.trim();
+    }
+    if (params.joiningDateFrom?.trim()) {
+      queryParams['joiningDateFrom'] = params.joiningDateFrom.trim();
+    }
+    if (params.joiningDateTo?.trim()) {
+      queryParams['joiningDateTo'] = params.joiningDateTo.trim();
+    }
+
+    return this.http.get<PagedResponse<Employee>>(this.apiUrl, { params: queryParams });
+  }
+
+  export(params: EmployeeSearchParams): Observable<Blob> {
+    const queryParams: Record<string, string> = {};
+
+    if (params.search?.trim()) {
+      queryParams['search'] = params.search.trim();
+    }
+    if (params.department?.trim()) {
+      queryParams['department'] = params.department.trim();
+    }
+    if (params.designation?.trim()) {
+      queryParams['designation'] = params.designation.trim();
+    }
+    if (params.joiningDateFrom?.trim()) {
+      queryParams['joiningDateFrom'] = params.joiningDateFrom.trim();
+    }
+    if (params.joiningDateTo?.trim()) {
+      queryParams['joiningDateTo'] = params.joiningDateTo.trim();
+    }
+
+    return this.http.get(`${this.apiUrl}/export`, {
+      params: queryParams,
+      responseType: 'blob'
+    });
   }
 
   getAttributeSuggestions(query: string): Observable<string[]> {
     return this.http.get<string[]>(`${this.apiUrl}/attribute-suggestions`, {
       params: { query, take: '8' }
     });
+  }
+
+  getStatusOptions(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/status-options`);
   }
 
   create(request: CreateEmployeeRequest): Observable<Employee> {

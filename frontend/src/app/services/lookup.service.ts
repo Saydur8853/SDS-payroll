@@ -9,6 +9,7 @@ import { LookupItem } from '../models/lookup.model';
 export class LookupService {
   private readonly departmentApi = 'http://localhost:5277/api/departments';
   private readonly designationApi = 'http://localhost:5277/api/designations';
+  private readonly shiftLookupApi = 'http://localhost:5277/api/shifts/lookup';
 
   constructor(private readonly http: HttpClient) {}
 
@@ -42,5 +43,9 @@ export class LookupService {
 
   deleteDesignation(id: string): Observable<void> {
     return this.http.delete<void>(`${this.designationApi}/${id}`);
+  }
+
+  getShifts(): Observable<LookupItem[]> {
+    return this.http.get<LookupItem[]>(this.shiftLookupApi);
   }
 }

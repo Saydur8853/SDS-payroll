@@ -5,6 +5,7 @@ import { LandingLayoutComponent } from './pages/landing-layout/landing-layout.co
 import { EmployeeInfoComponent } from './pages/employee-info/employee-info.component';
 import { DepartmentsComponent } from './pages/departments/departments.component';
 import { DesignationsComponent } from './pages/designations/designations.component';
+import { ShiftsComponent } from './pages/shifts/shifts.component';
 
 export const routes: Routes = [
   {
@@ -16,7 +17,8 @@ export const routes: Routes = [
       { path: 'company-info', component: CompanyInfoComponent },
       { path: 'employee-info', component: EmployeeInfoComponent },
       { path: 'departments', component: DepartmentsComponent },
-      { path: 'designations', component: DesignationsComponent }
+      { path: 'designations', component: DesignationsComponent },
+      { path: 'shifts', component: ShiftsComponent }
     ]
   },
   { path: '**', redirectTo: '/dashboard' }

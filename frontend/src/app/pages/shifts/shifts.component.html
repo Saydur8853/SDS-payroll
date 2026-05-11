@@ -1,0 +1,153 @@
+<main class="page">
+  <section class="panel">
+    <h1>Shift Info</h1>
+    <div class="shift-form">
+      <label class="name-field">
+        Shift Name
+        <input type="text" [(ngModel)]="newName" placeholder="Morning Shift" />
+      </label>
+
+      <div class="time-groups">
+        <div class="time-group">
+          <h4>In Session</h4>
+          <div class="group-fields">
+            <label>
+              In Time
+              <input type="time" [(ngModel)]="newInTime" />
+              <small>{{ formatTimeForDisplay(newInTime) }}</small>
+            </label>
+            <label>
+              In Time Grace
+              <input type="time" [(ngModel)]="newInTimeGrace" />
+              <small>{{ formatTimeForDisplay(newInTimeGrace) }}</small>
+            </label>
+          </div>
+        </div>
+
+        <div class="time-group">
+          <h4>Out Session</h4>
+          <div class="group-fields">
+            <label>
+              Out Time
+              <input type="time" [(ngModel)]="newOutTime" />
+              <small>{{ formatTimeForDisplay(newOutTime) }}</small>
+            </label>
+            <label>
+              Out Time Grace
+              <input type="time" [(ngModel)]="newOutTimeGrace" />
+              <small>{{ formatTimeForDisplay(newOutTimeGrace) }}</small>
+            </label>
+          </div>
+        </div>
+
+        <div class="time-group">
+          <h4>Break Session</h4>
+          <div class="group-fields">
+            <label>
+              Break Start Time
+              <input type="time" [(ngModel)]="newBreakStartTime" />
+              <small>{{ formatTimeForDisplay(newBreakStartTime) }}</small>
+            </label>
+            <label>
+              Break End Time
+              <input type="time" [(ngModel)]="newBreakEndTime" />
+              <small>{{ formatTimeForDisplay(newBreakEndTime) }}</small>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="create-actions">
+      <button type="button" class="btn primary" (click)="create()">Add Shift</button>
+    </div>
+    <p class="message">{{ message }}</p>
+  </section>
+
+  <section class="panel">
+    <h2>Shift List</h2>
+
+    <div class="item" *ngFor="let item of items">
+      <div *ngIf="editingId !== item.id" class="item-stack">
+        <h3>{{ item.displayName }}</h3>
+        <p>
+          <strong>In:</strong> {{ formatTimeForDisplay(item.inTime) }} |
+          <strong>Out:</strong> {{ formatTimeForDisplay(item.outTime) }}
+        </p>
+        <p>
+          <strong>In Grace:</strong> {{ formatTimeForDisplay(item.inTimeGrace) }} |
+          <strong>Out Grace:</strong> {{ formatTimeForDisplay(item.outTimeGrace) }}
+        </p>
+        <p>
+          <strong>Break:</strong> {{ formatTimeForDisplay(item.breakStartTime) }} - {{ formatTimeForDisplay(item.breakEndTime) }}
+        </p>
+        <div class="actions">
+          <button type="button" class="btn tiny secondary" (click)="startEdit(item)">Edit</button>
+          <button type="button" class="btn tiny danger" (click)="delete(item)">Delete</button>
+        </div>
+      </div>
+
+      <div *ngIf="editingId === item.id" class="shift-form">
+        <label class="name-field">
+          Shift Name
+          <input type="text" [(ngModel)]="editName" />
+        </label>
+
+        <div class="time-groups">
+          <div class="time-group">
+            <h4>In Session</h4>
+            <div class="group-fields">
+              <label>
+                In Time
+                <input type="time" [(ngModel)]="editInTime" />
+                <small>{{ formatTimeForDisplay(editInTime) }}</small>
+              </label>
+              <label>
+                In Time Grace
+                <input type="time" [(ngModel)]="editInTimeGrace" />
+                <small>{{ formatTimeForDisplay(editInTimeGrace) }}</small>
+              </label>
+            </div>
+          </div>
+
+          <div class="time-group">
+            <h4>Out Session</h4>
+            <div class="group-fields">
+              <label>
+                Out Time
+                <input type="time" [(ngModel)]="editOutTime" />
+                <small>{{ formatTimeForDisplay(editOutTime) }}</small>
+              </label>
+              <label>
+                Out Time Grace
+                <input type="time" [(ngModel)]="editOutTimeGrace" />
+                <small>{{ formatTimeForDisplay(editOutTimeGrace) }}</small>
+              </label>
+            </div>
+          </div>
+
+          <div class="time-group">
+            <h4>Break Session</h4>
+            <div class="group-fields">
+              <label>
+                Break Start Time
+                <input type="time" [(ngModel)]="editBreakStartTime" />
+                <small>{{ formatTimeForDisplay(editBreakStartTime) }}</small>
+              </label>
+              <label>
+                Break End Time
+                <input type="time" [(ngModel)]="editBreakEndTime" />
+                <small>{{ formatTimeForDisplay(editBreakEndTime) }}</small>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn tiny primary" (click)="saveEdit(item)">Save</button>
+          <button type="button" class="btn tiny secondary" (click)="cancelEdit()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>

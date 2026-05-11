@@ -10,6 +10,27 @@ public class EmployeeResponse
     public string? Department { get; set; }
     public string? Designation { get; set; }
     public string? Address { get; set; }
+    public string? FatherName { get; set; }
+    public string? MotherName { get; set; }
+    public string? SpouseName { get; set; }
+    public string? FatherPhone { get; set; }
+    public string? MotherPhone { get; set; }
+    public string? SpousePhone { get; set; }
+    public string? Gender { get; set; }
+    public string? Religion { get; set; }
+    public string? MaritalStatus { get; set; }
+    public string? BloodGroup { get; set; }
+    public string? NationalId { get; set; }
+    public string? EmploymentStatus { get; set; }
+    public string? PhotoUrl { get; set; }
+    public string? SignatureUrl { get; set; }
+    public string? WorkingTime { get; set; }
+    public string? SalaryRule { get; set; }
+    public decimal? GrossSalary { get; set; }
+    public decimal? BasicSalary { get; set; }
+    public string? Weekend { get; set; }
+    public string? SalaryAccount { get; set; }
+    public DateOnly? DateOfBirth { get; set; }
     public DateOnly JoiningDate { get; set; }
     public Dictionary<string, string?> DynamicAttributes { get; set; } = new();
     public DateTime CreatedAtUtc { get; set; }

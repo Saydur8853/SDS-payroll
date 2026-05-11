@@ -53,12 +53,59 @@ using (var scope = app.Services.CreateScope())
             "Department" character varying(100) NULL,
             "Designation" character varying(100) NULL,
             "Address" character varying(500) NULL,
+            "FatherName" character varying(200) NULL,
+            "MotherName" character varying(200) NULL,
+            "SpouseName" character varying(200) NULL,
+            "FatherPhone" character varying(50) NULL,
+            "MotherPhone" character varying(50) NULL,
+            "SpousePhone" character varying(50) NULL,
+            "Gender" character varying(50) NULL,
+            "Religion" character varying(100) NULL,
+            "MaritalStatus" character varying(50) NULL,
+            "BloodGroup" character varying(20) NULL,
+            "NationalId" character varying(100) NULL,
+            "EmploymentStatus" character varying(100) NULL,
+            "PhotoUrl" character varying(2000) NULL,
+            "SignatureUrl" character varying(2000) NULL,
+            "WorkingTime" character varying(100) NULL,
+            "SalaryRule" character varying(100) NULL,
+            "GrossSalary" numeric(18,2) NULL,
+            "BasicSalary" numeric(18,2) NULL,
+            "Weekend" character varying(100) NULL,
+            "SalaryAccount" character varying(100) NULL,
+            "DateOfBirth" date NULL,
             "JoiningDate" date NOT NULL,
             "DynamicAttributes" jsonb NOT NULL,
             "CreatedAtUtc" timestamp with time zone NOT NULL,
             "UpdatedAtUtc" timestamp with time zone NOT NULL,
             CONSTRAINT "PK_Employees" PRIMARY KEY ("Id")
         );
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        ALTER TABLE "Employees"
+        ADD COLUMN IF NOT EXISTS "DateOfBirth" date NULL;
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "FatherName" character varying(200) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "MotherName" character varying(200) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "SpouseName" character varying(200) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "FatherPhone" character varying(50) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "MotherPhone" character varying(50) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "SpousePhone" character varying(50) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "Gender" character varying(50) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "Religion" character varying(100) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "MaritalStatus" character varying(50) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "BloodGroup" character varying(20) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "NationalId" character varying(100) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "EmploymentStatus" character varying(100) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "PhotoUrl" character varying(2000) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "SignatureUrl" character varying(2000) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "WorkingTime" character varying(100) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "SalaryRule" character varying(100) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "GrossSalary" numeric(18,2) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "BasicSalary" numeric(18,2) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "Weekend" character varying(100) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "SalaryAccount" character varying(100) NULL;
         """);
     dbContext.Database.ExecuteSqlRaw("""
         CREATE TABLE IF NOT EXISTS "Departments" (
@@ -77,6 +124,29 @@ using (var scope = app.Services.CreateScope())
             "UpdatedAtUtc" timestamp with time zone NOT NULL,
             CONSTRAINT "PK_Designations" PRIMARY KEY ("Id")
         );
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        CREATE TABLE IF NOT EXISTS "Shifts" (
+            "Id" uuid NOT NULL,
+            "Name" character varying(150) NOT NULL,
+            "InTime" time without time zone NULL,
+            "OutTime" time without time zone NULL,
+            "InTimeGrace" time without time zone NULL,
+            "OutTimeGrace" time without time zone NULL,
+            "BreakStartTime" time without time zone NULL,
+            "BreakEndTime" time without time zone NULL,
+            "CreatedAtUtc" timestamp with time zone NOT NULL,
+            "UpdatedAtUtc" timestamp with time zone NOT NULL,
+            CONSTRAINT "PK_Shifts" PRIMARY KEY ("Id")
+        );
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        ALTER TABLE "Shifts" ADD COLUMN IF NOT EXISTS "InTime" time without time zone NULL;
+        ALTER TABLE "Shifts" ADD COLUMN IF NOT EXISTS "OutTime" time without time zone NULL;
+        ALTER TABLE "Shifts" ADD COLUMN IF NOT EXISTS "InTimeGrace" time without time zone NULL;
+        ALTER TABLE "Shifts" ADD COLUMN IF NOT EXISTS "OutTimeGrace" time without time zone NULL;
+        ALTER TABLE "Shifts" ADD COLUMN IF NOT EXISTS "BreakStartTime" time without time zone NULL;
+        ALTER TABLE "Shifts" ADD COLUMN IF NOT EXISTS "BreakEndTime" time without time zone NULL;
         """);
 }
 
