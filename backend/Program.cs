@@ -46,10 +46,10 @@ using (var scope = app.Services.CreateScope())
     dbContext.Database.ExecuteSqlRaw("""
         CREATE TABLE IF NOT EXISTS "Employees" (
             "Id" uuid NOT NULL,
-            "EmployeeCode" character varying(50) NOT NULL,
+            "EmployeeCode" bigint NOT NULL,
             "FullName" character varying(200) NOT NULL,
             "Email" character varying(200) NULL,
-            "Phone" character varying(50) NULL,
+            "Phone" character varying(50) NOT NULL,
             "Department" character varying(100) NULL,
             "Designation" character varying(100) NULL,
             "Address" character varying(500) NULL,
@@ -64,9 +64,9 @@ using (var scope = app.Services.CreateScope())
             "MaritalStatus" character varying(50) NULL,
             "BloodGroup" character varying(20) NULL,
             "NationalId" character varying(100) NULL,
-            "EmploymentStatus" character varying(100) NULL,
-            "PhotoUrl" character varying(2000) NULL,
-            "SignatureUrl" character varying(2000) NULL,
+            "EmploymentStatus" character varying(100) NOT NULL,
+            "Photo" bytea NULL,
+            "Signature" bytea NULL,
             "WorkingTime" character varying(100) NULL,
             "SalaryRule" character varying(100) NULL,
             "GrossSalary" numeric(18,2) NULL,
@@ -108,6 +108,24 @@ using (var scope = app.Services.CreateScope())
         ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "SalaryAccount" character varying(100) NULL;
         """);
     dbContext.Database.ExecuteSqlRaw("""
+        ALTER TABLE "Employees" ALTER COLUMN "EmployeeCode" TYPE bigint USING "EmployeeCode"::bigint;
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        ALTER TABLE "Employees" DROP COLUMN IF EXISTS "PhotoUrl";
+        ALTER TABLE "Employees" DROP COLUMN IF EXISTS "SignatureUrl";
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "Photo" bytea NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "Signature" bytea NULL;
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        UPDATE "Employees" SET "Phone" = '' WHERE "Phone" IS NULL;
+        ALTER TABLE "Employees" ALTER COLUMN "Phone" SET NOT NULL;
+        UPDATE "Employees" SET "EmploymentStatus" = 'Active' WHERE "EmploymentStatus" IS NULL;
+        ALTER TABLE "Employees" ALTER COLUMN "EmploymentStatus" SET NOT NULL;
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_Employees_EmployeeCode" ON "Employees" ("EmployeeCode");
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
         CREATE TABLE IF NOT EXISTS "Departments" (
             "Id" uuid NOT NULL,
             "Name" character varying(150) NOT NULL,
@@ -147,6 +165,9 @@ using (var scope = app.Services.CreateScope())
         ALTER TABLE "Shifts" ADD COLUMN IF NOT EXISTS "OutTimeGrace" time without time zone NULL;
         ALTER TABLE "Shifts" ADD COLUMN IF NOT EXISTS "BreakStartTime" time without time zone NULL;
         ALTER TABLE "Shifts" ADD COLUMN IF NOT EXISTS "BreakEndTime" time without time zone NULL;
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        ALTER TABLE "Companies" ADD COLUMN IF NOT EXISTS "Logo" bytea NULL;
         """);
 }
 

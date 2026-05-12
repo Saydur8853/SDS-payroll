@@ -27,7 +27,7 @@ export class CompanyService {
     return this.http.post<Company>(this.apiUrl, request);
   }
 
-  update(id: string, request: { name: string; address: string; logoUrl?: string | null }): Observable<Company> {
+  update(id: string, request: { name: string; address: string; logoUrl?: string | null; logoBase64?: string | null }): Observable<Company> {
     return this.http.put<Company>(`${this.apiUrl}/${id}`, request);
   }
 

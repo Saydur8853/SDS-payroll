@@ -19,6 +19,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Address).IsRequired().HasMaxLength(500);
             entity.Property(e => e.LogoUrl).HasMaxLength(2000);
+            entity.Property(e => e.Logo);
             entity.Property(e => e.DynamicAttributes).HasColumnType("jsonb");
             entity.Property(e => e.CreatedAtUtc).IsRequired();
             entity.Property(e => e.UpdatedAtUtc).IsRequired();
@@ -27,10 +28,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<Employee>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.EmployeeCode).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.EmployeeCode).IsRequired();
             entity.Property(e => e.FullName).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Email).HasMaxLength(200);
-            entity.Property(e => e.Phone).HasMaxLength(50);
+            entity.Property(e => e.Phone).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Department).HasMaxLength(100);
             entity.Property(e => e.Designation).HasMaxLength(100);
             entity.Property(e => e.Address).HasMaxLength(500);
@@ -45,9 +46,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(e => e.MaritalStatus).HasMaxLength(50);
             entity.Property(e => e.BloodGroup).HasMaxLength(20);
             entity.Property(e => e.NationalId).HasMaxLength(100);
-            entity.Property(e => e.EmploymentStatus).HasMaxLength(100);
-            entity.Property(e => e.PhotoUrl).HasMaxLength(2000);
-            entity.Property(e => e.SignatureUrl).HasMaxLength(2000);
+            entity.Property(e => e.EmploymentStatus).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Photo);
+            entity.Property(e => e.Signature);
             entity.Property(e => e.WorkingTime).HasMaxLength(100);
             entity.Property(e => e.SalaryRule).HasMaxLength(100);
             entity.Property(e => e.GrossSalary).HasColumnType("numeric(18,2)");
@@ -59,6 +60,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(e => e.DynamicAttributes).HasColumnType("jsonb");
             entity.Property(e => e.CreatedAtUtc).IsRequired();
             entity.Property(e => e.UpdatedAtUtc).IsRequired();
+            entity.HasIndex(e => e.EmployeeCode).IsUnique();
         });
 
         modelBuilder.Entity<Department>(entity =>

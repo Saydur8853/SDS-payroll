@@ -5,8 +5,7 @@ namespace Payroll.Api.Dtos;
 public class EmployeeUpdateRequest
 {
     [Required]
-    [MaxLength(50)]
-    public string EmployeeCode { get; set; } = string.Empty;
+    public long EmployeeCode { get; set; }
 
     [Required]
     [MaxLength(200)]
@@ -15,8 +14,9 @@ public class EmployeeUpdateRequest
     [MaxLength(200)]
     public string? Email { get; set; }
 
+    [Required]
     [MaxLength(50)]
-    public string? Phone { get; set; }
+    public string Phone { get; set; } = string.Empty;
 
     [MaxLength(100)]
     public string? Department { get; set; }
@@ -60,14 +60,12 @@ public class EmployeeUpdateRequest
     [MaxLength(100)]
     public string? NationalId { get; set; }
 
+    [Required]
     [MaxLength(100)]
-    public string? EmploymentStatus { get; set; }
+    public string EmploymentStatus { get; set; } = string.Empty;
 
-    [MaxLength(2000)]
-    public string? PhotoUrl { get; set; }
-
-    [MaxLength(2000)]
-    public string? SignatureUrl { get; set; }
+    public string? PhotoBase64 { get; set; }
+    public string? SignatureBase64 { get; set; }
 
     [MaxLength(100)]
     public string? WorkingTime { get; set; }

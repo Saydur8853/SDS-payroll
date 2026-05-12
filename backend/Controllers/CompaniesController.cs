@@ -95,6 +95,7 @@ public class CompaniesController(AppDbContext dbContext, IWebHostEnvironment env
             Name = request.Name.Trim(),
             Address = request.Address.Trim(),
             LogoUrl = request.LogoUrl?.Trim(),
+            Logo = ConvertBase64ToBytes(request.LogoBase64),
             DynamicAttributes = CanonicalizeDynamicAttributes(request.DynamicAttributes, existingKeys.Keys)
         };
 
@@ -151,6 +152,10 @@ public class CompaniesController(AppDbContext dbContext, IWebHostEnvironment env
         company.Name = request.Name.Trim();
         company.Address = request.Address.Trim();
         company.LogoUrl = request.LogoUrl?.Trim();
+        if (!string.IsNullOrWhiteSpace(request.LogoBase64))
+        {
+            company.Logo = ConvertBase64ToBytes(request.LogoBase64);
+        }
         company.UpdatedAtUtc = DateTime.UtcNow;
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -256,10 +261,26 @@ public class CompaniesController(AppDbContext dbContext, IWebHostEnvironment env
             Name = company.Name,
             Address = company.Address,
             LogoUrl = company.LogoUrl,
+            LogoBase64 = company.Logo != null ? $"data:image/webp;base64,{Convert.ToBase64String(company.Logo)}" : null,
             DynamicAttributes = company.DynamicAttributes,
             CreatedAtUtc = company.CreatedAtUtc,
             UpdatedAtUtc = company.UpdatedAtUtc
         };
+
+    private static byte[]? ConvertBase64ToBytes(string? base64String)
+    {
+        if (string.IsNullOrWhiteSpace(base64String)) return null;
+        try
+        {
+            var parts = base64String.Split(',');
+            var base64 = parts.Length > 1 ? parts[1] : parts[0];
+            return Convert.FromBase64String(base64);
+        }
+        catch
+        {
+            return null;
+        }
+    }
 
     private static Dictionary<string, string?>? ParseDynamicAttributes(string? dynamicAttributesJson)
     {

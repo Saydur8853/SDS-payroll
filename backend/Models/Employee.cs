@@ -6,8 +6,7 @@ public class Employee
 {
     public Guid Id { get; set; }
 
-    [MaxLength(50)]
-    public required string EmployeeCode { get; set; }
+    public long EmployeeCode { get; set; }
 
     [MaxLength(200)]
     public required string FullName { get; set; }
@@ -16,7 +15,7 @@ public class Employee
     public string? Email { get; set; }
 
     [MaxLength(50)]
-    public string? Phone { get; set; }
+    public required string Phone { get; set; }
 
     [MaxLength(100)]
     public string? Department { get; set; }
@@ -61,13 +60,10 @@ public class Employee
     public string? NationalId { get; set; }
 
     [MaxLength(100)]
-    public string? EmploymentStatus { get; set; }
+    public required string EmploymentStatus { get; set; }
 
-    [MaxLength(2000)]
-    public string? PhotoUrl { get; set; }
-
-    [MaxLength(2000)]
-    public string? SignatureUrl { get; set; }
+    public byte[]? Photo { get; set; }
+    public byte[]? Signature { get; set; }
 
     [MaxLength(100)]
     public string? WorkingTime { get; set; }

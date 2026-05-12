@@ -17,6 +17,7 @@ export class CompanyInfoComponent implements OnInit {
   address = '';
   logoUrl = '';
   selectedLogoFile: File | null = null;
+  logoBase64: string | null = null; // Preview for Add mode
 
   dynamicEntries: Array<{ key: string; value: string }> = [{ key: '', value: '' }];
   attributeSuggestionsByRow: Record<number, string[]> = {};
@@ -27,6 +28,7 @@ export class CompanyInfoComponent implements OnInit {
   editName = '';
   editAddress = '';
   editLogoUrl = '';
+  editLogoBase64: string | null = null; // Preview for Edit mode
   editDynamicEntries: Array<{ key: string; value: string }> = [];
   message = '';
 
@@ -69,9 +71,43 @@ export class CompanyInfoComponent implements OnInit {
     this.onAttributeKeyInput(index);
   }
 
-  onLogoFileSelected(event: Event): void {
+  onLogoFileSelected(event: Event, isEdit: boolean = false): void {
     const input = event.target as HTMLInputElement;
-    this.selectedLogoFile = input.files && input.files.length > 0 ? input.files[0] : null;
+    const file = input.files && input.files.length > 0 ? input.files[0] : null;
+
+    if (isEdit) {
+      this.selectedLogoFile = file; // Note: You might want a separate editSelectedLogoFile if the backend supports it
+      if (file) {
+        this.convertToBase64(file, (base64) => this.editLogoBase64 = base64);
+      } else {
+        this.editLogoBase64 = null;
+      }
+    } else {
+      this.selectedLogoFile = file;
+      if (file) {
+        this.convertToBase64(file, (base64) => this.logoBase64 = base64);
+      } else {
+        this.logoBase64 = null;
+      }
+    }
+  }
+
+  private convertToBase64(file: File, callback: (base64: string) => void): void {
+    const reader = new FileReader();
+    reader.onload = () => callback(reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  removeLogo(isEdit: boolean = false): void {
+    if (isEdit) {
+      this.editLogoBase64 = null;
+      this.editLogoUrl = '';
+      // Also clear the file if needed
+    } else {
+      this.logoBase64 = null;
+      this.logoUrl = '';
+      this.selectedLogoFile = null;
+    }
   }
 
   saveCompany(): void {
@@ -84,12 +120,11 @@ export class CompanyInfoComponent implements OnInit {
     this.isSaving = true;
     this.message = '';
 
-    const request$ = this.selectedLogoFile
-      ? this.companyService.createWithLogoUpload(this.name.trim(), this.address.trim(), dynamicAttributes, this.selectedLogoFile)
-      : this.companyService.create({
+    const request$ = this.companyService.create({
           name: this.name.trim(),
           address: this.address.trim(),
           logoUrl: this.logoUrl.trim() ? this.logoUrl.trim() : null,
+          logoBase64: this.logoBase64,
           dynamicAttributes
         });
 
@@ -135,6 +170,7 @@ export class CompanyInfoComponent implements OnInit {
     this.editName = company.name;
     this.editAddress = company.address;
     this.editLogoUrl = company.logoUrl ?? '';
+    this.editLogoBase64 = company.logoUrl ?? null; // If it's already a URL, show it
     this.editDynamicEntries = Object.entries(company.dynamicAttributes).map(([key, value]) => ({
       key,
       value: value ?? ''
@@ -176,7 +212,8 @@ export class CompanyInfoComponent implements OnInit {
       await firstValueFrom(this.companyService.update(company.id, {
         name: this.editName.trim(),
         address: this.editAddress.trim(),
-        logoUrl: this.editLogoUrl.trim() ? this.editLogoUrl.trim() : null
+        logoUrl: this.editLogoUrl.trim() ? this.editLogoUrl.trim() : null,
+        logoBase64: this.editLogoBase64
       }));
 
       const editedAttributes = this.buildEditDynamicAttributesPayload();
@@ -226,8 +263,17 @@ export class CompanyInfoComponent implements OnInit {
     if (key.trim().toLowerCase() === 'status') {
       return this.normalizeStatusValue(value ?? '');
     }
-
     return value ?? '';
+  }
+
+  getLogoUrl(company: Company): string {
+    if (company.logoBase64) return company.logoBase64;
+    const url = company.logoUrl;
+    if (!url) return '';
+    if (url.startsWith('http') || url.startsWith('data:')) {
+      return url;
+    }
+    return `http://localhost:5277/${url}`;
   }
 
   private loadCompanies(): void {
@@ -266,6 +312,7 @@ export class CompanyInfoComponent implements OnInit {
     this.address = '';
     this.logoUrl = '';
     this.selectedLogoFile = null;
+    this.logoBase64 = null;
     this.dynamicEntries = [{ key: '', value: '' }];
     this.attributeSuggestionsByRow = {};
     this.onAttributeKeyInput(0);

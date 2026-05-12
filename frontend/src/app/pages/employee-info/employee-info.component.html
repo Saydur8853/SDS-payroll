@@ -17,33 +17,73 @@
         <span class="material-symbols-rounded">badge</span>
         <span>Basic Information</span>
       </div>
-      <div class="field-grid cols-3">
-        <label>
-          <span class="label-text">Employee Code <span class="required-star">*</span></span>
-          <input type="text" [(ngModel)]="employeeCode" placeholder="e.g. EMP-001" />
-        </label>
-        <label>
-          <span class="label-text">Full Name <span class="required-star">*</span></span>
-          <input type="text" [(ngModel)]="fullName" placeholder="Enter full name" />
-        </label>
-        <label>
-          <span class="label-text">Joining Date <span class="required-star">*</span></span>
-          <input type="date" [(ngModel)]="joiningDate" />
-        </label>
-        <label>
-          Email
-          <input type="email" [(ngModel)]="email" placeholder="email@example.com" [class.invalid-input]="isCreateEmailInvalid()" />
-          <small class="field-warning" *ngIf="isCreateEmailInvalid()">Please enter a valid email format.</small>
-        </label>
-        <label>
-          Phone
-          <input type="text" [(ngModel)]="phone" placeholder="01XXXXXXXXX" [class.invalid-input]="isCreatePhoneInvalid()" />
-          <small class="field-warning" *ngIf="isCreatePhoneInvalid()">Phone must be at least 10 digits.</small>
-        </label>
-        <label>
-          National ID
-          <input type="text" [(ngModel)]="nationalId" placeholder="National ID number" />
-        </label>
+      <div class="basic-info-media-layout">
+        <div class="field-grid cols-1 flex-1">
+          <label>
+            <span class="label-text">Employee Code <span class="required-star">*</span></span>
+            <input type="number" [(ngModel)]="employeeCode" placeholder="e.g. 101" (blur)="checkCode()" [class.invalid-input]="isEmployeeCodeDuplicate" />
+            <small class="field-warning" *ngIf="isEmployeeCodeDuplicate">This code is already taken.</small>
+          </label>
+          <label>
+            <span class="label-text">Full Name <span class="required-star">*</span></span>
+            <input type="text" [(ngModel)]="fullName" placeholder="Enter full name" />
+          </label>
+          <label>
+            <span class="label-text">Joining Date <span class="required-star">*</span></span>
+            <input type="date" [(ngModel)]="joiningDate" />
+          </label>
+          <label>
+            Email
+            <input type="email" [(ngModel)]="email" placeholder="email@example.com" [class.invalid-input]="isCreateEmailInvalid()" />
+            <small class="field-warning" *ngIf="isCreateEmailInvalid()">Please enter a valid email format.</small>
+          </label>
+          <label>
+            <span class="label-text">Phone <span class="required-star">*</span></span>
+            <input type="text" [(ngModel)]="phone" placeholder="01XXXXXXXXX" [class.invalid-input]="isCreatePhoneInvalid()" />
+            <small class="field-warning" *ngIf="isCreatePhoneInvalid()">Phone must be at least 10 digits.</small>
+          </label>
+          <label>
+            National ID
+            <input type="text" [(ngModel)]="nationalId" placeholder="National ID number" />
+          </label>
+        </div>
+
+        <div class="media-column">
+          <div class="image-preview" [class.empty]="!photoBase64">
+            <img *ngIf="photoBase64" [src]="photoBase64" alt="Photo Preview" />
+            <div *ngIf="!photoBase64" class="placeholder">
+              <span class="material-symbols-rounded">account_circle</span>
+            </div>
+            <div class="image-overlay" *ngIf="photoBase64">
+              <button class="btn tiny icon-btn danger" (click)="removeImage('photo', false)">
+                <span class="material-symbols-rounded">delete</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="media-actions">
+            <label class="btn tiny primary upload-btn flex-1">
+              <span class="material-symbols-rounded">upload</span> Photo
+              <input type="file" (change)="onFileChange($event, 'photo', false)" accept="image/*" hidden />
+            </label>
+            <label class="btn tiny primary upload-btn flex-1">
+              <span class="material-symbols-rounded">upload</span> Signature
+              <input type="file" (change)="onFileChange($event, 'signature', false)" accept="image/*" hidden />
+            </label>
+          </div>
+
+          <div class="image-preview signature" [class.empty]="!signatureBase64">
+            <img *ngIf="signatureBase64" [src]="signatureBase64" alt="Signature Preview" />
+            <div *ngIf="!signatureBase64" class="placeholder">
+              <span class="material-symbols-rounded">draw</span>
+            </div>
+            <div class="image-overlay" *ngIf="signatureBase64">
+              <button class="btn tiny icon-btn danger" (click)="removeImage('signature', false)">
+                <span class="material-symbols-rounded">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -157,7 +197,7 @@
           </select>
         </label>
         <label>
-          Status
+          <span class="label-text">Status <span class="required-star">*</span></span>
           <select [(ngModel)]="employmentStatus" (ngModelChange)="onStatusChange($event)">
             <option value="">Select Status</option>
             <option *ngFor="let item of statusOptions" [value]="item">{{ item }}</option>
@@ -205,23 +245,7 @@
       </div>
     </div>
 
-    <!-- ── Section: Media ──────────────────────────────── -->
-    <div class="form-section">
-      <div class="section-label">
-        <span class="material-symbols-rounded">image</span>
-        <span>Media</span>
-      </div>
-      <div class="field-grid cols-2">
-        <label>
-          Photo URL
-          <input type="text" [(ngModel)]="photoUrl" placeholder="https://..." />
-        </label>
-        <label>
-          Signature URL
-          <input type="text" [(ngModel)]="signatureUrl" placeholder="https://..." />
-        </label>
-      </div>
-    </div>
+
 
     <!-- ── Section: Dynamic Attributes ──────────────────── -->
     <div class="form-section">
@@ -377,25 +401,76 @@
 
       <!-- ── Inline Edit ────────────────────────────────── -->
       <div class="edit-panel" *ngIf="editingEmployeeId === employee.id">
-        <div class="field-grid cols-3">
-          <label>
-            <span class="label-text">Employee Code <span class="required-star">*</span></span>
-            <input type="text" [(ngModel)]="editEmployeeCode" />
-          </label>
-          <label>
-            <span class="label-text">Full Name <span class="required-star">*</span></span>
-            <input type="text" [(ngModel)]="editFullName" />
-          </label>
-          <label>
-            Email
-            <input type="email" [(ngModel)]="editEmail" [class.invalid-input]="isEditEmailInvalid()" />
-            <small class="field-warning" *ngIf="isEditEmailInvalid()">Invalid email format.</small>
-          </label>
-          <label>
-            Phone
-            <input type="text" [(ngModel)]="editPhone" [class.invalid-input]="isEditPhoneInvalid()" />
-            <small class="field-warning" *ngIf="isEditPhoneInvalid()">At least 10 digits.</small>
-          </label>
+        <div class="basic-info-media-layout">
+          <div class="field-grid cols-1 flex-1">
+            <label>
+              <span class="label-text">Employee Code <span class="required-star">*</span></span>
+              <input type="number" [(ngModel)]="editEmployeeCode" placeholder="e.g. 101" (blur)="checkEditCode()" [class.invalid-input]="isEditEmployeeCodeDuplicate" />
+              <small class="field-warning" *ngIf="isEditEmployeeCodeDuplicate">This code is already taken.</small>
+            </label>
+            <label>
+              <span class="label-text">Full Name <span class="required-star">*</span></span>
+              <input type="text" [(ngModel)]="editFullName" placeholder="Enter full name" />
+            </label>
+            <label>
+              <span class="label-text">Joining Date <span class="required-star">*</span></span>
+              <input type="date" [(ngModel)]="editJoiningDate" />
+            </label>
+            <label>
+              Email
+              <input type="email" [(ngModel)]="editEmail" placeholder="email@example.com" [class.invalid-input]="isEditEmailInvalid()" />
+              <small class="field-warning" *ngIf="isEditEmailInvalid()">Please enter a valid email format.</small>
+            </label>
+            <label>
+              <span class="label-text">Phone <span class="required-star">*</span></span>
+              <input type="text" [(ngModel)]="editPhone" placeholder="01XXXXXXXXX" [class.invalid-input]="isEditPhoneInvalid()" />
+              <small class="field-warning" *ngIf="isEditPhoneInvalid()">Phone must be at least 10 digits.</small>
+            </label>
+            <label>
+              National ID
+              <input type="text" [(ngModel)]="editNationalId" placeholder="National ID number" />
+            </label>
+          </div>
+
+          <div class="media-column">
+            <div class="image-preview" [class.empty]="!editPhotoBase64">
+              <img *ngIf="editPhotoBase64" [src]="editPhotoBase64" alt="Photo Preview" />
+              <div *ngIf="!editPhotoBase64" class="placeholder">
+                <span class="material-symbols-rounded">account_circle</span>
+              </div>
+              <div class="image-overlay" *ngIf="editPhotoBase64">
+                <button class="btn tiny icon-btn danger" (click)="removeImage('photo', true)">
+                  <span class="material-symbols-rounded">delete</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="media-actions">
+              <label class="btn tiny primary upload-btn flex-1">
+                <span class="material-symbols-rounded">upload</span> Photo
+                <input type="file" (change)="onFileChange($event, 'photo', true)" accept="image/*" hidden />
+              </label>
+              <label class="btn tiny primary upload-btn flex-1">
+                <span class="material-symbols-rounded">upload</span> Signature
+                <input type="file" (change)="onFileChange($event, 'signature', true)" accept="image/*" hidden />
+              </label>
+            </div>
+
+            <div class="image-preview signature" [class.empty]="!editSignatureBase64">
+              <img *ngIf="editSignatureBase64" [src]="editSignatureBase64" alt="Signature Preview" />
+              <div *ngIf="!editSignatureBase64" class="placeholder">
+                <span class="material-symbols-rounded">draw</span>
+              </div>
+              <div class="image-overlay" *ngIf="editSignatureBase64">
+                <button class="btn tiny icon-btn danger" (click)="removeImage('signature', true)">
+                  <span class="material-symbols-rounded">delete</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-grid cols-3 mt-4">
           <label>
             Department
             <select [(ngModel)]="editDepartment" (ngModelChange)="onEditDepartmentChange($event)">
@@ -413,7 +488,7 @@
             </select>
           </label>
           <label>
-            Status
+            <span class="label-text">Status <span class="required-star">*</span></span>
             <select [(ngModel)]="editEmploymentStatus" (ngModelChange)="onEditStatusChange($event)">
               <option value="">Select Status</option>
               <option *ngFor="let item of statusOptions" [value]="item">{{ item }}</option>
@@ -477,18 +552,6 @@
             </select>
           </label>
           <label>
-            National ID
-            <input type="text" [(ngModel)]="editNationalId" />
-          </label>
-          <label>
-            Photo URL
-            <input type="text" [(ngModel)]="editPhotoUrl" />
-          </label>
-          <label>
-            Signature URL
-            <input type="text" [(ngModel)]="editSignatureUrl" />
-          </label>
-          <label>
             Working Time
             <select [(ngModel)]="editWorkingTime" (ngModelChange)="onEditWorkingTimeChange($event)">
               <option value="">Select Working Time</option>
@@ -526,10 +589,6 @@
             <small class="field-warning" *ngIf="isEditDobFuture()">DOB cannot be in the future.</small>
             <small class="field-warning" *ngIf="!isEditDobFuture() && isEditDobUnderMinimumAge()">Min age 18.</small>
           </label>
-          <label>
-            <span class="label-text">Joining Date <span class="required-star">*</span></span>
-            <input type="date" [(ngModel)]="editJoiningDate" />
-          </label>
         </div>
 
         <div class="edit-dynamic-list">
@@ -553,6 +612,7 @@
           <button type="button" class="btn tiny secondary" (click)="cancelEdit()">Cancel</button>
         </div>
       </div>
+
 
       <!-- ── Dynamic Attributes Display ────────────────── -->
       <div class="employee-dynamic-attributes" *ngIf="(employee.dynamicAttributes | keyvalue).length > 0">
@@ -645,6 +705,68 @@
     <div class="modal-actions">
       <button type="button" class="btn primary" (click)="createShift()">Save</button>
       <button type="button" class="btn secondary" (click)="closeShiftModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Image Cropper Modal -->
+<div class="modal-backdrop" *ngIf="showCropper">
+  <div class="modal-content cropper-modal">
+    <div class="modal-header">
+      <div class="header-content">
+        <div class="header-icon">
+          <span class="material-symbols-rounded">{{ croppingFor === 'photo' ? 'account_circle' : 'draw' }}</span>
+        </div>
+        <div>
+          <h3>{{ croppingFor === 'photo' ? 'Crop Employee Photo' : 'Crop Signature' }}</h3>
+          <p class="modal-subtitle">{{ croppingFor === 'photo' ? 'Adjust for passport size' : 'Adjust for signature area' }}</p>
+        </div>
+      </div>
+      <button class="btn-close" (click)="cancelCrop()">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="cropper-container">
+        <image-cropper
+          [imageChangedEvent]="imageChangedEvent"
+          [maintainAspectRatio]="true"
+          [cropperStaticWidth]="croppingFor === 'photo' ? 300 : 450"
+          [cropperStaticHeight]="croppingFor === 'photo' ? 375 : 150"
+          [onlyScaleDown]="false"
+          [roundCropper]="false"
+          [canvasRotation]="0"
+          [transform]="transform"
+          [alignImage]="'center'"
+          format="webp"
+          (imageCropped)="imageCropped($event)"
+          (imageLoaded)="imageLoaded($event)"
+          (cropperReady)="cropperReady()"
+          (loadImageFailed)="loadImageFailed()"
+          [imageQuality]="90"
+          [resizeToWidth]="croppingFor === 'photo' ? 400 : 600"
+          class="cropper-element"
+        ></image-cropper>
+      </div>
+
+      <div class="cropper-controls vertical">
+        <button class="btn tiny icon-btn secondary" (click)="zoomIn()" title="Zoom In">
+          <span class="material-symbols-rounded">add</span>
+        </button>
+        <span class="zoom-label">{{ (scale * 100).toFixed(0) }}%</span>
+        <button class="btn tiny icon-btn secondary" (click)="zoomOut()" title="Zoom Out">
+          <span class="material-symbols-rounded">remove</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="cancelCrop()">Cancel</button>
+      <button class="btn primary apply-btn" (click)="applyCrop()" [disabled]="!croppedImage">
+        <span class="material-symbols-rounded">{{ croppedImage ? 'check' : 'hourglass_empty' }}</span>
+        {{ croppedImage ? 'Apply Crop' : 'Processing...' }}
+      </button>
     </div>
   </div>
 </div>

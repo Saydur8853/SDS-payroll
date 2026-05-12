@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { ImageCropperComponent, ImageCroppedEvent, LoadedImage } from 'ngx-image-cropper';
 import { EmployeeService } from '../../services/employee.service';
 import { Employee } from '../../models/employee.model';
 import { LookupItem } from '../../models/lookup.model';
@@ -10,7 +12,7 @@ import { ShiftService } from '../../services/shift.service';
 
 @Component({
   selector: 'app-employee-info',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ImageCropperComponent],
   templateUrl: './employee-info.component.html',
   styleUrl: './employee-info.component.scss'
 })
@@ -31,7 +33,7 @@ export class EmployeeInfoComponent implements OnInit {
   statusOptions: string[] = [];
   loadingEmployees = false;
 
-  employeeCode = '';
+  employeeCode: number | null = null;
   fullName = '';
   email = '';
   phone = '';
@@ -50,8 +52,8 @@ export class EmployeeInfoComponent implements OnInit {
   maritalStatus = '';
   bloodGroup = '';
   nationalId = '';
-  photoUrl = '';
-  signatureUrl = '';
+  photoBase64: string | null = null;
+  signatureBase64: string | null = null;
   workingTime = '';
   salaryRule = '';
   grossSalary: number | null = null;
@@ -67,8 +69,10 @@ export class EmployeeInfoComponent implements OnInit {
   deletingEmployeeId: string | null = null;
   saving = false;
   message = '';
+  isEmployeeCodeDuplicate = false;
+  isEditEmployeeCodeDuplicate = false;
 
-  editEmployeeCode = '';
+  editEmployeeCode: number | null = null;
   editFullName = '';
   editEmail = '';
   editPhone = '';
@@ -87,8 +91,8 @@ export class EmployeeInfoComponent implements OnInit {
   editMaritalStatus = '';
   editBloodGroup = '';
   editNationalId = '';
-  editPhotoUrl = '';
-  editSignatureUrl = '';
+  editPhotoBase64: string | null = null;
+  editSignatureBase64: string | null = null;
   editWorkingTime = '';
   editSalaryRule = '';
   editGrossSalary: number | null = null;
@@ -130,10 +134,167 @@ export class EmployeeInfoComponent implements OnInit {
   readonly religionOptions = ['Islam', 'Hinduism', 'Christianity', 'Buddhism', 'Other'];
   exporting = false;
 
+  // Cropper State
+  showCropper = false;
+  imageChangedEvent: any = '';
+  croppedImage: any = '';
+  croppingFor: 'photo' | 'signature' = 'photo';
+  isEditMode = false;
+
+  // Zoom/Transform
+  scale = 1;
+  transform: any = {
+    scale: 1,
+    rotate: 0,
+    flipH: false,
+    flipV: false
+  };
+
   ngOnInit(): void {
     this.loadEmployees();
     this.loadLookups();
     this.onAttributeKeyInput(0);
+  }
+
+  checkCode(): void {
+    const code = this.employeeCode;
+    if (code === null || code === undefined) {
+      this.isEmployeeCodeDuplicate = false;
+      return;
+    }
+
+    this.employeeService.checkEmployeeCode(code).subscribe({
+      next: (exists) => {
+        this.isEmployeeCodeDuplicate = exists;
+        if (exists) {
+          this.message = `Employee code '${code}' is already taken.`;
+        } else if (this.message === `Employee code '${code}' is already taken.`) {
+          this.message = '';
+        }
+      }
+    });
+  }
+
+  checkEditCode(): void {
+    const code = this.editEmployeeCode;
+    const id = this.editingEmployeeId;
+    if (code === null || code === undefined || !id) {
+      this.isEditEmployeeCodeDuplicate = false;
+      return;
+    }
+
+    this.employeeService.checkEmployeeCode(code, id).subscribe({
+      next: (exists) => {
+        this.isEditEmployeeCodeDuplicate = exists;
+        if (exists) {
+          this.message = `Employee code '${code}' is already taken.`;
+        } else if (this.message === `Employee code '${code}' is already taken.`) {
+          this.message = '';
+        }
+      }
+    });
+  }
+
+  // --- Image Upload & Cropping ---
+
+  onFileChange(event: any, type: 'photo' | 'signature', isEdit: boolean): void {
+    this.croppingFor = type;
+    this.isEditMode = isEdit;
+    this.imageChangedEvent = event;
+    this.showCropper = true;
+  }
+
+  imageCropped(event: ImageCroppedEvent) {
+    console.log('Image cropped event fired', event);
+    if (event.base64) {
+      this.croppedImage = event.base64;
+    } else if (event.objectUrl) {
+      // Fallback if base64 is not provided for some reason
+      this.croppedImage = event.objectUrl;
+    }
+  }
+
+  imageLoaded(image: LoadedImage) {
+    // show cropper
+  }
+
+  cropperReady() {
+    // cropper ready
+  }
+
+  loadImageFailed() {
+    this.message = 'Failed to load image. Please try another file.';
+  }
+
+  applyCrop(): void {
+    console.log('Applying crop for:', this.croppingFor, 'isEdit:', this.isEditMode);
+    console.log('Cropped image length:', this.croppedImage?.length);
+
+    if (!this.croppedImage) {
+      this.message = 'Processing image, please wait a moment...';
+      return;
+    }
+
+    if (this.isEditMode) {
+      if (this.croppingFor === 'photo') {
+        this.editPhotoBase64 = this.croppedImage;
+      } else {
+        this.editSignatureBase64 = this.croppedImage;
+      }
+    } else {
+      if (this.croppingFor === 'photo') {
+        this.photoBase64 = this.croppedImage;
+      } else {
+        this.signatureBase64 = this.croppedImage;
+      }
+    }
+    
+    this.cancelCrop();
+  }
+
+  cancelCrop(): void {
+    this.showCropper = false;
+    this.imageChangedEvent = '';
+    this.croppedImage = '';
+    this.scale = 1;
+    this.transform = { ...this.transform, scale: 1 };
+  }
+
+  zoomOut(): void {
+    this.scale = Math.max(0.1, this.scale - 0.1);
+    this.updateTransform();
+  }
+
+  zoomIn(): void {
+    this.scale += 0.1;
+    this.updateTransform();
+  }
+
+  @HostListener('wheel', ['$event'])
+  onMouseWheel(event: WheelEvent): void {
+    if (this.showCropper && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      const delta = event.deltaY > 0 ? -0.1 : 0.1;
+      this.scale = Math.max(0.1, Math.min(5, this.scale + delta));
+      this.updateTransform();
+    }
+  }
+
+  private updateTransform(): void {
+    this.transform = {
+      ...this.transform,
+      scale: this.scale
+    };
+  }
+
+  removeImage(type: 'photo' | 'signature', isEdit: boolean): void {
+    if (isEdit) {
+      if (type === 'photo') this.editPhotoBase64 = null;
+      else this.editSignatureBase64 = null;
+    } else {
+      if (type === 'photo') this.photoBase64 = null;
+      else this.signatureBase64 = null;
+    }
   }
 
   addDynamicAttributeRow(): void {
@@ -358,8 +519,12 @@ export class EmployeeInfoComponent implements OnInit {
   }
 
   saveEmployee(): void {
-    if (!this.employeeCode.trim() || !this.fullName.trim() || !this.joiningDate) {
-      this.message = 'Employee code, name and joining date are required.';
+    if (this.isEmployeeCodeDuplicate) {
+      this.message = 'Please use a unique employee code.';
+      return;
+    }
+    if (this.employeeCode === null || this.employeeCode === undefined || !this.fullName.trim() || !this.joiningDate || !this.phone.trim() || !this.employmentStatus.trim()) {
+      this.message = 'Employee code, name, joining date, phone and status are required.';
       return;
     }
     if (!this.isEmailValid(this.email)) {
@@ -381,7 +546,7 @@ export class EmployeeInfoComponent implements OnInit {
 
     this.saving = true;
     this.employeeService.create({
-      employeeCode: this.employeeCode.trim(),
+      employeeCode: this.employeeCode!,
       fullName: this.fullName.trim(),
       email: this.email.trim() || null,
       phone: this.phone.trim() || null,
@@ -400,8 +565,8 @@ export class EmployeeInfoComponent implements OnInit {
       maritalStatus: this.maritalStatus.trim() || null,
       bloodGroup: this.bloodGroup.trim() || null,
       nationalId: this.nationalId.trim() || null,
-      photoUrl: this.photoUrl.trim() || null,
-      signatureUrl: this.signatureUrl.trim() || null,
+      photoBase64: this.photoBase64,
+      signatureBase64: this.signatureBase64,
       workingTime: this.workingTime.trim() || null,
       salaryRule: this.salaryRule.trim() || null,
       grossSalary: this.normalizeOptionalNumber(this.grossSalary),
@@ -417,8 +582,13 @@ export class EmployeeInfoComponent implements OnInit {
         this.resetCreateForm();
         this.loadEmployees();
       },
-      error: () => {
-        this.message = 'Failed to save employee.';
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 409) {
+          this.message = typeof error.error === 'string' ? error.error : 'Employee code already exists.';
+        } else {
+          this.message = 'Failed to save employee.';
+        }
+        this.saving = false;
       },
       complete: () => {
         this.saving = false;
@@ -428,6 +598,7 @@ export class EmployeeInfoComponent implements OnInit {
 
   startEdit(employee: Employee): void {
     this.editingEmployeeId = employee.id;
+    this.isEditEmployeeCodeDuplicate = false;
     this.editEmployeeCode = employee.employeeCode;
     this.editFullName = employee.fullName;
     this.editEmail = employee.email ?? '';
@@ -447,8 +618,8 @@ export class EmployeeInfoComponent implements OnInit {
     this.editMaritalStatus = employee.maritalStatus ?? '';
     this.editBloodGroup = employee.bloodGroup ?? '';
     this.editNationalId = employee.nationalId ?? '';
-    this.editPhotoUrl = employee.photoUrl ?? '';
-    this.editSignatureUrl = employee.signatureUrl ?? '';
+    this.editPhotoBase64 = employee.photoBase64 ?? null;
+    this.editSignatureBase64 = employee.signatureBase64 ?? null;
     this.editWorkingTime = employee.workingTime ?? '';
     this.editSalaryRule = employee.salaryRule ?? '';
     this.editGrossSalary = employee.grossSalary ?? null;
@@ -475,6 +646,7 @@ export class EmployeeInfoComponent implements OnInit {
 
   cancelEdit(): void {
     this.editingEmployeeId = null;
+    this.isEditEmployeeCodeDuplicate = false;
     this.editEmploymentStatus = '';
     this.editDateOfBirth = '';
     this.editDynamicEntries = [];
@@ -493,8 +665,12 @@ export class EmployeeInfoComponent implements OnInit {
   }
 
   async saveEdit(employee: Employee): Promise<void> {
-    if (!this.editEmployeeCode.trim() || !this.editFullName.trim() || !this.editJoiningDate) {
-      this.message = 'Employee code, name and joining date are required.';
+    if (this.isEditEmployeeCodeDuplicate) {
+      this.message = 'Please use a unique employee code.';
+      return;
+    }
+    if (this.editEmployeeCode === null || this.editEmployeeCode === undefined || !this.editFullName.trim() || !this.editJoiningDate || !this.editPhone.trim() || !this.editEmploymentStatus.trim()) {
+      this.message = 'Employee code, name, joining date, phone and status are required.';
       return;
     }
     if (!this.isEmailValid(this.editEmail)) {
@@ -516,7 +692,7 @@ export class EmployeeInfoComponent implements OnInit {
 
     try {
       await firstValueFrom(this.employeeService.update(employee.id, {
-        employeeCode: this.editEmployeeCode.trim(),
+        employeeCode: this.editEmployeeCode!,
         fullName: this.editFullName.trim(),
         email: this.editEmail.trim() || null,
         phone: this.editPhone.trim() || null,
@@ -535,8 +711,8 @@ export class EmployeeInfoComponent implements OnInit {
         maritalStatus: this.editMaritalStatus.trim() || null,
         bloodGroup: this.editBloodGroup.trim() || null,
         nationalId: this.editNationalId.trim() || null,
-        photoUrl: this.editPhotoUrl.trim() || null,
-        signatureUrl: this.editSignatureUrl.trim() || null,
+        photoBase64: this.editPhotoBase64,
+        signatureBase64: this.editSignatureBase64,
         workingTime: this.editWorkingTime.trim() || null,
         salaryRule: this.editSalaryRule.trim() || null,
         grossSalary: this.normalizeOptionalNumber(this.editGrossSalary),
@@ -555,8 +731,12 @@ export class EmployeeInfoComponent implements OnInit {
       this.message = 'Employee updated successfully.';
       this.cancelEdit();
       this.loadEmployees();
-    } catch {
-      this.message = 'Failed to update employee.';
+    } catch (error: any) {
+      if (error.status === 409) {
+        this.message = typeof error.error === 'string' ? error.error : 'Employee code already exists.';
+      } else {
+        this.message = 'Failed to update employee.';
+      }
     }
   }
 
@@ -735,7 +915,7 @@ export class EmployeeInfoComponent implements OnInit {
   }
 
   private resetCreateForm(): void {
-    this.employeeCode = '';
+    this.employeeCode = null;
     this.fullName = '';
     this.email = '';
     this.phone = '';
@@ -754,8 +934,8 @@ export class EmployeeInfoComponent implements OnInit {
     this.maritalStatus = '';
     this.bloodGroup = '';
     this.nationalId = '';
-    this.photoUrl = '';
-    this.signatureUrl = '';
+    this.photoBase64 = null;
+    this.signatureBase64 = null;
     this.workingTime = '';
     this.salaryRule = '';
     this.grossSalary = null;
@@ -766,6 +946,7 @@ export class EmployeeInfoComponent implements OnInit {
     this.joiningDate = '';
     this.dynamicEntries = [{ key: '', value: '' }];
     this.attributeSuggestionsByRow = {};
+    this.isEmployeeCodeDuplicate = false;
     this.onAttributeKeyInput(0);
   }
 

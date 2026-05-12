@@ -14,4 +14,5 @@ public class CompanyUpdateRequest
 
     [MaxLength(2000)]
     public string? LogoUrl { get; set; }
+    public string? LogoBase64 { get; set; }
 }

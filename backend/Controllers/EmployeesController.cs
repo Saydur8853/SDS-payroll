@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Payroll.Api.Data;
 using Payroll.Api.Dtos;
 using Payroll.Api.Models;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 
@@ -165,19 +166,32 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
         return Ok(MapToResponse(employee));
     }
 
+    [HttpGet("exists/{code}")]
+    public async Task<ActionResult<bool>> CheckCode(long code, [FromQuery] Guid? excludeId, CancellationToken cancellationToken)
+    {
+        var exists = await dbContext.Employees
+            .AnyAsync(x => x.EmployeeCode == code && (excludeId == null || x.Id != excludeId), cancellationToken);
+        return Ok(exists);
+    }
+
     [HttpPost]
     public async Task<ActionResult<EmployeeResponse>> Create(
         [FromBody] EmployeeCreateRequest request,
         CancellationToken cancellationToken)
     {
+        if (await dbContext.Employees.AnyAsync(x => x.EmployeeCode == request.EmployeeCode, cancellationToken))
+        {
+            return Conflict($"Employee with code '{request.EmployeeCode}' already exists.");
+        }
+
         var existingKeys = await GetDynamicAttributeKeyCounts(cancellationToken);
         var employee = new Employee
         {
             Id = Guid.NewGuid(),
-            EmployeeCode = request.EmployeeCode.Trim(),
+            EmployeeCode = request.EmployeeCode,
             FullName = request.FullName.Trim(),
             Email = request.Email?.Trim(),
-            Phone = request.Phone?.Trim(),
+            Phone = request.Phone.Trim(),
             Department = request.Department?.Trim(),
             Designation = request.Designation?.Trim(),
             Address = request.Address?.Trim(),
@@ -192,9 +206,9 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
             MaritalStatus = request.MaritalStatus?.Trim(),
             BloodGroup = request.BloodGroup?.Trim(),
             NationalId = request.NationalId?.Trim(),
-            EmploymentStatus = request.EmploymentStatus?.Trim(),
-            PhotoUrl = request.PhotoUrl?.Trim(),
-            SignatureUrl = request.SignatureUrl?.Trim(),
+            EmploymentStatus = request.EmploymentStatus.Trim(),
+            Photo = FromBase64(request.PhotoBase64),
+            Signature = FromBase64(request.SignatureBase64),
             WorkingTime = request.WorkingTime?.Trim(),
             SalaryRule = request.SalaryRule?.Trim(),
             GrossSalary = request.GrossSalary,
@@ -224,10 +238,15 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
             return NotFound();
         }
 
-        employee.EmployeeCode = request.EmployeeCode.Trim();
+        if (await dbContext.Employees.AnyAsync(x => x.Id != id && x.EmployeeCode == request.EmployeeCode, cancellationToken))
+        {
+            return Conflict($"Employee with code '{request.EmployeeCode}' already exists.");
+        }
+
+        employee.EmployeeCode = request.EmployeeCode;
         employee.FullName = request.FullName.Trim();
         employee.Email = request.Email?.Trim();
-        employee.Phone = request.Phone?.Trim();
+        employee.Phone = request.Phone.Trim();
         employee.Department = request.Department?.Trim();
         employee.Designation = request.Designation?.Trim();
         employee.Address = request.Address?.Trim();
@@ -242,9 +261,11 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
         employee.MaritalStatus = request.MaritalStatus?.Trim();
         employee.BloodGroup = request.BloodGroup?.Trim();
         employee.NationalId = request.NationalId?.Trim();
-        employee.EmploymentStatus = request.EmploymentStatus?.Trim();
-        employee.PhotoUrl = request.PhotoUrl?.Trim();
-        employee.SignatureUrl = request.SignatureUrl?.Trim();
+        employee.EmploymentStatus = request.EmploymentStatus.Trim();
+        employee.Photo = FromBase64(request.PhotoBase64);
+        employee.Signature = FromBase64(request.SignatureBase64);
+        employee.Photo = request.PhotoBase64 != null ? FromBase64(request.PhotoBase64) : employee.Photo;
+        employee.Signature = request.SignatureBase64 != null ? FromBase64(request.SignatureBase64) : employee.Signature;
         employee.WorkingTime = request.WorkingTime?.Trim();
         employee.SalaryRule = request.SalaryRule?.Trim();
         employee.GrossSalary = request.GrossSalary;
@@ -398,8 +419,8 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
             BloodGroup = employee.BloodGroup,
             NationalId = employee.NationalId,
             EmploymentStatus = employee.EmploymentStatus,
-            PhotoUrl = employee.PhotoUrl,
-            SignatureUrl = employee.SignatureUrl,
+            PhotoBase64 = ToBase64(employee.Photo),
+            SignatureBase64 = ToBase64(employee.Signature),
             WorkingTime = employee.WorkingTime,
             SalaryRule = employee.SalaryRule,
             GrossSalary = employee.GrossSalary,
@@ -530,8 +551,10 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
         {
             var rawTerm = search.Trim();
             var likeTerm = $"%{rawTerm}%";
+            long? searchCode = long.TryParse(rawTerm, out var parsed) ? parsed : null;
+
             query = query.Where(x =>
-                EF.Functions.ILike(x.EmployeeCode, rawTerm) ||
+                (searchCode != null && x.EmployeeCode == searchCode) ||
                 EF.Functions.ILike(x.FullName, likeTerm) ||
                 (x.Phone != null && EF.Functions.ILike(x.Phone, rawTerm)));
         }
@@ -611,7 +634,7 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
         {
             var staticColumns = new[]
             {
-                employee.EmployeeCode,
+                employee.EmployeeCode.ToString(),
                 employee.FullName,
                 employee.Email ?? string.Empty,
                 employee.Phone ?? string.Empty,
@@ -630,8 +653,8 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
                 employee.BloodGroup ?? string.Empty,
                 employee.NationalId ?? string.Empty,
                 employee.EmploymentStatus ?? string.Empty,
-                employee.PhotoUrl ?? string.Empty,
-                employee.SignatureUrl ?? string.Empty,
+                employee.Photo != null ? "Yes" : "No",
+                employee.Signature != null ? "Yes" : "No",
                 employee.WorkingTime ?? string.Empty,
                 employee.SalaryRule ?? string.Empty,
                 employee.GrossSalary?.ToString("0.##") ?? string.Empty,
@@ -651,6 +674,24 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
         }
 
         return Encoding.UTF8.GetBytes(builder.ToString());
+    }
+
+    private static byte[]? FromBase64(string? base64)
+    {
+        if (string.IsNullOrWhiteSpace(base64)) return null;
+        try
+        {
+            var s = base64;
+            if (s.Contains(',')) s = s.Split(',')[1];
+            return Convert.FromBase64String(s);
+        }
+        catch { return null; }
+    }
+
+    private static string? ToBase64(byte[]? bytes)
+    {
+        if (bytes == null || bytes.Length == 0) return null;
+        return "data:image/webp;base64," + Convert.ToBase64String(bytes);
     }
 
     private static string EscapeCsv(string value)

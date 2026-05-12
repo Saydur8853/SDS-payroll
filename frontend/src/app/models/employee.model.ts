@@ -1,6 +1,6 @@
 export interface Employee {
   id: string;
-  employeeCode: string;
+  employeeCode: number;
   fullName: string;
   email?: string | null;
   phone?: string | null;
@@ -19,8 +19,8 @@ export interface Employee {
   bloodGroup?: string | null;
   nationalId?: string | null;
   employmentStatus?: string | null;
-  photoUrl?: string | null;
-  signatureUrl?: string | null;
+  photoBase64?: string | null;
+  signatureBase64?: string | null;
   workingTime?: string | null;
   salaryRule?: string | null;
   grossSalary?: number | null;
@@ -53,7 +53,7 @@ export interface PagedResponse<T> {
 }
 
 export interface CreateEmployeeRequest {
-  employeeCode: string;
+  employeeCode: number;
   fullName: string;
   email?: string | null;
   phone?: string | null;
@@ -72,8 +72,8 @@ export interface CreateEmployeeRequest {
   bloodGroup?: string | null;
   nationalId?: string | null;
   employmentStatus?: string | null;
-  photoUrl?: string | null;
-  signatureUrl?: string | null;
+  photoBase64?: string | null;
+  signatureBase64?: string | null;
   workingTime?: string | null;
   salaryRule?: string | null;
   grossSalary?: number | null;

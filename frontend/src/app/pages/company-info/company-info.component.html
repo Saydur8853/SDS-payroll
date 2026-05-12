@@ -2,26 +2,41 @@
   <section class="panel">
     <h1>Company Info</h1>
 
-    <div class="form-grid">
-      <label>
-        <span class="label-text">Company Name <span class="required-star">*</span></span>
-        <input type="text" [(ngModel)]="name" />
-      </label>
+    <div class="basic-info-media-layout">
+      <div class="field-grid flex-1">
+        <label>
+          <span class="label-text">Company Name <span class="required-star">*</span></span>
+          <input type="text" [(ngModel)]="name" placeholder="Enter company name" />
+        </label>
 
-      <label>
-        <span class="label-text">Company Address <span class="required-star">*</span></span>
-        <input type="text" [(ngModel)]="address" />
-      </label>
+        <label>
+          <span class="label-text">Company Address <span class="required-star">*</span></span>
+          <input type="text" [(ngModel)]="address" placeholder="Full address" />
+        </label>
 
-      <label>
-        Logo URL (optional)
-        <input type="text" [(ngModel)]="logoUrl" [disabled]="selectedLogoFile !== null" />
-      </label>
+        <label>
+          <span class="label-text">Logo URL (optional)</span>
+          <input type="text" [(ngModel)]="logoUrl" [disabled]="selectedLogoFile !== null" placeholder="https://..." />
+        </label>
+      </div>
 
-      <label>
-        Logo Upload (optional)
-        <input type="file" accept="image/*" (change)="onLogoFileSelected($event)" />
-      </label>
+      <div class="media-column">
+        <div class="image-preview" [class.empty]="!logoBase64">
+          <img *ngIf="logoBase64" [src]="logoBase64" alt="Logo Preview" />
+          <div *ngIf="!logoBase64" class="placeholder">
+            <span class="material-symbols-rounded">business</span>
+          </div>
+          <div class="image-overlay" *ngIf="logoBase64">
+            <button class="btn tiny icon-btn danger" (click)="removeLogo(false)">
+              <span class="material-symbols-rounded">delete</span>
+            </button>
+          </div>
+        </div>
+        <label class="btn tiny primary upload-btn">
+          <span class="material-symbols-rounded">upload</span> Upload Logo
+          <input type="file" (change)="onLogoFileSelected($event, false)" accept="image/*" hidden />
+        </label>
+      </div>
     </div>
 
     <div class="dynamic-header">
@@ -94,32 +109,74 @@
       </div>
 
       <div class="edit-panel" *ngIf="editingCompanyId === company.id">
-        <input type="text" [(ngModel)]="editName" placeholder="Company name" />
-        <input type="text" [(ngModel)]="editAddress" placeholder="Company address" />
-        <input type="text" [(ngModel)]="editLogoUrl" placeholder="Logo URL (optional)" />
-        <div class="edit-dynamic-list">
+        <div class="basic-info-media-layout">
+          <div class="field-grid flex-1">
+            <label>
+              <span class="label-text">Company Name <span class="required-star">*</span></span>
+              <input type="text" [(ngModel)]="editName" placeholder="Company name" />
+            </label>
+            <label>
+              <span class="label-text">Company Address <span class="required-star">*</span></span>
+              <input type="text" [(ngModel)]="editAddress" placeholder="Company address" />
+            </label>
+            <label>
+              <span class="label-text">Logo URL (optional)</span>
+              <input type="text" [(ngModel)]="editLogoUrl" placeholder="Logo URL" />
+            </label>
+          </div>
+
+          <div class="media-column">
+            <div class="image-preview" [class.empty]="!editLogoBase64">
+              <img *ngIf="editLogoBase64" [src]="editLogoBase64" alt="Logo Preview" />
+              <div *ngIf="!editLogoBase64" class="placeholder">
+                <span class="material-symbols-rounded">business</span>
+              </div>
+              <div class="image-overlay" *ngIf="editLogoBase64">
+                <button class="btn tiny icon-btn danger" (click)="removeLogo(true)">
+                  <span class="material-symbols-rounded">delete</span>
+                </button>
+              </div>
+            </div>
+            <label class="btn tiny primary upload-btn">
+              <span class="material-symbols-rounded">upload</span> Change Logo
+              <input type="file" (change)="onLogoFileSelected($event, true)" accept="image/*" hidden />
+            </label>
+          </div>
+        </div>
+
+        <div class="edit-dynamic-list mt-4">
           <h4>Dynamic Attributes</h4>
           <div class="edit-dynamic-row" *ngFor="let entry of editDynamicEntries; let idx = index">
             <input type="text" [(ngModel)]="entry.key" placeholder="Attribute key" />
             <input type="text" [(ngModel)]="entry.value" placeholder="Attribute value" />
-            <button type="button" class="btn tiny danger" (click)="removeEditDynamicAttributeRow(idx)">Remove</button>
+            <button type="button" class="btn tiny danger icon-btn" (click)="removeEditDynamicAttributeRow(idx)">
+              <span class="material-symbols-rounded" style="font-size:16px">close</span>
+            </button>
           </div>
-          <button type="button" class="btn tiny secondary" (click)="addEditDynamicAttributeRow()">Add Attribute</button>
+          <button type="button" class="btn tiny secondary" (click)="addEditDynamicAttributeRow()">
+            <span class="material-symbols-rounded" style="font-size:16px">add</span> Add Attribute
+          </button>
         </div>
         <div class="edit-actions">
-          <button type="button" class="btn tiny primary" [disabled]="updatingCompanyId === company.id" (click)="saveEdit(company)">Save</button>
+          <button type="button" class="btn tiny primary" [disabled]="updatingCompanyId === company.id" (click)="saveEdit(company)">
+            <span class="material-symbols-rounded" style="font-size:16px">save</span> Save
+          </button>
           <button type="button" class="btn tiny secondary" (click)="cancelEdit()">Cancel</button>
         </div>
       </div>
 
-      <p *ngIf="company.logoUrl">
-        <a [href]="company.logoUrl" target="_blank" rel="noopener">Logo</a>
-      </p>
-      <ul>
-        <li *ngFor="let item of company.dynamicAttributes | keyvalue">
-          <span><strong>{{ item.key }}:</strong> {{ getDisplayAttributeValue(item.key, item.value) }}</span>
-        </li>
-      </ul>
+      <div class="company-body">
+        <div class="card-logo" *ngIf="company.logoBase64 || company.logoUrl">
+          <img [src]="getLogoUrl(company)" alt="Company Logo" />
+        </div>
+        <div class="card-details">
+          <ul>
+            <li *ngFor="let item of company.dynamicAttributes | keyvalue">
+              <span><strong>{{ item.key }}:</strong> {{ getDisplayAttributeValue(item.key, item.value) }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   </section>
 </main>

@@ -86,4 +86,12 @@ export class EmployeeService {
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  checkEmployeeCode(code: number, excludeId?: string): Observable<boolean> {
+    let url = `${this.apiUrl}/exists/${code}`;
+    if (excludeId) {
+      url += `?excludeId=${excludeId}`;
+    }
+    return this.http.get<boolean>(url);
+  }
 }

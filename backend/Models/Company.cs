@@ -15,6 +15,8 @@ public class Company
     [MaxLength(2000)]
     public string? LogoUrl { get; set; }
 
+    public byte[]? Logo { get; set; }
+
     public Dictionary<string, string?> DynamicAttributes { get; set; } = new();
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;

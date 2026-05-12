@@ -3,7 +3,7 @@ namespace Payroll.Api.Dtos;
 public class EmployeeResponse
 {
     public Guid Id { get; set; }
-    public string EmployeeCode { get; set; } = string.Empty;
+    public long EmployeeCode { get; set; }
     public string FullName { get; set; } = string.Empty;
     public string? Email { get; set; }
     public string? Phone { get; set; }
@@ -22,8 +22,8 @@ public class EmployeeResponse
     public string? BloodGroup { get; set; }
     public string? NationalId { get; set; }
     public string? EmploymentStatus { get; set; }
-    public string? PhotoUrl { get; set; }
-    public string? SignatureUrl { get; set; }
+    public string? PhotoBase64 { get; set; }
+    public string? SignatureBase64 { get; set; }
     public string? WorkingTime { get; set; }
     public string? SalaryRule { get; set; }
     public decimal? GrossSalary { get; set; }

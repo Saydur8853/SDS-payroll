@@ -14,6 +14,7 @@ public class CompanyCreateRequest
 
     [MaxLength(2000)]
     public string? LogoUrl { get; set; }
+    public string? LogoBase64 { get; set; }
 
     public Dictionary<string, string?> DynamicAttributes { get; set; } = new();
 }
