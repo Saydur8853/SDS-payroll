@@ -1,7 +1,6 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { ImageCropperComponent, ImageCroppedEvent, LoadedImage } from 'ngx-image-cropper';
 import { EmployeeService } from '../../services/employee.service';
@@ -32,6 +31,7 @@ export class EmployeeInfoComponent implements OnInit {
   shifts: LookupItem[] = [];
   statusOptions: string[] = [];
   loadingEmployees = false;
+  hasRequestedEmployees = false;
 
   employeeCode: number | null = null;
   fullName = '';
@@ -151,7 +151,6 @@ export class EmployeeInfoComponent implements OnInit {
   };
 
   ngOnInit(): void {
-    this.loadEmployees();
     this.loadLookups();
     this.onAttributeKeyInput(0);
   }
@@ -163,7 +162,7 @@ export class EmployeeInfoComponent implements OnInit {
       return;
     }
 
-    this.employeeService.checkEmployeeCode(code).subscribe({
+    this.employeeService.checkEmployeeCode(code, this.editingEmployeeId ?? undefined).subscribe({
       next: (exists) => {
         this.isEmployeeCodeDuplicate = exists;
         if (exists) {
@@ -204,13 +203,22 @@ export class EmployeeInfoComponent implements OnInit {
     this.showCropper = true;
   }
 
-  imageCropped(event: ImageCroppedEvent) {
+  imageCropped(event: ImageCroppedEvent): void {
     console.log('Image cropped event fired', event);
     if (event.base64) {
       this.croppedImage = event.base64;
     } else if (event.objectUrl) {
-      // Fallback if base64 is not provided for some reason
-      this.croppedImage = event.objectUrl;
+      this.croppedImage = '';
+      this.convertObjectUrlToBase64(event.objectUrl)
+        .then((base64) => {
+          this.croppedImage = base64;
+        })
+        .catch(() => {
+          this.croppedImage = '';
+          this.message = 'Failed to process image. Please try again.';
+        });
+    } else {
+      this.croppedImage = '';
     }
   }
 
@@ -226,7 +234,7 @@ export class EmployeeInfoComponent implements OnInit {
     this.message = 'Failed to load image. Please try another file.';
   }
 
-  applyCrop(): void {
+  async applyCrop(): Promise<void> {
     console.log('Applying crop for:', this.croppingFor, 'isEdit:', this.isEditMode);
     console.log('Cropped image length:', this.croppedImage?.length);
 
@@ -235,17 +243,27 @@ export class EmployeeInfoComponent implements OnInit {
       return;
     }
 
+    let finalImage = this.croppedImage as string;
+    if (this.croppingFor === 'signature') {
+      try {
+        finalImage = await this.cleanSignatureBackground(finalImage);
+      } catch {
+        // Keep original crop if cleanup fails.
+        finalImage = this.croppedImage as string;
+      }
+    }
+
     if (this.isEditMode) {
       if (this.croppingFor === 'photo') {
-        this.editPhotoBase64 = this.croppedImage;
+        this.editPhotoBase64 = finalImage;
       } else {
-        this.editSignatureBase64 = this.croppedImage;
+        this.editSignatureBase64 = finalImage;
       }
     } else {
       if (this.croppingFor === 'photo') {
-        this.photoBase64 = this.croppedImage;
+        this.photoBase64 = finalImage;
       } else {
-        this.signatureBase64 = this.croppedImage;
+        this.signatureBase64 = finalImage;
       }
     }
     
@@ -518,13 +536,24 @@ export class EmployeeInfoComponent implements OnInit {
     });
   }
 
-  saveEmployee(): void {
+  async saveEmployee(): Promise<void> {
     if (this.isEmployeeCodeDuplicate) {
       this.message = 'Please use a unique employee code.';
       return;
     }
-    if (this.employeeCode === null || this.employeeCode === undefined || !this.fullName.trim() || !this.joiningDate || !this.phone.trim() || !this.employmentStatus.trim()) {
-      this.message = 'Employee code, name, joining date, phone and status are required.';
+    if (
+      this.employeeCode === null ||
+      this.employeeCode === undefined ||
+      !this.fullName.trim() ||
+      !this.phone.trim() ||
+      !this.employmentStatus.trim() ||
+      !this.department.trim() ||
+      !this.designation.trim() ||
+      !this.gender.trim() ||
+      !this.dateOfBirth ||
+      !this.joiningDate
+    ) {
+      this.message = 'Employee code, name, phone, status, department, designation, gender, date of birth and joining date are required.';
       return;
     }
     if (!this.isEmailValid(this.email)) {
@@ -543,9 +572,13 @@ export class EmployeeInfoComponent implements OnInit {
       this.message = `Minimum age is ${this.minimumAgeYears} years.`;
       return;
     }
+    if (this.isMaternityStatusInvalidForGender(this.employmentStatus, this.gender)) {
+      this.message = 'This employee gender is not female.';
+      return;
+    }
 
     this.saving = true;
-    this.employeeService.create({
+    const updateRequest = {
       employeeCode: this.employeeCode!,
       fullName: this.fullName.trim(),
       email: this.email.trim() || null,
@@ -574,82 +607,93 @@ export class EmployeeInfoComponent implements OnInit {
       weekend: this.weekend.trim() || null,
       salaryAccount: this.salaryAccount.trim() || null,
       dateOfBirth: this.dateOfBirth || null,
-      joiningDate: this.joiningDate,
-      dynamicAttributes: this.buildDynamicAttributesPayload(this.dynamicEntries)
-    }).subscribe({
-      next: () => {
+      joiningDate: this.joiningDate
+    };
+
+    try {
+      if (this.editingEmployeeId) {
+        await firstValueFrom(this.employeeService.update(this.editingEmployeeId, updateRequest));
+        await firstValueFrom(this.employeeService.replaceDynamicAttributes(
+          this.editingEmployeeId,
+          this.buildDynamicAttributesPayload(this.dynamicEntries)
+        ));
+        this.message = 'Employee updated successfully.';
+      } else {
+        await firstValueFrom(this.employeeService.create({
+          ...updateRequest,
+          dynamicAttributes: this.buildDynamicAttributesPayload(this.dynamicEntries)
+        }));
         this.message = 'Employee saved successfully.';
-        this.resetCreateForm();
-        this.loadEmployees();
-      },
-      error: (error: HttpErrorResponse) => {
-        if (error.status === 409) {
-          this.message = typeof error.error === 'string' ? error.error : 'Employee code already exists.';
-        } else {
-          this.message = 'Failed to save employee.';
-        }
-        this.saving = false;
-      },
-      complete: () => {
-        this.saving = false;
       }
-    });
+
+      this.resetCreateForm();
+      this.loadEmployees();
+    } catch (error: any) {
+      if (error?.status === 409) {
+        this.message = typeof error.error === 'string' ? error.error : 'Employee code already exists.';
+      } else {
+        this.message = this.editingEmployeeId ? 'Failed to update employee.' : 'Failed to save employee.';
+      }
+    } finally {
+      this.saving = false;
+    }
   }
 
   startEdit(employee: Employee): void {
     this.editingEmployeeId = employee.id;
-    this.isEditEmployeeCodeDuplicate = false;
-    this.editEmployeeCode = employee.employeeCode;
-    this.editFullName = employee.fullName;
-    this.editEmail = employee.email ?? '';
-    this.editPhone = employee.phone ?? '';
-    this.editDepartment = employee.department ?? '';
-    this.editDesignation = employee.designation ?? '';
-    this.editEmploymentStatus = employee.employmentStatus ?? '';
-    this.editAddress = employee.address ?? '';
-    this.editFatherName = employee.fatherName ?? '';
-    this.editMotherName = employee.motherName ?? '';
-    this.editSpouseName = employee.spouseName ?? '';
-    this.editFatherPhone = employee.fatherPhone ?? '';
-    this.editMotherPhone = employee.motherPhone ?? '';
-    this.editSpousePhone = employee.spousePhone ?? '';
-    this.editGender = employee.gender ?? '';
-    this.editReligion = employee.religion ?? '';
-    this.editMaritalStatus = employee.maritalStatus ?? '';
-    this.editBloodGroup = employee.bloodGroup ?? '';
-    this.editNationalId = employee.nationalId ?? '';
-    this.editPhotoBase64 = employee.photoBase64 ?? null;
-    this.editSignatureBase64 = employee.signatureBase64 ?? null;
-    this.editWorkingTime = employee.workingTime ?? '';
-    this.editSalaryRule = employee.salaryRule ?? '';
-    this.editGrossSalary = employee.grossSalary ?? null;
-    this.editBasicSalary = employee.basicSalary ?? null;
-    this.editWeekend = employee.weekend ?? '';
-    this.editSalaryAccount = employee.salaryAccount ?? '';
-    this.editDateOfBirth = employee.dateOfBirth ?? '';
-    this.editJoiningDate = employee.joiningDate;
-    if (this.editWorkingTime && !this.shifts.some(x => x.name.toLowerCase() === this.editWorkingTime.toLowerCase())) {
-      this.shifts = [...this.shifts, { id: `legacy-${employee.id}`, name: this.editWorkingTime }]
+    this.isEmployeeCodeDuplicate = false;
+    this.employeeCode = employee.employeeCode;
+    this.fullName = employee.fullName;
+    this.email = employee.email ?? '';
+    this.phone = employee.phone ?? '';
+    this.department = employee.department ?? '';
+    this.designation = employee.designation ?? '';
+    this.employmentStatus = employee.employmentStatus ?? '';
+    this.address = employee.address ?? '';
+    this.fatherName = employee.fatherName ?? '';
+    this.motherName = employee.motherName ?? '';
+    this.spouseName = employee.spouseName ?? '';
+    this.fatherPhone = employee.fatherPhone ?? '';
+    this.motherPhone = employee.motherPhone ?? '';
+    this.spousePhone = employee.spousePhone ?? '';
+    this.gender = employee.gender ?? '';
+    this.religion = employee.religion ?? '';
+    this.maritalStatus = employee.maritalStatus ?? '';
+    this.bloodGroup = employee.bloodGroup ?? '';
+    this.nationalId = employee.nationalId ?? '';
+    this.photoBase64 = employee.photoBase64 ?? null;
+    this.signatureBase64 = employee.signatureBase64 ?? null;
+    this.workingTime = employee.workingTime ?? '';
+    this.salaryRule = employee.salaryRule ?? '';
+    this.grossSalary = employee.grossSalary ?? null;
+    this.basicSalary = employee.basicSalary ?? null;
+    this.weekend = employee.weekend ?? '';
+    this.salaryAccount = employee.salaryAccount ?? '';
+    this.dateOfBirth = employee.dateOfBirth ?? '';
+    this.joiningDate = employee.joiningDate;
+    if (this.workingTime && !this.shifts.some(x => x.name.toLowerCase() === this.workingTime.toLowerCase())) {
+      this.shifts = [...this.shifts, { id: `legacy-${employee.id}`, name: this.workingTime }]
         .sort((a, b) => a.name.localeCompare(b.name));
     }
-    if (this.editEmploymentStatus && !this.statusOptions.some(x => x.toLowerCase() === this.editEmploymentStatus.toLowerCase())) {
-      this.statusOptions = [...this.statusOptions, this.editEmploymentStatus].sort((a, b) => a.localeCompare(b));
+    if (this.employmentStatus && !this.statusOptions.some(x => x.toLowerCase() === this.employmentStatus.toLowerCase())) {
+      this.statusOptions = [...this.statusOptions, this.employmentStatus].sort((a, b) => a.localeCompare(b));
     }
-    this.editDynamicEntries = Object.entries(employee.dynamicAttributes).map(([key, value]) => ({
+    this.dynamicEntries = Object.entries(employee.dynamicAttributes).map(([key, value]) => ({
       key,
       value: value ?? ''
     }));
-    if (this.editDynamicEntries.length === 0) {
-      this.editDynamicEntries.push({ key: '', value: '' });
+    if (this.dynamicEntries.length === 0) {
+      this.dynamicEntries.push({ key: '', value: '' });
     }
+    this.attributeSuggestionsByRow = {};
+    this.dynamicEntries.forEach((_, index) => this.onAttributeKeyInput(index));
+    this.message = `Editing employee: ${employee.fullName}`;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   cancelEdit(): void {
-    this.editingEmployeeId = null;
-    this.isEditEmployeeCodeDuplicate = false;
-    this.editEmploymentStatus = '';
-    this.editDateOfBirth = '';
-    this.editDynamicEntries = [];
+    this.resetCreateForm();
+    this.message = 'Edit canceled.';
   }
 
   addEditDynamicAttributeRow(): void {
@@ -794,6 +838,7 @@ export class EmployeeInfoComponent implements OnInit {
 
   applyFilters(): void {
     this.page = 1;
+    this.hasRequestedEmployees = true;
     this.loadEmployees();
   }
 
@@ -805,7 +850,11 @@ export class EmployeeInfoComponent implements OnInit {
     this.filterJoiningDateTo = '';
     this.pageSize = 20;
     this.page = 1;
-    this.loadEmployees();
+    this.hasRequestedEmployees = false;
+    this.employees = [];
+    this.totalCount = 0;
+    this.totalPages = 0;
+    this.loadingEmployees = false;
   }
 
   onPageSizeChange(pageSize: string | number): void {
@@ -900,6 +949,12 @@ export class EmployeeInfoComponent implements OnInit {
     this.employeeService.getStatusOptions().subscribe({
       next: (items) => {
         this.statusOptions = items;
+        if (!this.employmentStatus && this.statusOptions.length > 0) {
+          this.employmentStatus = this.statusOptions[0];
+        }
+        if (this.editingEmployeeId && !this.editEmploymentStatus && this.statusOptions.length > 0) {
+          this.editEmploymentStatus = this.statusOptions[0];
+        }
       }
     });
   }
@@ -915,13 +970,14 @@ export class EmployeeInfoComponent implements OnInit {
   }
 
   private resetCreateForm(): void {
+    this.editingEmployeeId = null;
     this.employeeCode = null;
     this.fullName = '';
     this.email = '';
     this.phone = '';
     this.department = '';
     this.designation = '';
-    this.employmentStatus = '';
+    this.employmentStatus = this.statusOptions[0] ?? '';
     this.address = '';
     this.fatherName = '';
     this.motherName = '';
@@ -947,6 +1003,7 @@ export class EmployeeInfoComponent implements OnInit {
     this.dynamicEntries = [{ key: '', value: '' }];
     this.attributeSuggestionsByRow = {};
     this.isEmployeeCodeDuplicate = false;
+    this.isEditEmployeeCodeDuplicate = false;
     this.onAttributeKeyInput(0);
   }
 
@@ -1007,6 +1064,36 @@ export class EmployeeInfoComponent implements OnInit {
     private readonly lookupService: LookupService,
     private readonly shiftService: ShiftService
   ) {}
+
+  getEmployeePhotoSrc(employee: Employee): string | null {
+    return this.resolveEmployeeImageSource(employee.photoBase64);
+  }
+
+  getEmployeeSignatureSrc(employee: Employee): string | null {
+    return this.resolveEmployeeImageSource(employee.signatureBase64);
+  }
+
+  getEmployeeStatusClass(status?: string | null): string {
+    const normalized = (status ?? '').trim().toLowerCase();
+
+    if (normalized === 'active') {
+      return 'status-active';
+    }
+
+    if (normalized === 'inactive') {
+      return 'status-inactive';
+    }
+
+    if (normalized === 'close' || normalized === 'closed') {
+      return 'status-closed';
+    }
+
+    if (normalized === 'resigned') {
+      return 'status-resigned';
+    }
+
+    return 'status-default';
+  }
 
   private isEmailValid(email: string): boolean {
     const trimmed = email.trim();
@@ -1159,6 +1246,12 @@ export class EmployeeInfoComponent implements OnInit {
     return Number.isFinite(parsed) ? parsed : null;
   }
 
+  private isMaternityStatusInvalidForGender(status?: string | null, gender?: string | null): boolean {
+    const normalizedStatus = (status ?? '').trim().toLowerCase();
+    const normalizedGender = (gender ?? '').trim().toLowerCase();
+    return normalizedStatus === 'maternity' && normalizedGender !== 'female';
+  }
+
   private buildExportTimestamp(): string {
     const now = new Date();
     const yyyy = now.getFullYear();
@@ -1177,5 +1270,156 @@ export class EmployeeInfoComponent implements OnInit {
     anchor.download = fileName;
     anchor.click();
     window.URL.revokeObjectURL(objectUrl);
+  }
+
+  private resolveEmployeeImageSource(value?: string | null): string | null {
+    const source = value?.trim();
+    if (!source) {
+      return null;
+    }
+
+    if (source.startsWith('data:image/')) {
+      return source;
+    }
+
+    if (source.startsWith('http://') || source.startsWith('https://')) {
+      return source;
+    }
+
+    if (source.startsWith('/uploads/')) {
+      return `http://localhost:5277${source}`;
+    }
+
+    if (/^[A-Za-z0-9+/=]+$/.test(source)) {
+      return `data:image/webp;base64,${source}`;
+    }
+
+    return null;
+  }
+
+  private async convertObjectUrlToBase64(objectUrl: string): Promise<string> {
+    const response = await fetch(objectUrl);
+    const blob = await response.blob();
+
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error('Failed to convert image to base64.'));
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  private async cleanSignatureBackground(dataUrl: string): Promise<string> {
+    const image = await this.loadImage(dataUrl);
+    const canvas = document.createElement('canvas');
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const context = canvas.getContext('2d');
+
+    if (!context) {
+      return dataUrl;
+    }
+
+    context.drawImage(image, 0, 0);
+    const frame = context.getImageData(0, 0, canvas.width, canvas.height);
+    const pixels = frame.data;
+    const width = canvas.width;
+    const height = canvas.height;
+    const pixelCount = width * height;
+
+    // Convert to grayscale first.
+    const gray = new Uint8ClampedArray(pixelCount);
+    for (let i = 0, p = 0; i < pixelCount; i++, p += 4) {
+      const red = pixels[p];
+      const green = pixels[p + 1];
+      const blue = pixels[p + 2];
+      gray[i] = Math.round((0.299 * red) + (0.587 * green) + (0.114 * blue));
+    }
+
+    // Build integral image for fast local mean calculation.
+    const stride = width + 1;
+    const integral = new Float64Array((width + 1) * (height + 1));
+    for (let y = 1; y <= height; y++) {
+      let rowSum = 0;
+      for (let x = 1; x <= width; x++) {
+        rowSum += gray[(y - 1) * width + (x - 1)];
+        integral[y * stride + x] = integral[(y - 1) * stride + x] + rowSum;
+      }
+    }
+
+    // Adaptive threshold to handle uneven lighting/shadows on paper.
+    const radius = Math.max(8, Math.round(Math.min(width, height) * 0.08));
+    const offset = 14;
+    const inkMask = new Uint8Array(pixelCount);
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const x1 = Math.max(0, x - radius);
+        const y1 = Math.max(0, y - radius);
+        const x2 = Math.min(width - 1, x + radius);
+        const y2 = Math.min(height - 1, y + radius);
+
+        const area = (x2 - x1 + 1) * (y2 - y1 + 1);
+        const sum =
+          integral[(y2 + 1) * stride + (x2 + 1)] -
+          integral[y1 * stride + (x2 + 1)] -
+          integral[(y2 + 1) * stride + x1] +
+          integral[y1 * stride + x1];
+
+        const localMean = sum / area;
+        const index = y * width + x;
+        inkMask[index] = gray[index] < (localMean - offset) ? 1 : 0;
+      }
+    }
+
+    // Remove isolated noise pixels.
+    for (let y = 1; y < height - 1; y++) {
+      for (let x = 1; x < width - 1; x++) {
+        const index = y * width + x;
+        if (inkMask[index] === 0) {
+          continue;
+        }
+
+        let neighbors = 0;
+        for (let yy = -1; yy <= 1; yy++) {
+          for (let xx = -1; xx <= 1; xx++) {
+            if (xx === 0 && yy === 0) {
+              continue;
+            }
+            neighbors += inkMask[(y + yy) * width + (x + xx)];
+          }
+        }
+
+        if (neighbors <= 1) {
+          inkMask[index] = 0;
+        }
+      }
+    }
+
+    // Render clean black ink on white background.
+    for (let i = 0, p = 0; i < pixelCount; i++, p += 4) {
+      if (inkMask[i] === 1) {
+        pixels[p] = 35;
+        pixels[p + 1] = 35;
+        pixels[p + 2] = 35;
+      } else {
+        pixels[p] = 255;
+        pixels[p + 1] = 255;
+        pixels[p + 2] = 255;
+      }
+      pixels[p + 3] = 255;
+    }
+
+    context.putImageData(frame, 0, 0);
+    return canvas.toDataURL('image/webp', 0.95);
+  }
+
+  private loadImage(source: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error('Unable to load image.'));
+      image.src = source;
+    });
   }
 }

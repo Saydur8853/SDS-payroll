@@ -6,8 +6,8 @@
         <span class="material-symbols-rounded">person_add</span>
       </div>
       <div>
-        <h1>Add New Employee</h1>
-        <p class="panel-subtitle">Fill in the details below to register a new employee</p>
+        <h1>{{ editingEmployeeId ? 'Edit Employee' : 'Add New Employee' }}</h1>
+        <p class="panel-subtitle">{{ editingEmployeeId ? 'Update selected employee details from this form' : 'Fill in the details below to register a new employee' }}</p>
       </div>
     </div>
 
@@ -95,7 +95,7 @@
       </div>
       <div class="field-grid cols-4">
         <label>
-          Gender
+          <span class="label-text">Gender <span class="required-star">*</span></span>
           <select [(ngModel)]="gender">
             <option value="">Select Gender</option>
             <option *ngFor="let item of genderOptions" [value]="item">{{ item }}</option>
@@ -123,7 +123,7 @@
           </select>
         </label>
         <label>
-          Date of Birth
+          <span class="label-text">Date of Birth <span class="required-star">*</span></span>
           <input
             type="date"
             [(ngModel)]="dateOfBirth"
@@ -181,7 +181,7 @@
       </div>
       <div class="field-grid cols-3">
         <label>
-          Department
+          <span class="label-text">Department <span class="required-star">*</span></span>
           <select [(ngModel)]="department" (ngModelChange)="onDepartmentChange($event)">
             <option value="">Select Department</option>
             <option *ngFor="let item of departments" [value]="item.name">{{ item.name }}</option>
@@ -189,7 +189,7 @@
           </select>
         </label>
         <label>
-          Designation
+          <span class="label-text">Designation <span class="required-star">*</span></span>
           <select [(ngModel)]="designation" (ngModelChange)="onDesignationChange($event)">
             <option value="">Select Designation</option>
             <option *ngFor="let item of designations" [value]="item.name">{{ item.name }}</option>
@@ -281,7 +281,10 @@
     <div class="form-footer">
       <button type="button" class="btn primary save-btn" [disabled]="saving" (click)="saveEmployee()">
         <span class="material-symbols-rounded" style="font-size:18px">save</span>
-        {{ saving ? 'Saving...' : 'Save Employee' }}
+        {{ saving ? 'Saving...' : (editingEmployeeId ? 'Update Employee' : 'Save Employee') }}
+      </button>
+      <button type="button" class="btn secondary save-btn" *ngIf="editingEmployeeId" [disabled]="saving" (click)="cancelEdit()">
+        Cancel Edit
       </button>
       <p class="message" *ngIf="message">{{ message }}</p>
     </div>
@@ -364,24 +367,61 @@
 
     <!-- ── Loading / Empty ─────────────────────────────── -->
     <p *ngIf="loadingEmployees" class="list-state">Loading employees...</p>
-    <p *ngIf="!loadingEmployees && totalCount === 0" class="list-state">No employees found for current search/filter.</p>
+    <p *ngIf="!loadingEmployees && !hasRequestedEmployees" class="list-state">Apply search or filter to load employees.</p>
+    <p *ngIf="!loadingEmployees && hasRequestedEmployees && totalCount === 0" class="list-state">No employees found for current search/filter.</p>
 
     <!-- ── Employee Cards ──────────────────────────────── -->
     <div class="employee-card" *ngFor="let employee of employees; trackBy: trackByEmployeeId">
       <div class="employee-header">
         <div class="emp-info">
-          <h3>{{ employee.fullName }}</h3>
+          <div class="emp-title-row">
+            <h3 class="emp-name">{{ employee.fullName }}</h3>
+            <span class="status-badge" [ngClass]="getEmployeeStatusClass(employee.employmentStatus)">
+              {{ employee.employmentStatus || 'Unknown' }}
+            </span>
+          </div>
+          <p class="emp-service-line">Length Of Service: {{ getLengthOfService(employee.joiningDate) }}</p>
           <div class="emp-meta-grid">
             <span><strong>Code:</strong> {{ employee.employeeCode || '-' }}</span>
-            <span><strong>Dept:</strong> {{ employee.department || '-' }}</span>
-            <span><strong>Desig:</strong> {{ employee.designation || '-' }}</span>
-            <span><strong>Email:</strong> {{ employee.email || '-' }}</span>
-            <span><strong>Phone:</strong> {{ employee.phone || '-' }}</span>
-            <span><strong>Status:</strong> {{ employee.employmentStatus || '-' }}</span>
-            <span><strong>Gender:</strong> {{ employee.gender || '-' }}</span>
-            <span><strong>Blood:</strong> {{ employee.bloodGroup || '-' }}</span>
-            <span><strong>DOB:</strong> {{ formatDisplayDate(employee.dateOfBirth) }} | {{ getCurrentAge(employee.dateOfBirth) }}</span>
-            <span><strong>Joining:</strong> {{ formatDisplayDate(employee.joiningDate) }} | {{ getLengthOfService(employee.joiningDate) }}</span>
+            <span *ngIf="employee.department"><strong>Dept:</strong> {{ employee.department }}</span>
+            <span *ngIf="employee.designation"><strong>Desig:</strong> {{ employee.designation }}</span>
+            <span *ngIf="employee.email"><strong>Email:</strong> {{ employee.email }}</span>
+            <span *ngIf="employee.phone"><strong>Phone:</strong> {{ employee.phone }}</span>
+            <span *ngIf="employee.gender"><strong>Gender:</strong> {{ employee.gender }}</span>
+            <span *ngIf="employee.religion"><strong>Religion:</strong> {{ employee.religion }}</span>
+            <span *ngIf="employee.maritalStatus"><strong>Marital:</strong> {{ employee.maritalStatus }}</span>
+            <span *ngIf="employee.bloodGroup"><strong>Blood:</strong> {{ employee.bloodGroup }}</span>
+            <span *ngIf="employee.nationalId"><strong>NID:</strong> {{ employee.nationalId }}</span>
+            <span *ngIf="employee.address"><strong>Address:</strong> {{ employee.address }}</span>
+            <span *ngIf="employee.fatherName"><strong>Father Name:</strong> {{ employee.fatherName }}</span>
+            <span *ngIf="employee.fatherPhone"><strong>Father Phone:</strong> {{ employee.fatherPhone }}</span>
+            <span *ngIf="employee.motherName"><strong>Mother Name:</strong> {{ employee.motherName }}</span>
+            <span *ngIf="employee.motherPhone"><strong>Mother Phone:</strong> {{ employee.motherPhone }}</span>
+            <span *ngIf="employee.spouseName"><strong>Spouse Name:</strong> {{ employee.spouseName }}</span>
+            <span *ngIf="employee.spousePhone"><strong>Spouse Phone:</strong> {{ employee.spousePhone }}</span>
+            <span *ngIf="employee.workingTime"><strong>Working Time:</strong> {{ employee.workingTime }}</span>
+            <span *ngIf="employee.salaryRule"><strong>Salary Rule:</strong> {{ employee.salaryRule }}</span>
+            <span *ngIf="employee.grossSalary !== null && employee.grossSalary !== undefined"><strong>Gross Salary:</strong> {{ employee.grossSalary }}</span>
+            <span *ngIf="employee.basicSalary !== null && employee.basicSalary !== undefined"><strong>Basic Salary:</strong> {{ employee.basicSalary }}</span>
+            <span *ngIf="employee.weekend"><strong>Weekend:</strong> {{ employee.weekend }}</span>
+            <span *ngIf="employee.salaryAccount"><strong>Salary Account:</strong> {{ employee.salaryAccount }}</span>
+            <span *ngIf="employee.dateOfBirth"><strong>DOB:</strong> {{ formatDisplayDate(employee.dateOfBirth) }} | {{ getCurrentAge(employee.dateOfBirth) }}</span>
+            <span><strong>Joining:</strong> {{ formatDisplayDate(employee.joiningDate) }}</span>
+            <ng-container *ngFor="let item of employee.dynamicAttributes | keyvalue">
+              <span *ngIf="item.value">
+                <strong>{{ item.key }}:</strong> {{ item.value }}
+              </span>
+            </ng-container>
+          </div>
+        </div>
+        <div class="employee-media-stack">
+          <div class="employee-photo-thumb" [class.empty]="!getEmployeePhotoSrc(employee)">
+            <img *ngIf="getEmployeePhotoSrc(employee) as photoSrc" [src]="photoSrc" [alt]="employee.fullName + ' photo'" />
+            <span *ngIf="!getEmployeePhotoSrc(employee)" class="material-symbols-rounded">account_circle</span>
+          </div>
+          <div class="employee-signature-thumb" [class.empty]="!getEmployeeSignatureSrc(employee)">
+            <img *ngIf="getEmployeeSignatureSrc(employee) as signatureSrc" [src]="signatureSrc" [alt]="employee.fullName + ' signature'" />
+            <span *ngIf="!getEmployeeSignatureSrc(employee)" class="material-symbols-rounded">draw</span>
           </div>
         </div>
         <div class="employee-actions">
@@ -400,7 +440,7 @@
       </div>
 
       <!-- ── Inline Edit ────────────────────────────────── -->
-      <div class="edit-panel" *ngIf="editingEmployeeId === employee.id">
+      <div class="edit-panel" *ngIf="false && editingEmployeeId === employee.id">
         <div class="basic-info-media-layout">
           <div class="field-grid cols-1 flex-1">
             <label>
@@ -615,11 +655,6 @@
 
 
       <!-- ── Dynamic Attributes Display ────────────────── -->
-      <div class="employee-dynamic-attributes" *ngIf="(employee.dynamicAttributes | keyvalue).length > 0">
-        <p *ngFor="let item of employee.dynamicAttributes | keyvalue">
-          <strong>{{ item.key }}:</strong> {{ item.value }}
-        </p>
-      </div>
     </div>
 
     <!-- ── Pagination ──────────────────────────────────── -->

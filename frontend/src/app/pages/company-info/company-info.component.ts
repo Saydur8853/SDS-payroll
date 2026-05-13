@@ -31,6 +31,8 @@ export class CompanyInfoComponent implements OnInit {
   editLogoBase64: string | null = null; // Preview for Edit mode
   editDynamicEntries: Array<{ key: string; value: string }> = [];
   message = '';
+  isLocatingAddress = false;
+  isLocatingEditAddress = false;
 
   constructor(private readonly companyService: CompanyService) {}
 
@@ -108,6 +110,73 @@ export class CompanyInfoComponent implements OnInit {
       this.logoUrl = '';
       this.selectedLogoFile = null;
     }
+  }
+
+  useCurrentLocation(isEdit: boolean = false): void {
+    if (!navigator.geolocation) {
+      this.message = 'Geolocation is not supported by this browser.';
+      return;
+    }
+
+    if (isEdit) {
+      this.isLocatingEditAddress = true;
+    } else {
+      this.isLocatingAddress = true;
+    }
+    this.message = 'Detecting current location...';
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+        const fallback = `Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`;
+
+        let resolvedAddress = fallback;
+        try {
+          const reverseAddress = await this.reverseGeocode(latitude, longitude);
+          if (reverseAddress) {
+            resolvedAddress = reverseAddress;
+          }
+        } catch {
+          // Keep fallback coordinates if reverse lookup fails.
+        }
+
+        if (isEdit) {
+          this.editAddress = resolvedAddress;
+        } else {
+          this.address = resolvedAddress;
+        }
+
+        this.message = 'Current location captured.';
+        if (isEdit) {
+          this.isLocatingEditAddress = false;
+        } else {
+          this.isLocatingAddress = false;
+        }
+      },
+      (error) => {
+        if (error.code === error.PERMISSION_DENIED) {
+          this.message = 'Location permission denied.';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          this.message = 'Location information is unavailable.';
+        } else if (error.code === error.TIMEOUT) {
+          this.message = 'Location request timed out.';
+        } else {
+          this.message = 'Failed to get current location.';
+        }
+
+        if (isEdit) {
+          this.isLocatingEditAddress = false;
+        } else {
+          this.isLocatingAddress = false;
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 12000,
+        maximumAge: 0
+      }
+    );
   }
 
   saveCompany(): void {
@@ -337,5 +406,88 @@ export class CompanyInfoComponent implements OnInit {
     }
 
     return rawValue.trim() || 'Deactive';
+  }
+
+  private async reverseGeocode(latitude: number, longitude: number): Promise<string | null> {
+    const endpoint = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&lat=${encodeURIComponent(String(latitude))}&lon=${encodeURIComponent(String(longitude))}`;
+    const response = await fetch(endpoint, {
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = await response.json() as {
+      name?: string;
+      display_name?: string;
+      address?: {
+        road?: string;
+        suburb?: string;
+        neighbourhood?: string;
+        quarter?: string;
+        city_district?: string;
+        city?: string;
+        town?: string;
+        village?: string;
+        municipality?: string;
+        state_district?: string;
+        postcode?: string;
+        amenity?: string;
+        shop?: string;
+        office?: string;
+        building?: string;
+      };
+    };
+
+    const address = payload.address ?? {};
+    const name = (
+      payload.name ??
+      address.amenity ??
+      address.shop ??
+      address.office ??
+      address.building
+    )?.trim() ?? '';
+
+    const road = address.road?.trim() ?? '';
+    const area = (
+      address.suburb ??
+      address.neighbourhood ??
+      address.quarter ??
+      address.city_district
+    )?.trim() ?? '';
+    const city = (
+      address.city ??
+      address.town ??
+      address.village ??
+      address.municipality ??
+      address.state_district
+    )?.trim() ?? '';
+    const postcode = address.postcode?.trim() ?? '';
+    const cityPostcode = [city, postcode].filter(Boolean).join(' ');
+
+    const segments = [name, road, area, cityPostcode]
+      .filter(Boolean)
+      .filter((value, index, array) =>
+        array.findIndex(x => x.toLowerCase() === value.toLowerCase()) === index
+      );
+
+    if (segments.length > 0) {
+      return segments.join(', ');
+    }
+
+    const fallback = payload.display_name?.trim() ?? '';
+    if (!fallback) {
+      return null;
+    }
+
+    return fallback
+      .split(',')
+      .map(x => x.trim())
+      .filter(Boolean)
+      .slice(0, 4)
+      .join(', ');
   }
 }

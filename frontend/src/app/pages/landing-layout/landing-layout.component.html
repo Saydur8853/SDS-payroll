@@ -9,11 +9,12 @@
   <aside class="sidebar" id="main-sidebar">
     <!-- Brand -->
     <div class="brand">
-      <div class="brand-icon">
+      <div class="brand-icon" *ngIf="!companyLogoSrc">
         <span class="material-symbols-rounded">paid</span>
       </div>
+      <img *ngIf="companyLogoSrc" class="brand-logo" [src]="companyLogoSrc" [alt]="companyBrandName + ' logo'" />
       <div class="brand-text">
-        <h1>SDS Payroll</h1>
+        <h1>{{ companyBrandName }}</h1>
         <span class="brand-tagline">Management System</span>
       </div>
     </div>

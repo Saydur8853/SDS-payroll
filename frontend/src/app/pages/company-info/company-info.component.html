@@ -11,7 +11,13 @@
 
         <label>
           <span class="label-text">Company Address <span class="required-star">*</span></span>
-          <input type="text" [(ngModel)]="address" placeholder="Full address" />
+          <div class="address-input-group">
+            <input type="text" [(ngModel)]="address" placeholder="Full address" />
+            <button type="button" class="btn tiny secondary location-btn" [disabled]="isLocatingAddress" (click)="useCurrentLocation(false)">
+              <span class="material-symbols-rounded" style="font-size:16px">my_location</span>
+              {{ isLocatingAddress ? 'Locating...' : 'Use Current Location' }}
+            </button>
+          </div>
         </label>
 
         <label>
@@ -117,7 +123,13 @@
             </label>
             <label>
               <span class="label-text">Company Address <span class="required-star">*</span></span>
-              <input type="text" [(ngModel)]="editAddress" placeholder="Company address" />
+              <div class="address-input-group">
+                <input type="text" [(ngModel)]="editAddress" placeholder="Company address" />
+                <button type="button" class="btn tiny secondary location-btn" [disabled]="isLocatingEditAddress" (click)="useCurrentLocation(true)">
+                  <span class="material-symbols-rounded" style="font-size:16px">my_location</span>
+                  {{ isLocatingEditAddress ? 'Locating...' : 'Use Current Location' }}
+                </button>
+              </div>
             </label>
             <label>
               <span class="label-text">Logo URL (optional)</span>

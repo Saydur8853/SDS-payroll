@@ -179,6 +179,16 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
         [FromBody] EmployeeCreateRequest request,
         CancellationToken cancellationToken)
     {
+        var requiredFieldError = ValidateRequiredEmployeeFields(
+            request.Department,
+            request.Designation,
+            request.Gender,
+            request.DateOfBirth);
+        if (requiredFieldError is not null)
+        {
+            return BadRequest(requiredFieldError);
+        }
+
         if (await dbContext.Employees.AnyAsync(x => x.EmployeeCode == request.EmployeeCode, cancellationToken))
         {
             return Conflict($"Employee with code '{request.EmployeeCode}' already exists.");
@@ -192,8 +202,8 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
             FullName = request.FullName.Trim(),
             Email = request.Email?.Trim(),
             Phone = request.Phone.Trim(),
-            Department = request.Department?.Trim(),
-            Designation = request.Designation?.Trim(),
+            Department = request.Department.Trim(),
+            Designation = request.Designation.Trim(),
             Address = request.Address?.Trim(),
             FatherName = request.FatherName?.Trim(),
             MotherName = request.MotherName?.Trim(),
@@ -201,7 +211,7 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
             FatherPhone = request.FatherPhone?.Trim(),
             MotherPhone = request.MotherPhone?.Trim(),
             SpousePhone = request.SpousePhone?.Trim(),
-            Gender = request.Gender?.Trim(),
+            Gender = request.Gender.Trim(),
             Religion = request.Religion?.Trim(),
             MaritalStatus = request.MaritalStatus?.Trim(),
             BloodGroup = request.BloodGroup?.Trim(),
@@ -232,6 +242,16 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
         [FromBody] EmployeeUpdateRequest request,
         CancellationToken cancellationToken)
     {
+        var requiredFieldError = ValidateRequiredEmployeeFields(
+            request.Department,
+            request.Designation,
+            request.Gender,
+            request.DateOfBirth);
+        if (requiredFieldError is not null)
+        {
+            return BadRequest(requiredFieldError);
+        }
+
         var employee = await dbContext.Employees.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (employee is null)
         {
@@ -247,8 +267,8 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
         employee.FullName = request.FullName.Trim();
         employee.Email = request.Email?.Trim();
         employee.Phone = request.Phone.Trim();
-        employee.Department = request.Department?.Trim();
-        employee.Designation = request.Designation?.Trim();
+        employee.Department = request.Department.Trim();
+        employee.Designation = request.Designation.Trim();
         employee.Address = request.Address?.Trim();
         employee.FatherName = request.FatherName?.Trim();
         employee.MotherName = request.MotherName?.Trim();
@@ -256,14 +276,12 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
         employee.FatherPhone = request.FatherPhone?.Trim();
         employee.MotherPhone = request.MotherPhone?.Trim();
         employee.SpousePhone = request.SpousePhone?.Trim();
-        employee.Gender = request.Gender?.Trim();
+        employee.Gender = request.Gender.Trim();
         employee.Religion = request.Religion?.Trim();
         employee.MaritalStatus = request.MaritalStatus?.Trim();
         employee.BloodGroup = request.BloodGroup?.Trim();
         employee.NationalId = request.NationalId?.Trim();
         employee.EmploymentStatus = request.EmploymentStatus.Trim();
-        employee.Photo = FromBase64(request.PhotoBase64);
-        employee.Signature = FromBase64(request.SignatureBase64);
         employee.Photo = request.PhotoBase64 != null ? FromBase64(request.PhotoBase64) : employee.Photo;
         employee.Signature = request.SignatureBase64 != null ? FromBase64(request.SignatureBase64) : employee.Signature;
         employee.WorkingTime = request.WorkingTime?.Trim();
@@ -278,6 +296,35 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
 
         await dbContext.SaveChangesAsync(cancellationToken);
         return Ok(MapToResponse(employee));
+    }
+
+    private static string? ValidateRequiredEmployeeFields(
+        string department,
+        string designation,
+        string gender,
+        DateOnly? dateOfBirth)
+    {
+        if (string.IsNullOrWhiteSpace(department))
+        {
+            return "Department is required.";
+        }
+
+        if (string.IsNullOrWhiteSpace(designation))
+        {
+            return "Designation is required.";
+        }
+
+        if (string.IsNullOrWhiteSpace(gender))
+        {
+            return "Gender is required.";
+        }
+
+        if (!dateOfBirth.HasValue)
+        {
+            return "Date of birth is required.";
+        }
+
+        return null;
     }
 
     [HttpPut("{id:guid}/attributes")]
@@ -616,8 +663,6 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
             "BloodGroup",
             "NationalId",
             "EmploymentStatus",
-            "PhotoUrl",
-            "SignatureUrl",
             "WorkingTime",
             "SalaryRule",
             "GrossSalary",
@@ -653,8 +698,6 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
                 employee.BloodGroup ?? string.Empty,
                 employee.NationalId ?? string.Empty,
                 employee.EmploymentStatus ?? string.Empty,
-                employee.Photo != null ? "Yes" : "No",
-                employee.Signature != null ? "Yes" : "No",
                 employee.WorkingTime ?? string.Empty,
                 employee.SalaryRule ?? string.Empty,
                 employee.GrossSalary?.ToString("0.##") ?? string.Empty,
@@ -691,7 +734,58 @@ public class EmployeesController(AppDbContext dbContext) : ControllerBase
     private static string? ToBase64(byte[]? bytes)
     {
         if (bytes == null || bytes.Length == 0) return null;
-        return "data:image/webp;base64," + Convert.ToBase64String(bytes);
+        var mimeType = DetectImageMimeType(bytes);
+        return $"data:{mimeType};base64,{Convert.ToBase64String(bytes)}";
+    }
+
+    private static string DetectImageMimeType(byte[] bytes)
+    {
+        if (bytes.Length >= 12 &&
+            bytes[0] == 0x52 && // R
+            bytes[1] == 0x49 && // I
+            bytes[2] == 0x46 && // F
+            bytes[3] == 0x46 && // F
+            bytes[8] == 0x57 && // W
+            bytes[9] == 0x45 && // E
+            bytes[10] == 0x42 && // B
+            bytes[11] == 0x50) // P
+        {
+            return "image/webp";
+        }
+
+        if (bytes.Length >= 3 &&
+            bytes[0] == 0xFF &&
+            bytes[1] == 0xD8 &&
+            bytes[2] == 0xFF)
+        {
+            return "image/jpeg";
+        }
+
+        if (bytes.Length >= 8 &&
+            bytes[0] == 0x89 &&
+            bytes[1] == 0x50 &&
+            bytes[2] == 0x4E &&
+            bytes[3] == 0x47 &&
+            bytes[4] == 0x0D &&
+            bytes[5] == 0x0A &&
+            bytes[6] == 0x1A &&
+            bytes[7] == 0x0A)
+        {
+            return "image/png";
+        }
+
+        if (bytes.Length >= 6 &&
+            bytes[0] == 0x47 &&
+            bytes[1] == 0x49 &&
+            bytes[2] == 0x46 &&
+            bytes[3] == 0x38 &&
+            (bytes[4] == 0x37 || bytes[4] == 0x39) &&
+            bytes[5] == 0x61)
+        {
+            return "image/gif";
+        }
+
+        return "image/webp";
     }
 
     private static string EscapeCsv(string value)

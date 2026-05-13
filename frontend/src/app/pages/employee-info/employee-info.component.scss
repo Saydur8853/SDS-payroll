@@ -225,6 +225,72 @@ input[type=number] {
   min-width: 0;
 }
 
+.emp-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.emp-name {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.1;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: capitalize;
+}
+
+.status-badge.status-active {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.45);
+}
+
+.status-badge.status-inactive {
+  background: rgba(250, 204, 21, 0.2);
+  color: #fde047;
+  border-color: rgba(250, 204, 21, 0.45);
+}
+
+.status-badge.status-closed {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.45);
+}
+
+.status-badge.status-resigned {
+  background: rgba(15, 23, 42, 0.45);
+  color: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.85);
+}
+
+.status-badge.status-default {
+  background: rgba(148, 163, 184, 0.2);
+  color: #e2e8f0;
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+.emp-service-line {
+  margin: 0.3rem 0 0.55rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #d4c2ff;
+}
+
 .emp-meta-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -240,6 +306,57 @@ input[type=number] {
 .emp-meta-grid strong {
   color: var(--text-primary);
   font-weight: 600;
+}
+
+.employee-media-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  flex-shrink: 0;
+  padding: 0.45rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.employee-photo-thumb,
+.employee-signature-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.95);
+
+  img {
+    width: 100%;
+    height: 100%;
+  }
+
+  &.empty {
+    border-style: dashed;
+    border-color: rgba(255, 255, 255, 0.14);
+
+    .material-symbols-rounded {
+      color: var(--text-muted);
+      opacity: 0.7;
+    }
+  }
+}
+
+.employee-photo-thumb {
+  width: 120px;
+  height: 150px;
+}
+
+.employee-signature-thumb {
+  width: 120px;
+  height: 60px;
+
+  img {
+    filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.35));
+  }
 }
 
 /* ── Responsive ────────────────────────────────────────── */
@@ -286,6 +403,22 @@ input[type=number] {
 
   .employee-header {
     flex-direction: column;
+  }
+
+  .employee-media-stack {
+    flex-direction: row;
+    align-items: center;
+    padding: 0.35rem;
+  }
+
+  .employee-photo-thumb {
+    width: 96px;
+    height: 120px;
+  }
+
+  .employee-signature-thumb {
+    width: 96px;
+    height: 48px;
   }
 }
 

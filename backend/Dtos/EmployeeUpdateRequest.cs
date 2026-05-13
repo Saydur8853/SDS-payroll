@@ -18,11 +18,13 @@ public class EmployeeUpdateRequest
     [MaxLength(50)]
     public string Phone { get; set; } = string.Empty;
 
+    [Required]
     [MaxLength(100)]
-    public string? Department { get; set; }
+    public string Department { get; set; } = string.Empty;
 
+    [Required]
     [MaxLength(100)]
-    public string? Designation { get; set; }
+    public string Designation { get; set; } = string.Empty;
 
     [MaxLength(500)]
     public string? Address { get; set; }
@@ -45,8 +47,9 @@ public class EmployeeUpdateRequest
     [MaxLength(50)]
     public string? SpousePhone { get; set; }
 
+    [Required]
     [MaxLength(50)]
-    public string? Gender { get; set; }
+    public string Gender { get; set; } = string.Empty;
 
     [MaxLength(100)]
     public string? Religion { get; set; }
@@ -82,6 +85,7 @@ public class EmployeeUpdateRequest
     [MaxLength(100)]
     public string? SalaryAccount { get; set; }
 
+    [Required]
     public DateOnly? DateOfBirth { get; set; }
 
     public DateOnly JoiningDate { get; set; }
