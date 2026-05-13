@@ -16,6 +16,7 @@ public class ShiftsController(AppDbContext dbContext) : ControllerBase
     {
         var shifts = await dbContext.Shifts
             .AsNoTracking()
+            .Include(x => x.TemporaryOverrides)
             .OrderBy(x => x.Name)
             .ToListAsync(cancellationToken);
 
@@ -50,7 +51,7 @@ public class ShiftsController(AppDbContext dbContext) : ControllerBase
 
         if (!HasRequiredTimes(request))
         {
-            return BadRequest("All shift time fields are required.");
+            return BadRequest("In/Out time and grace time fields are required.");
         }
 
         var exists = await dbContext.Shifts
@@ -98,7 +99,7 @@ public class ShiftsController(AppDbContext dbContext) : ControllerBase
 
         if (!HasRequiredTimes(request))
         {
-            return BadRequest("All shift time fields are required.");
+            return BadRequest("In/Out time and grace time fields are required.");
         }
 
         var exists = await dbContext.Shifts
@@ -136,14 +137,113 @@ public class ShiftsController(AppDbContext dbContext) : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("{shiftId:guid}/overrides")]
+    public async Task<ActionResult<IEnumerable<ShiftTemporaryOverrideResponse>>> GetOverrides(Guid shiftId, CancellationToken cancellationToken)
+    {
+        var exists = await dbContext.Shifts.AnyAsync(x => x.Id == shiftId, cancellationToken);
+        if (!exists)
+        {
+            return NotFound();
+        }
+
+        var overrides = await dbContext.ShiftTemporaryOverrides
+            .AsNoTracking()
+            .Where(x => x.ShiftId == shiftId)
+            .OrderByDescending(x => x.DateFrom)
+            .ThenByDescending(x => x.DateTo)
+            .ToListAsync(cancellationToken);
+
+        return Ok(overrides.Select(MapOverrideToResponse));
+    }
+
+    [HttpPost("{shiftId:guid}/overrides")]
+    public async Task<ActionResult<ShiftTemporaryOverrideResponse>> CreateOverride(
+        Guid shiftId,
+        [FromBody] ShiftTemporaryOverrideUpsertRequest request,
+        CancellationToken cancellationToken)
+    {
+        var shift = await dbContext.Shifts.FirstOrDefaultAsync(x => x.Id == shiftId, cancellationToken);
+        if (shift is null)
+        {
+            return NotFound();
+        }
+
+        var validationError = ValidateOverrideRequest(request);
+        if (!string.IsNullOrEmpty(validationError))
+        {
+            return BadRequest(validationError);
+        }
+
+        var entity = new ShiftTemporaryOverride
+        {
+            Id = Guid.NewGuid(),
+            ShiftId = shiftId,
+            DateFrom = request.DateFrom,
+            DateTo = request.DateTo,
+            InTime = request.InTime,
+            OutTime = request.OutTime,
+            Reason = request.Reason?.Trim(),
+            IsActive = request.IsActive
+        };
+
+        dbContext.ShiftTemporaryOverrides.Add(entity);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Ok(MapOverrideToResponse(entity));
+    }
+
+    [HttpPut("{shiftId:guid}/overrides/{overrideId:guid}")]
+    public async Task<ActionResult<ShiftTemporaryOverrideResponse>> UpdateOverride(
+        Guid shiftId,
+        Guid overrideId,
+        [FromBody] ShiftTemporaryOverrideUpsertRequest request,
+        CancellationToken cancellationToken)
+    {
+        var entity = await dbContext.ShiftTemporaryOverrides
+            .FirstOrDefaultAsync(x => x.Id == overrideId && x.ShiftId == shiftId, cancellationToken);
+        if (entity is null)
+        {
+            return NotFound();
+        }
+
+        var validationError = ValidateOverrideRequest(request);
+        if (!string.IsNullOrEmpty(validationError))
+        {
+            return BadRequest(validationError);
+        }
+
+        entity.DateFrom = request.DateFrom;
+        entity.DateTo = request.DateTo;
+        entity.InTime = request.InTime;
+        entity.OutTime = request.OutTime;
+        entity.Reason = request.Reason?.Trim();
+        entity.IsActive = request.IsActive;
+        entity.UpdatedAtUtc = DateTime.UtcNow;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Ok(MapOverrideToResponse(entity));
+    }
+
+    [HttpDelete("{shiftId:guid}/overrides/{overrideId:guid}")]
+    public async Task<IActionResult> DeleteOverride(Guid shiftId, Guid overrideId, CancellationToken cancellationToken)
+    {
+        var entity = await dbContext.ShiftTemporaryOverrides
+            .FirstOrDefaultAsync(x => x.Id == overrideId && x.ShiftId == shiftId, cancellationToken);
+        if (entity is null)
+        {
+            return NotFound();
+        }
+
+        dbContext.ShiftTemporaryOverrides.Remove(entity);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return NoContent();
+    }
+
     private static bool HasRequiredTimes(ShiftUpsertRequest request)
     {
         return request.InTime.HasValue
             && request.OutTime.HasValue
             && request.InTimeGrace.HasValue
-            && request.OutTimeGrace.HasValue
-            && request.BreakStartTime.HasValue
-            && request.BreakEndTime.HasValue;
+            && request.OutTimeGrace.HasValue;
     }
 
     private static ShiftResponse MapToResponse(Shift shift)
@@ -158,8 +258,45 @@ public class ShiftsController(AppDbContext dbContext) : ControllerBase
             OutTimeGrace = shift.OutTimeGrace,
             BreakStartTime = shift.BreakStartTime,
             BreakEndTime = shift.BreakEndTime,
-            DisplayName = BuildDisplayName(shift.Name, shift.InTime, shift.OutTime)
+            DisplayName = BuildDisplayName(shift.Name, shift.InTime, shift.OutTime),
+            TemporaryOverrides = shift.TemporaryOverrides
+                .OrderByDescending(x => x.DateFrom)
+                .ThenByDescending(x => x.DateTo)
+                .Select(MapOverrideToResponse)
+                .ToList()
         };
+    }
+
+    private static ShiftTemporaryOverrideResponse MapOverrideToResponse(ShiftTemporaryOverride value)
+    {
+        return new ShiftTemporaryOverrideResponse
+        {
+            Id = value.Id,
+            ShiftId = value.ShiftId,
+            DateFrom = value.DateFrom,
+            DateTo = value.DateTo,
+            InTime = value.InTime,
+            OutTime = value.OutTime,
+            Reason = value.Reason,
+            IsActive = value.IsActive,
+            CreatedAtUtc = value.CreatedAtUtc,
+            UpdatedAtUtc = value.UpdatedAtUtc
+        };
+    }
+
+    private static string? ValidateOverrideRequest(ShiftTemporaryOverrideUpsertRequest request)
+    {
+        if (request.DateTo < request.DateFrom)
+        {
+            return "DateTo cannot be earlier than DateFrom.";
+        }
+
+        if (!request.InTime.HasValue && !request.OutTime.HasValue)
+        {
+            return "At least one of In Time or Out Time is required for temporary override.";
+        }
+
+        return null;
     }
 
     private static string BuildDisplayName(string name, TimeOnly? inTime, TimeOnly? outTime)

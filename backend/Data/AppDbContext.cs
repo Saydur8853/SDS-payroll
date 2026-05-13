@@ -10,6 +10,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Department> Departments => Set<Department>();
     public DbSet<Designation> Designations => Set<Designation>();
     public DbSet<Shift> Shifts => Set<Shift>();
+    public DbSet<ShiftTemporaryOverride> ShiftTemporaryOverrides => Set<ShiftTemporaryOverride>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -91,6 +92,25 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(e => e.BreakEndTime).HasColumnType("time without time zone");
             entity.Property(e => e.CreatedAtUtc).IsRequired();
             entity.Property(e => e.UpdatedAtUtc).IsRequired();
+            entity.HasMany(e => e.TemporaryOverrides)
+                .WithOne(x => x.Shift)
+                .HasForeignKey(x => x.ShiftId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ShiftTemporaryOverride>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.DateFrom).IsRequired();
+            entity.Property(e => e.DateTo).IsRequired();
+            entity.Property(e => e.InTime).HasColumnType("time without time zone");
+            entity.Property(e => e.OutTime).HasColumnType("time without time zone");
+            entity.Property(e => e.Reason).HasMaxLength(500);
+            entity.Property(e => e.IsActive).IsRequired();
+            entity.Property(e => e.CreatedAtUtc).IsRequired();
+            entity.Property(e => e.UpdatedAtUtc).IsRequired();
+            entity.HasIndex(e => e.ShiftId);
+            entity.HasIndex(e => new { e.ShiftId, e.DateFrom, e.DateTo });
         });
     }
 }

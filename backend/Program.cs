@@ -165,6 +165,28 @@ using (var scope = app.Services.CreateScope())
         ALTER TABLE "Shifts" ADD COLUMN IF NOT EXISTS "OutTimeGrace" time without time zone NULL;
         ALTER TABLE "Shifts" ADD COLUMN IF NOT EXISTS "BreakStartTime" time without time zone NULL;
         ALTER TABLE "Shifts" ADD COLUMN IF NOT EXISTS "BreakEndTime" time without time zone NULL;
+        ALTER TABLE "Shifts" ALTER COLUMN "BreakStartTime" DROP NOT NULL;
+        ALTER TABLE "Shifts" ALTER COLUMN "BreakEndTime" DROP NOT NULL;
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        CREATE TABLE IF NOT EXISTS "ShiftTemporaryOverrides" (
+            "Id" uuid NOT NULL,
+            "ShiftId" uuid NOT NULL,
+            "DateFrom" date NOT NULL,
+            "DateTo" date NOT NULL,
+            "InTime" time without time zone NULL,
+            "OutTime" time without time zone NULL,
+            "Reason" character varying(500) NULL,
+            "IsActive" boolean NOT NULL,
+            "CreatedAtUtc" timestamp with time zone NOT NULL,
+            "UpdatedAtUtc" timestamp with time zone NOT NULL,
+            CONSTRAINT "PK_ShiftTemporaryOverrides" PRIMARY KEY ("Id"),
+            CONSTRAINT "FK_ShiftTemporaryOverrides_Shifts_ShiftId" FOREIGN KEY ("ShiftId") REFERENCES "Shifts" ("Id") ON DELETE CASCADE
+        );
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        CREATE INDEX IF NOT EXISTS "IX_ShiftTemporaryOverrides_ShiftId" ON "ShiftTemporaryOverrides" ("ShiftId");
+        CREATE INDEX IF NOT EXISTS "IX_ShiftTemporaryOverrides_ShiftId_DateFrom_DateTo" ON "ShiftTemporaryOverrides" ("ShiftId", "DateFrom", "DateTo");
         """);
     dbContext.Database.ExecuteSqlRaw("""
         ALTER TABLE "Companies" ADD COLUMN IF NOT EXISTS "Logo" bytea NULL;

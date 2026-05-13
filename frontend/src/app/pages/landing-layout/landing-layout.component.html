@@ -31,37 +31,44 @@
         <span class="active-indicator"></span>
       </a>
 
-      <a routerLink="/company-info" routerLinkActive="active" id="nav-company">
-        <span class="material-symbols-rounded">apartment</span>
-        <span class="nav-text">Company Info</span>
-        <span class="active-indicator"></span>
-      </a>
-
       <a routerLink="/employee-info" routerLinkActive="active" id="nav-employee">
         <span class="material-symbols-rounded">badge</span>
         <span class="nav-text">Employee Info</span>
         <span class="active-indicator"></span>
       </a>
 
-      <span class="menu-label">ORGANIZATION</span>
+      <span class="menu-label">SETTINGS</span>
+      <button type="button" class="menu-group-trigger" (click)="toggleSettingsMenu()">
+        <span class="material-symbols-rounded">settings</span>
+        <span class="nav-text">Settings</span>
+        <span class="material-symbols-rounded menu-caret" [class.open]="isSettingsOpen">expand_more</span>
+      </button>
 
-      <a routerLink="/departments" routerLinkActive="active" id="nav-departments">
-        <span class="material-symbols-rounded">account_tree</span>
-        <span class="nav-text">Departments</span>
-        <span class="active-indicator"></span>
-      </a>
+      <div class="menu-subgroup" *ngIf="isSettingsOpen">
+        <a routerLink="/company-info" routerLinkActive="active" id="nav-company">
+          <span class="material-symbols-rounded">apartment</span>
+          <span class="nav-text">Company Info</span>
+          <span class="active-indicator"></span>
+        </a>
 
-      <a routerLink="/designations" routerLinkActive="active" id="nav-designations">
-        <span class="material-symbols-rounded">workspace_premium</span>
-        <span class="nav-text">Designations</span>
-        <span class="active-indicator"></span>
-      </a>
+        <a routerLink="/departments" routerLinkActive="active" id="nav-departments">
+          <span class="material-symbols-rounded">account_tree</span>
+          <span class="nav-text">Departments</span>
+          <span class="active-indicator"></span>
+        </a>
 
-      <a routerLink="/shifts" routerLinkActive="active" id="nav-shifts">
-        <span class="material-symbols-rounded">schedule</span>
-        <span class="nav-text">Shift Info</span>
-        <span class="active-indicator"></span>
-      </a>
+        <a routerLink="/designations" routerLinkActive="active" id="nav-designations">
+          <span class="material-symbols-rounded">workspace_premium</span>
+          <span class="nav-text">Designations</span>
+          <span class="active-indicator"></span>
+        </a>
+
+        <a routerLink="/shifts" routerLinkActive="active" id="nav-shifts">
+          <span class="material-symbols-rounded">schedule</span>
+          <span class="nav-text">Shift Info</span>
+          <span class="active-indicator"></span>
+        </a>
+      </div>
     </nav>
 
     <!-- Footer -->

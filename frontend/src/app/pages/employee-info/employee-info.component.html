@@ -717,22 +717,112 @@
         <div class="shift-modal-group">
           <h4>In Session</h4>
           <div class="shift-modal-fields">
-            <label>In Time <input type="time" [(ngModel)]="newShiftInTime" /></label>
-            <label>In Time Grace <input type="time" [(ngModel)]="newShiftInTimeGrace" /></label>
+            <label>
+              In Time
+              <div class="time-select">
+                <select [ngModel]="getShiftHourPart(newShiftInTime)" (ngModelChange)="newShiftInTime = updateShiftHourPart(newShiftInTime, $event)">
+                  <option value="">HH</option>
+                  <option *ngFor="let hour of shiftHourOptions" [value]="hour">{{ hour }}</option>
+                </select>
+                <select [ngModel]="getShiftMinutePart(newShiftInTime)" (ngModelChange)="newShiftInTime = updateShiftMinutePart(newShiftInTime, $event)">
+                  <option value="">MM</option>
+                  <option *ngFor="let minute of shiftMinuteOptions" [value]="minute">{{ minute }}</option>
+                </select>
+                <select [ngModel]="getShiftMeridiemPart(newShiftInTime)" (ngModelChange)="newShiftInTime = updateShiftMeridiemPart(newShiftInTime, $event)">
+                  <option *ngFor="let meridiem of shiftMeridiemOptions" [value]="meridiem">{{ meridiem }}</option>
+                </select>
+              </div>
+            </label>
+            <label>
+              In Time Grace
+              <div class="time-select">
+                <select [ngModel]="getShiftHourPart(newShiftInTimeGrace)" (ngModelChange)="newShiftInTimeGrace = updateShiftHourPart(newShiftInTimeGrace, $event)">
+                  <option value="">HH</option>
+                  <option *ngFor="let hour of shiftHourOptions" [value]="hour">{{ hour }}</option>
+                </select>
+                <select [ngModel]="getShiftMinutePart(newShiftInTimeGrace)" (ngModelChange)="newShiftInTimeGrace = updateShiftMinutePart(newShiftInTimeGrace, $event)">
+                  <option value="">MM</option>
+                  <option *ngFor="let minute of shiftMinuteOptions" [value]="minute">{{ minute }}</option>
+                </select>
+                <select [ngModel]="getShiftMeridiemPart(newShiftInTimeGrace)" (ngModelChange)="newShiftInTimeGrace = updateShiftMeridiemPart(newShiftInTimeGrace, $event)">
+                  <option *ngFor="let meridiem of shiftMeridiemOptions" [value]="meridiem">{{ meridiem }}</option>
+                </select>
+              </div>
+            </label>
           </div>
         </div>
         <div class="shift-modal-group">
           <h4>Out Session</h4>
           <div class="shift-modal-fields">
-            <label>Out Time <input type="time" [(ngModel)]="newShiftOutTime" /></label>
-            <label>Out Time Grace <input type="time" [(ngModel)]="newShiftOutTimeGrace" /></label>
+            <label>
+              Out Time
+              <div class="time-select">
+                <select [ngModel]="getShiftHourPart(newShiftOutTime)" (ngModelChange)="newShiftOutTime = updateShiftHourPart(newShiftOutTime, $event)">
+                  <option value="">HH</option>
+                  <option *ngFor="let hour of shiftHourOptions" [value]="hour">{{ hour }}</option>
+                </select>
+                <select [ngModel]="getShiftMinutePart(newShiftOutTime)" (ngModelChange)="newShiftOutTime = updateShiftMinutePart(newShiftOutTime, $event)">
+                  <option value="">MM</option>
+                  <option *ngFor="let minute of shiftMinuteOptions" [value]="minute">{{ minute }}</option>
+                </select>
+                <select [ngModel]="getShiftMeridiemPart(newShiftOutTime)" (ngModelChange)="newShiftOutTime = updateShiftMeridiemPart(newShiftOutTime, $event)">
+                  <option *ngFor="let meridiem of shiftMeridiemOptions" [value]="meridiem">{{ meridiem }}</option>
+                </select>
+              </div>
+            </label>
+            <label>
+              Out Time Grace
+              <div class="time-select">
+                <select [ngModel]="getShiftHourPart(newShiftOutTimeGrace)" (ngModelChange)="newShiftOutTimeGrace = updateShiftHourPart(newShiftOutTimeGrace, $event)">
+                  <option value="">HH</option>
+                  <option *ngFor="let hour of shiftHourOptions" [value]="hour">{{ hour }}</option>
+                </select>
+                <select [ngModel]="getShiftMinutePart(newShiftOutTimeGrace)" (ngModelChange)="newShiftOutTimeGrace = updateShiftMinutePart(newShiftOutTimeGrace, $event)">
+                  <option value="">MM</option>
+                  <option *ngFor="let minute of shiftMinuteOptions" [value]="minute">{{ minute }}</option>
+                </select>
+                <select [ngModel]="getShiftMeridiemPart(newShiftOutTimeGrace)" (ngModelChange)="newShiftOutTimeGrace = updateShiftMeridiemPart(newShiftOutTimeGrace, $event)">
+                  <option *ngFor="let meridiem of shiftMeridiemOptions" [value]="meridiem">{{ meridiem }}</option>
+                </select>
+              </div>
+            </label>
           </div>
         </div>
         <div class="shift-modal-group">
           <h4>Break Session</h4>
           <div class="shift-modal-fields">
-            <label>Break Start <input type="time" [(ngModel)]="newShiftBreakStartTime" /></label>
-            <label>Break End <input type="time" [(ngModel)]="newShiftBreakEndTime" /></label>
+            <label>
+              Break Start
+              <div class="time-select">
+                <select [ngModel]="getShiftHourPart(newShiftBreakStartTime)" (ngModelChange)="newShiftBreakStartTime = updateShiftHourPart(newShiftBreakStartTime, $event)">
+                  <option value="">HH</option>
+                  <option *ngFor="let hour of shiftHourOptions" [value]="hour">{{ hour }}</option>
+                </select>
+                <select [ngModel]="getShiftMinutePart(newShiftBreakStartTime)" (ngModelChange)="newShiftBreakStartTime = updateShiftMinutePart(newShiftBreakStartTime, $event)">
+                  <option value="">MM</option>
+                  <option *ngFor="let minute of shiftMinuteOptions" [value]="minute">{{ minute }}</option>
+                </select>
+                <select [ngModel]="getShiftMeridiemPart(newShiftBreakStartTime)" (ngModelChange)="newShiftBreakStartTime = updateShiftMeridiemPart(newShiftBreakStartTime, $event)">
+                  <option *ngFor="let meridiem of shiftMeridiemOptions" [value]="meridiem">{{ meridiem }}</option>
+                </select>
+              </div>
+            </label>
+            <label>
+              Break End
+              <div class="time-select">
+                <select [ngModel]="getShiftHourPart(newShiftBreakEndTime)" (ngModelChange)="newShiftBreakEndTime = updateShiftHourPart(newShiftBreakEndTime, $event)">
+                  <option value="">HH</option>
+                  <option *ngFor="let hour of shiftHourOptions" [value]="hour">{{ hour }}</option>
+                </select>
+                <select [ngModel]="getShiftMinutePart(newShiftBreakEndTime)" (ngModelChange)="newShiftBreakEndTime = updateShiftMinutePart(newShiftBreakEndTime, $event)">
+                  <option value="">MM</option>
+                  <option *ngFor="let minute of shiftMinuteOptions" [value]="minute">{{ minute }}</option>
+                </select>
+                <select [ngModel]="getShiftMeridiemPart(newShiftBreakEndTime)" (ngModelChange)="newShiftBreakEndTime = updateShiftMeridiemPart(newShiftBreakEndTime, $event)">
+                  <option *ngFor="let meridiem of shiftMeridiemOptions" [value]="meridiem">{{ meridiem }}</option>
+                </select>
+              </div>
+            </label>
           </div>
         </div>
       </div>

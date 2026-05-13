@@ -11,4 +11,5 @@ public class ShiftResponse
     public TimeOnly? BreakStartTime { get; set; }
     public TimeOnly? BreakEndTime { get; set; }
     public string DisplayName { get; set; } = string.Empty;
+    public List<ShiftTemporaryOverrideResponse> TemporaryOverrides { get; set; } = [];
 }

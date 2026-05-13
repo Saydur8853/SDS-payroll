@@ -15,6 +15,7 @@ public class Shift
     public TimeOnly? OutTimeGrace { get; set; }
     public TimeOnly? BreakStartTime { get; set; }
     public TimeOnly? BreakEndTime { get; set; }
+    public ICollection<ShiftTemporaryOverride> TemporaryOverrides { get; set; } = new List<ShiftTemporaryOverride>();
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;

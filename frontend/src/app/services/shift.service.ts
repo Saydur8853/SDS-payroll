@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Shift, ShiftUpsertRequest } from '../models/shift.model';
+import { Shift, ShiftTemporaryOverride, ShiftTemporaryOverrideUpsertRequest, ShiftUpsertRequest } from '../models/shift.model';
 
 @Injectable({
   providedIn: 'root'
@@ -25,5 +25,21 @@ export class ShiftService {
 
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  getOverrides(shiftId: string): Observable<ShiftTemporaryOverride[]> {
+    return this.http.get<ShiftTemporaryOverride[]>(`${this.apiUrl}/${shiftId}/overrides`);
+  }
+
+  createOverride(shiftId: string, request: ShiftTemporaryOverrideUpsertRequest): Observable<ShiftTemporaryOverride> {
+    return this.http.post<ShiftTemporaryOverride>(`${this.apiUrl}/${shiftId}/overrides`, request);
+  }
+
+  updateOverride(shiftId: string, overrideId: string, request: ShiftTemporaryOverrideUpsertRequest): Observable<ShiftTemporaryOverride> {
+    return this.http.put<ShiftTemporaryOverride>(`${this.apiUrl}/${shiftId}/overrides/${overrideId}`, request);
+  }
+
+  deleteOverride(shiftId: string, overrideId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${shiftId}/overrides/${overrideId}`);
   }
 }

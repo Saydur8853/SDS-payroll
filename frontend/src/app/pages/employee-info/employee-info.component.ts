@@ -9,6 +9,8 @@ import { LookupItem } from '../../models/lookup.model';
 import { LookupService } from '../../services/lookup.service';
 import { ShiftService } from '../../services/shift.service';
 
+type Meridiem = 'AM' | 'PM';
+
 @Component({
   selector: 'app-employee-info',
   imports: [CommonModule, FormsModule, ImageCropperComponent],
@@ -117,6 +119,9 @@ export class EmployeeInfoComponent implements OnInit {
   newShiftOutTimeGrace = '';
   newShiftBreakStartTime = '';
   newShiftBreakEndTime = '';
+  readonly shiftHourOptions = Array.from({ length: 12 }, (_, index) => (index + 1).toString().padStart(2, '0'));
+  readonly shiftMinuteOptions = Array.from({ length: 60 }, (_, index) => index.toString().padStart(2, '0'));
+  readonly shiftMeridiemOptions: Meridiem[] = ['AM', 'PM'];
 
   searchText = '';
   filterDepartment = '';
@@ -506,8 +511,8 @@ export class EmployeeInfoComponent implements OnInit {
       return;
     }
 
-    if (!this.newShiftInTime || !this.newShiftOutTime || !this.newShiftInTimeGrace || !this.newShiftOutTimeGrace || !this.newShiftBreakStartTime || !this.newShiftBreakEndTime) {
-      this.message = 'All shift time fields are required.';
+    if (!this.newShiftInTime || !this.newShiftOutTime || !this.newShiftInTimeGrace || !this.newShiftOutTimeGrace) {
+      this.message = 'In/Out time and grace time fields are required.';
       return;
     }
 
@@ -517,8 +522,8 @@ export class EmployeeInfoComponent implements OnInit {
       outTime: this.newShiftOutTime,
       inTimeGrace: this.newShiftInTimeGrace,
       outTimeGrace: this.newShiftOutTimeGrace,
-      breakStartTime: this.newShiftBreakStartTime,
-      breakEndTime: this.newShiftBreakEndTime
+      breakStartTime: this.newShiftBreakStartTime || null,
+      breakEndTime: this.newShiftBreakEndTime || null
     }).subscribe({
       next: (created) => {
         const displayName = created.displayName;
@@ -1095,6 +1100,30 @@ export class EmployeeInfoComponent implements OnInit {
     return 'status-default';
   }
 
+  getShiftHourPart(timeValue: string | null | undefined): string {
+    return this.parseShiftTimeParts(timeValue).hour;
+  }
+
+  getShiftMinutePart(timeValue: string | null | undefined): string {
+    return this.parseShiftTimeParts(timeValue).minute;
+  }
+
+  getShiftMeridiemPart(timeValue: string | null | undefined): Meridiem {
+    return this.parseShiftTimeParts(timeValue).meridiem;
+  }
+
+  updateShiftHourPart(currentValue: string, hour: string): string {
+    return this.updateShiftTimePart(currentValue, { hour });
+  }
+
+  updateShiftMinutePart(currentValue: string, minute: string): string {
+    return this.updateShiftTimePart(currentValue, { minute });
+  }
+
+  updateShiftMeridiemPart(currentValue: string, meridiem: Meridiem): string {
+    return this.updateShiftTimePart(currentValue, { meridiem });
+  }
+
   private isEmailValid(email: string): boolean {
     const trimmed = email.trim();
     return !trimmed || this.emailRegex.test(trimmed);
@@ -1244,6 +1273,71 @@ export class EmployeeInfoComponent implements OnInit {
 
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private normalizeShiftTime(timeValue: string | null | undefined): string {
+    if (!timeValue) {
+      return '';
+    }
+
+    return timeValue.trim().slice(0, 5);
+  }
+
+  private parseShiftTimeParts(timeValue: string | null | undefined): { hour: string; minute: string; meridiem: Meridiem } {
+    const normalized = this.normalizeShiftTime(timeValue);
+    if (!normalized) {
+      return { hour: '', minute: '', meridiem: 'AM' };
+    }
+
+    const [hourText, minuteText] = normalized.split(':');
+    const hour24 = Number(hourText);
+    const minute = Number(minuteText);
+    if (!Number.isFinite(hour24) || !Number.isFinite(minute)) {
+      return { hour: '', minute: '', meridiem: 'AM' };
+    }
+
+    const meridiem: Meridiem = hour24 >= 12 ? 'PM' : 'AM';
+    const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+    return {
+      hour: hour12.toString().padStart(2, '0'),
+      minute: minute.toString().padStart(2, '0'),
+      meridiem
+    };
+  }
+
+  private updateShiftTimePart(
+    currentValue: string | null | undefined,
+    patch: Partial<{ hour: string; minute: string; meridiem: Meridiem }>
+  ): string {
+    const current = this.parseShiftTimeParts(currentValue);
+    let nextHour = patch.hour ?? current.hour ?? '';
+    let nextMinute = patch.minute ?? current.minute ?? '';
+    const nextMeridiem = patch.meridiem ?? current.meridiem ?? 'AM';
+
+    // Allow selection in any order:
+    // if user picks hour first, use 00 minute; if user picks minute first, use 12 hour.
+    if (!nextMinute && patch.hour !== undefined) {
+      nextMinute = '00';
+    }
+    if (!nextHour && patch.minute !== undefined) {
+      nextHour = '12';
+    }
+
+    if (!nextHour || !nextMinute) {
+      return '';
+    }
+
+    const hour12 = Number(nextHour);
+    const minute = Number(nextMinute);
+    if (!Number.isFinite(hour12) || !Number.isFinite(minute) || hour12 < 1 || hour12 > 12 || minute < 0 || minute > 59) {
+      return '';
+    }
+
+    const hour24 = nextMeridiem === 'PM'
+      ? (hour12 % 12) + 12
+      : hour12 % 12;
+
+    return `${hour24.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
   }
 
   private isMaternityStatusInvalidForGender(status?: string | null, gender?: string | null): boolean {

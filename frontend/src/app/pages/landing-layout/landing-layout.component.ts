@@ -16,6 +16,7 @@ import { Inject } from '@angular/core';
 export class LandingLayoutComponent implements OnInit, OnDestroy {
   companyBrandName = 'SDS Payroll';
   companyLogoSrc: string | null = null;
+  isSettingsOpen = true;
   private routerSubscription?: Subscription;
 
   constructor(
@@ -26,9 +27,13 @@ export class LandingLayoutComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadBranding();
+    this.syncMenuStateWithRoute(this.router.url);
     this.routerSubscription = this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
-      .subscribe(() => this.loadBranding());
+      .subscribe((event) => {
+        this.loadBranding();
+        this.syncMenuStateWithRoute(event.urlAfterRedirects);
+      });
   }
 
   ngOnDestroy(): void {
@@ -97,5 +102,24 @@ export class LandingLayoutComponent implements OnInit, OnDestroy {
     if (!existingIcon) {
       this.documentRef.head.appendChild(iconElement);
     }
+  }
+
+  toggleSettingsMenu(): void {
+    this.isSettingsOpen = !this.isSettingsOpen;
+  }
+
+  private syncMenuStateWithRoute(url: string): void {
+    if (this.isSettingsRoute(url)) {
+      this.isSettingsOpen = true;
+    }
+  }
+
+  private isSettingsRoute(url: string): boolean {
+    return (
+      url.startsWith('/company-info') ||
+      url.startsWith('/departments') ||
+      url.startsWith('/designations') ||
+      url.startsWith('/shifts')
+    );
   }
 }

@@ -570,6 +570,12 @@ input[type=number] {
   gap: 0.5rem;
 }
 
+.time-select {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.4rem;
+}
+
 /* ── Cropper Modal ────────────────────────────────────── */
 
 .cropper-modal {
