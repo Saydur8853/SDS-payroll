@@ -17,12 +17,12 @@ export class LookupService {
     return this.http.get<LookupItem[]>(this.departmentApi);
   }
 
-  createDepartment(name: string): Observable<LookupItem> {
-    return this.http.post<LookupItem>(this.departmentApi, { name });
+  createDepartment(name: string, dynamicAttributes: Record<string, string> = {}): Observable<LookupItem> {
+    return this.http.post<LookupItem>(this.departmentApi, { name, dynamicAttributes });
   }
 
-  updateDepartment(id: string, name: string): Observable<LookupItem> {
-    return this.http.put<LookupItem>(`${this.departmentApi}/${id}`, { name });
+  updateDepartment(id: string, name: string, dynamicAttributes: Record<string, string> = {}): Observable<LookupItem> {
+    return this.http.put<LookupItem>(`${this.departmentApi}/${id}`, { name, dynamicAttributes });
   }
 
   deleteDepartment(id: string): Observable<void> {
@@ -33,12 +33,12 @@ export class LookupService {
     return this.http.get<LookupItem[]>(this.designationApi);
   }
 
-  createDesignation(name: string): Observable<LookupItem> {
-    return this.http.post<LookupItem>(this.designationApi, { name });
+  createDesignation(name: string, dynamicAttributes: Record<string, string> = {}): Observable<LookupItem> {
+    return this.http.post<LookupItem>(this.designationApi, { name, dynamicAttributes });
   }
 
-  updateDesignation(id: string, name: string): Observable<LookupItem> {
-    return this.http.put<LookupItem>(`${this.designationApi}/${id}`, { name });
+  updateDesignation(id: string, name: string, dynamicAttributes: Record<string, string> = {}): Observable<LookupItem> {
+    return this.http.put<LookupItem>(`${this.designationApi}/${id}`, { name, dynamicAttributes });
   }
 
   deleteDesignation(id: string): Observable<void> {

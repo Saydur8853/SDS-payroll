@@ -151,7 +151,11 @@
           <strong>Out Grace:</strong> {{ formatTimeForDisplay(item.outTimeGrace) }}
         </p>
         <p>
-          <strong>Break:</strong> {{ formatTimeForDisplay(item.breakStartTime) }} - {{ formatTimeForDisplay(item.breakEndTime) }}
+          <strong>Break:</strong>
+          <ng-container *ngIf="item.breakStartTime || item.breakEndTime; else noBreakInShift">
+            {{ formatTimeForDisplay(item.breakStartTime) }} - {{ formatTimeForDisplay(item.breakEndTime) }}
+          </ng-container>
+          <ng-template #noBreakInShift>No break in this Shift</ng-template>
         </p>
         <div class="actions">
           <button type="button" class="btn tiny secondary" (click)="startEdit(item)">Edit</button>

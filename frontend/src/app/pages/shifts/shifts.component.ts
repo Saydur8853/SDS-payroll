@@ -168,9 +168,10 @@ export class ShiftsComponent implements OnInit {
 
   getOverrideForm(shiftId: string): OverrideFormState {
     if (!this.overrideFormsByShift[shiftId]) {
+      const today = this.getTodayDateValue();
       this.overrideFormsByShift[shiftId] = {
-        dateFrom: '',
-        dateTo: '',
+        dateFrom: today,
+        dateTo: today,
         inTime: '',
         outTime: '',
         reason: '',
@@ -472,13 +473,22 @@ export class ShiftsComponent implements OnInit {
   }
 
   private resetOverrideCreateForm(shiftId: string): void {
+    const today = this.getTodayDateValue();
     this.overrideFormsByShift[shiftId] = {
-      dateFrom: '',
-      dateTo: '',
+      dateFrom: today,
+      dateTo: today,
       inTime: '',
       outTime: '',
       reason: '',
       isActive: true
     };
+  }
+
+  private getTodayDateValue(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }

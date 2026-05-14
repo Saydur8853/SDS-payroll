@@ -18,7 +18,12 @@ public class DepartmentsController(AppDbContext dbContext) : ControllerBase
             .OrderBy(x => x.Name)
             .ToListAsync(cancellationToken);
 
-        return Ok(departments.Select(x => new LookupResponse { Id = x.Id, Name = x.Name }));
+        return Ok(departments.Select(x => new LookupResponse
+        {
+            Id = x.Id,
+            Name = x.Name,
+            DynamicAttributes = x.DynamicAttributes
+        }));
     }
 
     [HttpPost]
@@ -42,13 +47,19 @@ public class DepartmentsController(AppDbContext dbContext) : ControllerBase
         var department = new Department
         {
             Id = Guid.NewGuid(),
-            Name = name
+            Name = name,
+            DynamicAttributes = NormalizeDynamicAttributes(request.DynamicAttributes)
         };
 
         dbContext.Departments.Add(department);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return Ok(new LookupResponse { Id = department.Id, Name = department.Name });
+        return Ok(new LookupResponse
+        {
+            Id = department.Id,
+            Name = department.Name,
+            DynamicAttributes = department.DynamicAttributes
+        });
     }
 
     [HttpPut("{id:guid}")]
@@ -77,10 +88,16 @@ public class DepartmentsController(AppDbContext dbContext) : ControllerBase
         }
 
         department.Name = name;
+        department.DynamicAttributes = NormalizeDynamicAttributes(request.DynamicAttributes);
         department.UpdatedAtUtc = DateTime.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return Ok(new LookupResponse { Id = department.Id, Name = department.Name });
+        return Ok(new LookupResponse
+        {
+            Id = department.Id,
+            Name = department.Name,
+            DynamicAttributes = department.DynamicAttributes
+        });
     }
 
     [HttpDelete("{id:guid}")]
@@ -95,5 +112,27 @@ public class DepartmentsController(AppDbContext dbContext) : ControllerBase
         dbContext.Departments.Remove(department);
         await dbContext.SaveChangesAsync(cancellationToken);
         return NoContent();
+    }
+
+    private static Dictionary<string, string?> NormalizeDynamicAttributes(Dictionary<string, string?>? attributes)
+    {
+        var normalized = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        if (attributes is null)
+        {
+            return normalized;
+        }
+
+        foreach (var item in attributes)
+        {
+            var key = item.Key?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                continue;
+            }
+
+            normalized[key] = item.Value?.Trim();
+        }
+
+        return normalized;
     }
 }

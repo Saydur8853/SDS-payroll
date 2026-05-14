@@ -5,22 +5,53 @@
       <input type="text" [(ngModel)]="newName" placeholder="New designation name" />
       <button type="button" class="btn primary" (click)="create()">Add</button>
     </div>
+    <div class="edit-dynamic-list">
+      <div class="dynamic-header">
+        <h4>Dynamic Attributes</h4>
+        <button type="button" class="btn tiny secondary" (click)="addNewDynamicAttributeRow()">+ Add Attribute</button>
+      </div>
+      <div class="dynamic-row" *ngFor="let entry of newDynamicEntries; let i = index">
+        <input type="text" [(ngModel)]="entry.key" placeholder="Attribute key" />
+        <input type="text" [(ngModel)]="entry.value" placeholder="Value" />
+        <button type="button" class="btn tiny danger" (click)="removeNewDynamicAttributeRow(i)">Remove</button>
+      </div>
+    </div>
     <p class="message">{{ message }}</p>
   </section>
 
   <section class="panel">
     <h2>Designation List</h2>
     <div class="item" *ngFor="let item of items">
-      <div *ngIf="editingId !== item.id" class="item-row">
-        <span>{{ item.name }}</span>
-        <div class="actions">
+      <div *ngIf="editingId !== item.id" class="company-header">
+        <div class="item-content">
+          <span>{{ item.name }}</span>
+          <div class="item-attributes" *ngIf="item.dynamicAttributes && (item.dynamicAttributes | keyvalue).length > 0">
+            <span class="chip" *ngFor="let attribute of item.dynamicAttributes | keyvalue">
+              {{ attribute.key }}: {{ attribute.value || '-' }}
+            </span>
+          </div>
+        </div>
+        <div class="company-actions">
           <button type="button" class="btn tiny secondary" (click)="startEdit(item)">Edit</button>
           <button type="button" class="btn tiny danger" (click)="delete(item)">Delete</button>
         </div>
       </div>
-      <div *ngIf="editingId === item.id" class="item-row">
-        <input type="text" [(ngModel)]="editName" />
-        <div class="actions">
+      <div *ngIf="editingId === item.id" class="edit-panel">
+        <div class="edit-content">
+          <input type="text" [(ngModel)]="editName" />
+          <div class="edit-dynamic-list">
+            <div class="dynamic-header">
+              <h4>Dynamic Attributes</h4>
+              <button type="button" class="btn tiny secondary" (click)="addEditDynamicAttributeRow()">+ Add Attribute</button>
+            </div>
+            <div class="edit-dynamic-row" *ngFor="let entry of editDynamicEntries; let i = index">
+              <input type="text" [(ngModel)]="entry.key" placeholder="Attribute key" />
+              <input type="text" [(ngModel)]="entry.value" placeholder="Value" />
+              <button type="button" class="btn tiny danger" (click)="removeEditDynamicAttributeRow(i)">Remove</button>
+            </div>
+          </div>
+        </div>
+        <div class="edit-actions">
           <button type="button" class="btn tiny primary" (click)="saveEdit(item)">Save</button>
           <button type="button" class="btn tiny secondary" (click)="cancelEdit()">Cancel</button>
         </div>

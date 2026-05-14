@@ -129,19 +129,29 @@ using (var scope = app.Services.CreateScope())
         CREATE TABLE IF NOT EXISTS "Departments" (
             "Id" uuid NOT NULL,
             "Name" character varying(150) NOT NULL,
+            "DynamicAttributes" jsonb NOT NULL,
             "CreatedAtUtc" timestamp with time zone NOT NULL,
             "UpdatedAtUtc" timestamp with time zone NOT NULL,
             CONSTRAINT "PK_Departments" PRIMARY KEY ("Id")
         );
         """);
     dbContext.Database.ExecuteSqlRaw("""
+        ALTER TABLE "Departments" ADD COLUMN IF NOT EXISTS "DynamicAttributes" jsonb NOT NULL DEFAULT '{{}}'::jsonb;
+        UPDATE "Departments" SET "DynamicAttributes" = '{{}}'::jsonb WHERE "DynamicAttributes" IS NULL;
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
         CREATE TABLE IF NOT EXISTS "Designations" (
             "Id" uuid NOT NULL,
             "Name" character varying(150) NOT NULL,
+            "DynamicAttributes" jsonb NOT NULL,
             "CreatedAtUtc" timestamp with time zone NOT NULL,
             "UpdatedAtUtc" timestamp with time zone NOT NULL,
             CONSTRAINT "PK_Designations" PRIMARY KEY ("Id")
         );
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        ALTER TABLE "Designations" ADD COLUMN IF NOT EXISTS "DynamicAttributes" jsonb NOT NULL DEFAULT '{{}}'::jsonb;
+        UPDATE "Designations" SET "DynamicAttributes" = '{{}}'::jsonb WHERE "DynamicAttributes" IS NULL;
         """);
     dbContext.Database.ExecuteSqlRaw("""
         CREATE TABLE IF NOT EXISTS "Shifts" (

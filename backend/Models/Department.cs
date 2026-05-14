@@ -9,6 +9,8 @@ public class Department
     [MaxLength(150)]
     public required string Name { get; set; }
 
+    public Dictionary<string, string?> DynamicAttributes { get; set; } = new();
+
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
 }
