@@ -21,8 +21,15 @@
         <div class="field-grid cols-1 flex-1">
           <label>
             <span class="label-text">Employee Code <span class="required-star">*</span></span>
-            <input type="number" [(ngModel)]="employeeCode" placeholder="e.g. 101" (blur)="checkCode()" [class.invalid-input]="isEmployeeCodeDuplicate" />
+            <input
+              type="number"
+              [(ngModel)]="employeeCode"
+              placeholder="e.g. 101"
+              (blur)="checkCode()"
+              [disabled]="!!editingEmployeeId"
+              [class.invalid-input]="isEmployeeCodeDuplicate" />
             <small class="field-warning" *ngIf="isEmployeeCodeDuplicate">This code is already taken.</small>
+            <small class="field-warning" *ngIf="editingEmployeeId">Employee code cannot be changed after creation.</small>
           </label>
           <label>
             <span class="label-text">Full Name <span class="required-star">*</span></span>
@@ -358,11 +365,18 @@
         Showing {{ pageStartIndex }}-{{ pageEndIndex }} of {{ totalCount }} employees
       </p>
       <div class="export-tools">
-        <button type="button" class="btn tiny primary export-button" [disabled]="exporting || loadingEmployees" (click)="downloadEmployees()">
+        <button type="button" class="btn tiny primary export-button" [disabled]="exporting || importingCsv || loadingEmployees" (click)="downloadEmployees()">
           <span class="material-symbols-rounded" style="font-size:16px">download</span>
           {{ exporting ? 'Exporting...' : 'Save as CSV' }}
         </button>
+        <button type="button" class="btn tiny secondary export-button" [disabled]="exporting || importingCsv || loadingEmployees || isCsvBackgroundJobActive" (click)="openCsvUpdateModal()">
+          <span class="material-symbols-rounded" style="font-size:16px">upload_file</span>
+          {{ importingCsv ? 'Uploading...' : (isCsvBackgroundJobActive ? 'Processing...' : 'Update by CSV') }}
+        </button>
       </div>
+      <p class="list-meta" *ngIf="csvBackgroundJobId && (csvBackgroundJobStatus === 'Queued' || csvBackgroundJobStatus === 'Running')">
+        CSV background job is {{ csvBackgroundJobStatus.toLowerCase() }}. You can continue working.
+      </p>
     </div>
 
     <!-- ── Loading / Empty ─────────────────────────────── -->
@@ -670,6 +684,29 @@
   </section>
 </main>
 
+<div class="csv-floating-badge" *ngIf="showCsvFloatingBadge && csvBackgroundJobId">
+  <button type="button" class="csv-float-close" (click)="closeCsvFloatingBadge()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+  <div class="csv-progress-circle" [style.--progress]="csvBackgroundJobPercent">
+    <div class="csv-progress-inner">
+      <p class="csv-progress-percent">{{ csvBackgroundJobPercent }}%</p>
+      <p class="csv-progress-label" *ngIf="csvBackgroundJobStatus !== 'Completed' && csvBackgroundJobStatus !== 'Failed'">Updating</p>
+  <p class="csv-progress-label" *ngIf="csvBackgroundJobStatus === 'Completed'">Completed</p>
+  <p class="csv-progress-label" *ngIf="csvBackgroundJobStatus === 'Failed'">Failed</p>
+      <p class="csv-progress-label" *ngIf="csvBackgroundJobStatus === 'Canceled'">Canceled</p>
+    </div>
+  </div>
+  <button
+    type="button"
+    class="btn tiny danger csv-cancel-btn"
+    *ngIf="isCsvBackgroundJobActive"
+    (click)="cancelCsvBackgroundJob()">
+    Cancel
+  </button>
+  <p class="csv-floating-status">{{ csvBackgroundJobStatus || 'Queued' }}</p>
+</div>
+
 <!-- ─── MODALS ─────────────────────────────────────────── -->
 
 <div class="modal-backdrop" *ngIf="showDepartmentModal">
@@ -830,6 +867,42 @@
     <div class="modal-actions">
       <button type="button" class="btn primary" (click)="createShift()">Save</button>
       <button type="button" class="btn secondary" (click)="closeShiftModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="showCsvUploadModal">
+  <div class="modal csv-upload-modal">
+    <h3>Update Employees by CSV</h3>
+    <p>Drop your CSV file here or choose a file.</p>
+    <div
+      class="csv-drop-zone"
+      [class.drag-over]="csvDragOver"
+      [class.disabled]="importingCsv"
+      (dragover)="onCsvUploadDragOver($event)"
+      (dragleave)="onCsvUploadDragLeave($event)"
+      (drop)="onCsvUploadDrop($event)">
+      <span class="material-symbols-rounded">upload_file</span>
+      <strong>{{ importingCsv ? 'Uploading...' : 'Drop CSV Here' }}</strong>
+      <span>or</span>
+      <label class="btn tiny primary csv-choose-btn">
+        Choose CSV
+        <input
+          type="file"
+          accept=".csv,text/csv"
+          hidden
+          [disabled]="importingCsv"
+          (change)="onCsvUpdateFileSelected($event)" />
+      </label>
+    </div>
+    <div class="csv-upload-feedback" *ngIf="csvImportStatusMessage || csvImportErrors.length > 0">
+      <p class="csv-status">{{ csvImportStatusMessage }}</p>
+      <ul *ngIf="csvImportErrors.length > 0">
+        <li *ngFor="let error of csvImportErrors">{{ error }}</li>
+      </ul>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn secondary" [disabled]="importingCsv" (click)="closeCsvUploadModal()">Close</button>
     </div>
   </div>
 </div>

@@ -1,9 +1,9 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom } from 'rxjs';
+import { finalize, firstValueFrom, interval, startWith, Subscription, switchMap, takeWhile } from 'rxjs';
 import { ImageCropperComponent, ImageCroppedEvent, LoadedImage } from 'ngx-image-cropper';
-import { EmployeeService } from '../../services/employee.service';
+import { EmployeeService, EmployeeCsvImportJobStatus } from '../../services/employee.service';
 import { Employee } from '../../models/employee.model';
 import { LookupItem } from '../../models/lookup.model';
 import { LookupService } from '../../services/lookup.service';
@@ -17,7 +17,7 @@ type Meridiem = 'AM' | 'PM';
   templateUrl: './employee-info.component.html',
   styleUrl: './employee-info.component.scss'
 })
-export class EmployeeInfoComponent implements OnInit {
+export class EmployeeInfoComponent implements OnInit, OnDestroy {
   private readonly addDepartmentOption = '__add_new_department__';
   private readonly addDesignationOption = '__add_new_designation__';
   private readonly addStatusOption = '__add_new_status__';
@@ -138,6 +138,16 @@ export class EmployeeInfoComponent implements OnInit {
   readonly bloodGroupOptions = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   readonly religionOptions = ['Islam', 'Hinduism', 'Christianity', 'Buddhism', 'Other'];
   exporting = false;
+  importingCsv = false;
+  showCsvUploadModal = false;
+  csvDragOver = false;
+  csvImportStatusMessage = '';
+  csvImportErrors: string[] = [];
+  csvBackgroundJobId: string | null = null;
+  csvBackgroundJobStatus = '';
+  csvBackgroundJobPercent = 0;
+  showCsvFloatingBadge = false;
+  private csvJobPollingSub: Subscription | null = null;
 
   // Cropper State
   showCropper = false;
@@ -158,6 +168,10 @@ export class EmployeeInfoComponent implements OnInit {
   ngOnInit(): void {
     this.loadLookups();
     this.onAttributeKeyInput(0);
+  }
+
+  ngOnDestroy(): void {
+    this.stopCsvJobPolling();
   }
 
   checkCode(): void {
@@ -904,6 +918,193 @@ export class EmployeeInfoComponent implements OnInit {
         this.exporting = false;
       }
     });
+  }
+
+  openCsvUpdateModal(): void {
+    if (!this.importingCsv && !this.isCsvBackgroundJobActive) {
+      this.csvImportStatusMessage = '';
+      this.csvImportErrors = [];
+      this.showCsvUploadModal = true;
+      this.csvDragOver = false;
+    }
+  }
+
+  closeCsvUploadModal(): void {
+    if (!this.importingCsv) {
+      this.showCsvUploadModal = false;
+      this.csvDragOver = false;
+    }
+  }
+
+  onCsvUploadDragOver(event: DragEvent): void {
+    event.preventDefault();
+    if (!this.importingCsv) {
+      this.csvDragOver = true;
+    }
+  }
+
+  onCsvUploadDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.csvDragOver = false;
+  }
+
+  onCsvUploadDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.csvDragOver = false;
+    if (this.importingCsv) {
+      return;
+    }
+
+    const file = event.dataTransfer?.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    this.importEmployeesFromCsv(file);
+  }
+
+  onCsvUpdateFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file || this.importingCsv) {
+      input.value = '';
+      return;
+    }
+
+    this.importEmployeesFromCsv(file, input);
+  }
+
+  private importEmployeesFromCsv(file: File, input?: HTMLInputElement): void {
+    this.csvImportStatusMessage = '';
+    this.csvImportErrors = [];
+
+    const fileName = file.name.toLowerCase();
+    if (!fileName.endsWith('.csv')) {
+      this.csvImportStatusMessage = 'CSV upload failed.';
+      this.csvImportErrors = ['Please choose a CSV file.'];
+      if (input) {
+        input.value = '';
+      }
+      return;
+    }
+
+    this.importingCsv = true;
+    this.employeeService.importUpdateCsvInBackground(file).pipe(
+      finalize(() => {
+        this.importingCsv = false;
+        if (input) {
+          input.value = '';
+        }
+      })
+    ).subscribe({
+      next: (accepted) => {
+        this.csvBackgroundJobId = accepted.jobId;
+        this.csvBackgroundJobStatus = accepted.status;
+        this.csvBackgroundJobPercent = 0;
+        this.showCsvFloatingBadge = true;
+        this.csvImportStatusMessage = accepted.message || 'CSV file accepted. Processing in background.';
+        this.csvImportErrors = [];
+        this.message = this.csvImportStatusMessage;
+        this.showCsvUploadModal = false;
+        this.startCsvJobPolling(accepted.jobId);
+      },
+      error: (error) => {
+        const apiError = error?.error;
+        if (apiError && typeof apiError === 'object') {
+          this.csvImportStatusMessage = typeof apiError.message === 'string'
+            ? apiError.message
+            : 'CSV upload failed.';
+          const errors = Array.isArray(apiError.errors) ? apiError.errors : [];
+          this.csvImportErrors = errors.length > 0 ? errors : ['Failed to update employees from CSV.'];
+        } else {
+          const apiMessage = typeof apiError === 'string' ? apiError : null;
+          this.csvImportStatusMessage = 'CSV upload failed.';
+          this.csvImportErrors = [apiMessage ?? 'Failed to update employees from CSV.'];
+        }
+
+        this.message = `${this.csvImportStatusMessage} ${this.csvImportErrors[0] ?? ''}`.trim();
+      }
+    });
+  }
+
+  private startCsvJobPolling(jobId: string): void {
+    this.stopCsvJobPolling();
+
+    this.csvJobPollingSub = interval(300).pipe(
+      startWith(0),
+      switchMap(() => this.employeeService.getImportUpdateCsvJobStatus(jobId)),
+      takeWhile((status) => status.status !== 'Completed' && status.status !== 'Failed', true)
+    ).subscribe({
+      next: (status) => this.handleCsvJobStatus(status),
+      error: () => {
+        this.csvImportStatusMessage = 'Unable to check CSV background job status.';
+        this.csvImportErrors = ['Please refresh and check employee list after some time.'];
+        this.message = this.csvImportStatusMessage;
+        this.stopCsvJobPolling();
+      }
+    });
+  }
+
+  private handleCsvJobStatus(status: EmployeeCsvImportJobStatus): void {
+    this.csvBackgroundJobStatus = status.status;
+    this.csvBackgroundJobPercent = status.progressPercent
+      ?? (status.totalRows && status.processedRows !== undefined && status.processedRows !== null
+        ? Math.min(100, Math.round((status.processedRows / status.totalRows) * 100))
+        : this.csvBackgroundJobPercent);
+
+    if (status.status === 'Completed' || status.status === 'Failed' || status.status === 'Canceled') {
+      const result = status.result;
+      this.csvImportStatusMessage = result?.message || status.message || `CSV background job ${status.status.toLowerCase()}.`;
+      this.csvImportErrors = result?.errors ?? [];
+      this.message = this.csvImportStatusMessage;
+      this.csvBackgroundJobStatus = status.status;
+      if (status.status === 'Completed') {
+        this.csvBackgroundJobPercent = 100;
+      }
+      this.stopCsvJobPolling();
+      this.hasRequestedEmployees = true;
+      this.loadEmployees();
+      return;
+    }
+
+    this.csvImportStatusMessage = status.message || `CSV background job status: ${status.status}`;
+    this.message = this.csvImportStatusMessage;
+  }
+
+  private stopCsvJobPolling(): void {
+    if (this.csvJobPollingSub) {
+      this.csvJobPollingSub.unsubscribe();
+      this.csvJobPollingSub = null;
+    }
+  }
+
+  closeCsvFloatingBadge(): void {
+    this.showCsvFloatingBadge = false;
+  }
+
+  cancelCsvBackgroundJob(): void {
+    if (!this.csvBackgroundJobId || !this.isCsvBackgroundJobActive) {
+      return;
+    }
+
+    this.employeeService.cancelImportUpdateCsvJob(this.csvBackgroundJobId).subscribe({
+      next: (status) => {
+        this.handleCsvJobStatus(status);
+        this.csvImportStatusMessage = status.message || 'CSV cancel requested.';
+        this.message = this.csvImportStatusMessage;
+        if (status.status === 'Canceled') {
+          this.stopCsvJobPolling();
+        }
+      },
+      error: () => {
+        this.csvImportStatusMessage = 'Failed to request CSV cancellation.';
+        this.message = this.csvImportStatusMessage;
+      }
+    });
+  }
+
+  get isCsvBackgroundJobActive(): boolean {
+    return this.csvBackgroundJobStatus === 'Queued' || this.csvBackgroundJobStatus === 'Running';
   }
 
   get hasPreviousPage(): boolean {

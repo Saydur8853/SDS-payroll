@@ -1,6 +1,9 @@
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Payroll.Api.Configuration;
+using Payroll.Api.Controllers;
 using Payroll.Api.Data;
 
 DotEnvLoader.Load();
@@ -27,6 +30,13 @@ var dataSource = dataSourceBuilder.Build();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(dataSource));
+builder.Services.AddTransient<EmployeesController>();
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(options => options.UseNpgsqlConnection(connectionString)));
+builder.Services.AddHangfireServer();
 
 var app = builder.Build();
 
@@ -36,6 +46,7 @@ app.UseSwaggerUI();
 app.UseHttpsRedirection();
 app.UseCors("FrontendPolicy");
 app.UseStaticFiles();
+app.MapHangfireDashboard("/hangfire");
 app.MapGet("/", () => Results.Redirect("/swagger/index.html"));
 app.MapControllers();
 
@@ -106,6 +117,9 @@ using (var scope = app.Services.CreateScope())
         ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "BasicSalary" numeric(18,2) NULL;
         ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "Weekend" character varying(100) NULL;
         ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "SalaryAccount" character varying(100) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "DepartmentId" uuid NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "DesignationId" uuid NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "ShiftId" uuid NULL;
         """);
     dbContext.Database.ExecuteSqlRaw("""
         ALTER TABLE "Employees" ALTER COLUMN "EmployeeCode" TYPE bigint USING "EmployeeCode"::bigint;
@@ -124,6 +138,9 @@ using (var scope = app.Services.CreateScope())
         """);
     dbContext.Database.ExecuteSqlRaw("""
         CREATE UNIQUE INDEX IF NOT EXISTS "IX_Employees_EmployeeCode" ON "Employees" ("EmployeeCode");
+        CREATE INDEX IF NOT EXISTS "IX_Employees_DepartmentId" ON "Employees" ("DepartmentId");
+        CREATE INDEX IF NOT EXISTS "IX_Employees_DesignationId" ON "Employees" ("DesignationId");
+        CREATE INDEX IF NOT EXISTS "IX_Employees_ShiftId" ON "Employees" ("ShiftId");
         """);
     dbContext.Database.ExecuteSqlRaw("""
         CREATE TABLE IF NOT EXISTS "Departments" (
@@ -199,8 +216,137 @@ using (var scope = app.Services.CreateScope())
         CREATE INDEX IF NOT EXISTS "IX_ShiftTemporaryOverrides_ShiftId_DateFrom_DateTo" ON "ShiftTemporaryOverrides" ("ShiftId", "DateFrom", "DateTo");
         """);
     dbContext.Database.ExecuteSqlRaw("""
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1
+                FROM pg_constraint
+                WHERE conname = 'FK_Employees_Departments_DepartmentId'
+            ) THEN
+                ALTER TABLE "Employees"
+                ADD CONSTRAINT "FK_Employees_Departments_DepartmentId"
+                FOREIGN KEY ("DepartmentId") REFERENCES "Departments" ("Id") ON DELETE SET NULL;
+            END IF;
+        END $$;
+
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1
+                FROM pg_constraint
+                WHERE conname = 'FK_Employees_Designations_DesignationId'
+            ) THEN
+                ALTER TABLE "Employees"
+                ADD CONSTRAINT "FK_Employees_Designations_DesignationId"
+                FOREIGN KEY ("DesignationId") REFERENCES "Designations" ("Id") ON DELETE SET NULL;
+            END IF;
+        END $$;
+
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1
+                FROM pg_constraint
+                WHERE conname = 'FK_Employees_Shifts_ShiftId'
+            ) THEN
+                ALTER TABLE "Employees"
+                ADD CONSTRAINT "FK_Employees_Shifts_ShiftId"
+                FOREIGN KEY ("ShiftId") REFERENCES "Shifts" ("Id") ON DELETE SET NULL;
+            END IF;
+        END $$;
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
         ALTER TABLE "Companies" ADD COLUMN IF NOT EXISTS "Logo" bytea NULL;
         """);
+
+    // Backfill FK columns from existing text values, keeping legacy text columns for compatibility.
+    var departments = await dbContext.Departments.AsNoTracking().ToListAsync();
+    var designations = await dbContext.Designations.AsNoTracking().ToListAsync();
+    var shifts = await dbContext.Shifts.AsNoTracking().ToListAsync();
+
+    static string NormalizeLookup(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim().ToLowerInvariant();
+
+    static string BuildShiftDisplayName(string name, TimeOnly? inTime, TimeOnly? outTime)
+    {
+        if (!inTime.HasValue || !outTime.HasValue)
+        {
+            return name;
+        }
+
+        var start = DateTime.Today.Add(inTime.Value.ToTimeSpan()).ToString("hh:mm tt", System.Globalization.CultureInfo.InvariantCulture);
+        var end = DateTime.Today.Add(outTime.Value.ToTimeSpan()).ToString("hh:mm tt", System.Globalization.CultureInfo.InvariantCulture);
+        return $"{name} - {start} : {end}";
+    }
+
+    var departmentByName = departments
+        .GroupBy(x => NormalizeLookup(x.Name))
+        .Where(g => !string.IsNullOrWhiteSpace(g.Key))
+        .ToDictionary(g => g.Key, g => g.First().Id);
+
+    var designationByName = designations
+        .GroupBy(x => NormalizeLookup(x.Name))
+        .Where(g => !string.IsNullOrWhiteSpace(g.Key))
+        .ToDictionary(g => g.Key, g => g.First().Id);
+
+    var shiftByKey = new Dictionary<string, Guid>(StringComparer.OrdinalIgnoreCase);
+    foreach (var shift in shifts)
+    {
+        var normalizedName = NormalizeLookup(shift.Name);
+        if (!string.IsNullOrWhiteSpace(normalizedName))
+        {
+            shiftByKey.TryAdd(normalizedName, shift.Id);
+        }
+
+        var normalizedDisplay = NormalizeLookup(BuildShiftDisplayName(shift.Name, shift.InTime, shift.OutTime));
+        if (!string.IsNullOrWhiteSpace(normalizedDisplay))
+        {
+            shiftByKey.TryAdd(normalizedDisplay, shift.Id);
+        }
+    }
+
+    var employeesToBackfill = await dbContext.Employees
+        .Where(x => x.DepartmentId == null || x.DesignationId == null || x.ShiftId == null)
+        .ToListAsync();
+
+    var backfilled = false;
+    foreach (var employee in employeesToBackfill)
+    {
+        if (employee.DepartmentId == null)
+        {
+            var key = NormalizeLookup(employee.Department);
+            if (!string.IsNullOrWhiteSpace(key) && departmentByName.TryGetValue(key, out var deptId))
+            {
+                employee.DepartmentId = deptId;
+                backfilled = true;
+            }
+        }
+
+        if (employee.DesignationId == null)
+        {
+            var key = NormalizeLookup(employee.Designation);
+            if (!string.IsNullOrWhiteSpace(key) && designationByName.TryGetValue(key, out var designationId))
+            {
+                employee.DesignationId = designationId;
+                backfilled = true;
+            }
+        }
+
+        if (employee.ShiftId == null)
+        {
+            var key = NormalizeLookup(employee.WorkingTime);
+            if (!string.IsNullOrWhiteSpace(key) && shiftByKey.TryGetValue(key, out var shiftId))
+            {
+                employee.ShiftId = shiftId;
+                backfilled = true;
+            }
+        }
+    }
+
+    if (backfilled)
+    {
+        await dbContext.SaveChangesAsync();
+    }
 }
 
 app.Run();

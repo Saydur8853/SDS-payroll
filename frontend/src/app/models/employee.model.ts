@@ -4,7 +4,9 @@ export interface Employee {
   fullName: string;
   email?: string | null;
   phone?: string | null;
+  departmentId?: string | null;
   department?: string | null;
+  designationId?: string | null;
   designation?: string | null;
   address?: string | null;
   fatherName?: string | null;
@@ -21,6 +23,7 @@ export interface Employee {
   employmentStatus?: string | null;
   photoBase64?: string | null;
   signatureBase64?: string | null;
+  shiftId?: string | null;
   workingTime?: string | null;
   salaryRule?: string | null;
   grossSalary?: number | null;
@@ -57,7 +60,9 @@ export interface CreateEmployeeRequest {
   fullName: string;
   email?: string | null;
   phone?: string | null;
+  departmentId?: string | null;
   department?: string | null;
+  designationId?: string | null;
   designation?: string | null;
   address?: string | null;
   fatherName?: string | null;
@@ -74,6 +79,7 @@ export interface CreateEmployeeRequest {
   employmentStatus?: string | null;
   photoBase64?: string | null;
   signatureBase64?: string | null;
+  shiftId?: string | null;
   workingTime?: string | null;
   salaryRule?: string | null;
   grossSalary?: number | null;

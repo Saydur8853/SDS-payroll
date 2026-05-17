@@ -7,7 +7,9 @@ public class EmployeeResponse
     public string FullName { get; set; } = string.Empty;
     public string? Email { get; set; }
     public string? Phone { get; set; }
+    public Guid? DepartmentId { get; set; }
     public string? Department { get; set; }
+    public Guid? DesignationId { get; set; }
     public string? Designation { get; set; }
     public string? Address { get; set; }
     public string? FatherName { get; set; }
@@ -24,6 +26,7 @@ public class EmployeeResponse
     public string? EmploymentStatus { get; set; }
     public string? PhotoBase64 { get; set; }
     public string? SignatureBase64 { get; set; }
+    public Guid? ShiftId { get; set; }
     public string? WorkingTime { get; set; }
     public string? SalaryRule { get; set; }
     public decimal? GrossSalary { get; set; }

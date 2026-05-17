@@ -19,9 +19,13 @@ public class Employee
 
     [MaxLength(100)]
     public string? Department { get; set; }
+    public Guid? DepartmentId { get; set; }
+    public Department? DepartmentLookup { get; set; }
 
     [MaxLength(100)]
     public string? Designation { get; set; }
+    public Guid? DesignationId { get; set; }
+    public Designation? DesignationLookup { get; set; }
 
     [MaxLength(500)]
     public string? Address { get; set; }
@@ -67,6 +71,8 @@ public class Employee
 
     [MaxLength(100)]
     public string? WorkingTime { get; set; }
+    public Guid? ShiftId { get; set; }
+    public Shift? ShiftLookup { get; set; }
 
     [MaxLength(100)]
     public string? SalaryRule { get; set; }

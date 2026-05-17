@@ -3,6 +3,38 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CreateEmployeeRequest, Employee, EmployeeSearchParams, PagedResponse } from '../models/employee.model';
 
+export interface EmployeeCsvImportResult {
+  message: string;
+  totalRows: number;
+  createdCount: number;
+  updatedCount: number;
+  failedCount: number;
+  errors: string[];
+}
+
+export interface EmployeeCsvImportJobAccepted {
+  jobId: string;
+  hangfireJobId?: string | null;
+  status: 'Queued' | string;
+  message: string;
+}
+
+export interface EmployeeCsvImportJobStatus {
+  jobId: string;
+  hangfireJobId?: string | null;
+  status: 'Queued' | 'Running' | 'Completed' | 'Failed' | 'Canceled' | string;
+  cancellationRequested?: boolean;
+  message: string;
+  createdAtUtc: string;
+  startedAtUtc?: string | null;
+  completedAtUtc?: string | null;
+  updatedAtUtc: string;
+  totalRows?: number | null;
+  processedRows?: number | null;
+  progressPercent?: number | null;
+  result?: EmployeeCsvImportResult | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -59,6 +91,31 @@ export class EmployeeService {
       params: queryParams,
       responseType: 'blob'
     });
+  }
+
+  importUpdateCsv(file: File): Observable<EmployeeCsvImportResult> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post<EmployeeCsvImportResult>(
+      `${this.apiUrl}/import-update`,
+      formData
+    );
+  }
+
+  importUpdateCsvInBackground(file: File): Observable<EmployeeCsvImportJobAccepted> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post<EmployeeCsvImportJobAccepted>(`${this.apiUrl}/import-update/background`, formData);
+  }
+
+  getImportUpdateCsvJobStatus(jobId: string): Observable<EmployeeCsvImportJobStatus> {
+    return this.http.get<EmployeeCsvImportJobStatus>(`${this.apiUrl}/import-update/jobs/${jobId}`);
+  }
+
+  cancelImportUpdateCsvJob(jobId: string): Observable<EmployeeCsvImportJobStatus> {
+    return this.http.post<EmployeeCsvImportJobStatus>(`${this.apiUrl}/import-update/jobs/${jobId}/cancel`, {});
   }
 
   getAttributeSuggestions(query: string): Observable<string[]> {
