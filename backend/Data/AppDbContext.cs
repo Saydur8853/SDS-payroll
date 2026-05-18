@@ -33,6 +33,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(e => e.FullName).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Email).HasMaxLength(200);
             entity.Property(e => e.Phone).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Company).HasMaxLength(200);
+            entity.Property(e => e.CompanyId);
             entity.Property(e => e.Department).HasMaxLength(100);
             entity.Property(e => e.DepartmentId);
             entity.Property(e => e.Designation).HasMaxLength(100);
@@ -65,9 +67,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(e => e.CreatedAtUtc).IsRequired();
             entity.Property(e => e.UpdatedAtUtc).IsRequired();
             entity.HasIndex(e => e.EmployeeCode).IsUnique();
+            entity.HasIndex(e => e.CompanyId);
             entity.HasIndex(e => e.DepartmentId);
             entity.HasIndex(e => e.DesignationId);
             entity.HasIndex(e => e.ShiftId);
+            entity.HasOne(e => e.CompanyLookup)
+                .WithMany()
+                .HasForeignKey(e => e.CompanyId)
+                .OnDelete(DeleteBehavior.SetNull);
             entity.HasOne(e => e.DepartmentLookup)
                 .WithMany()
                 .HasForeignKey(e => e.DepartmentId)

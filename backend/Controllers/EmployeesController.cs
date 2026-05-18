@@ -21,6 +21,67 @@ public class EmployeesController(
     ILogger<EmployeesController> logger) : ControllerBase
 {
     private static readonly string[] DefaultEmploymentStatuses = ["Active", "Inactive", "Maternity"];
+    private static readonly string[] DefaultGenders = ["Male", "Female", "Other"];
+    private static readonly string[] DefaultReligions = ["Islam", "Hinduism", "Christianity", "Buddhism"];
+    private static readonly string[] DefaultMaritalStatuses = ["Single", "Married", "Divorced", "Widowed", "Separated"];
+    private static readonly string[] DefaultBloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+    private static readonly string[] DefaultSalaryRules = ["Monthly", "Hourly", "Daily", "Weekly", "Biweekly", "Yearly"];
+    private static readonly Dictionary<string, string> GenderAliases = new(StringComparer.Ordinal)
+    {
+        ["m"] = "Male",
+        ["male"] = "Male",
+        ["man"] = "Male",
+        ["f"] = "Female",
+        ["female"] = "Female",
+        ["woman"] = "Female",
+        ["other"] = "Other",
+        ["others"] = "Other"
+    };
+    private static readonly Dictionary<string, string> EmploymentStatusAliases = new(StringComparer.Ordinal)
+    {
+        ["active"] = "Active",
+        ["inactive"] = "Inactive",
+        ["maternity"] = "Maternity",
+        ["materinity"] = "Maternity",
+        ["maternaty"] = "Maternity"
+    };
+    private static readonly Dictionary<string, string> ReligionAliases = new(StringComparer.Ordinal)
+    {
+        ["islam"] = "Islam",
+        ["muslim"] = "Islam",
+        ["hindu"] = "Hinduism",
+        ["hinduism"] = "Hinduism",
+        ["christian"] = "Christianity",
+        ["christianity"] = "Christianity",
+        ["buddhist"] = "Buddhism",
+        ["buddhism"] = "Buddhism"
+    };
+    private static readonly Dictionary<string, string> MaritalStatusAliases = new(StringComparer.Ordinal)
+    {
+        ["single"] = "Single",
+        ["unmarried"] = "Single",
+        ["married"] = "Married",
+        ["divorced"] = "Divorced",
+        ["widow"] = "Widowed",
+        ["widowed"] = "Widowed",
+        ["separated"] = "Separated"
+    };
+    private static readonly Dictionary<string, string> SalaryRuleAliases = new(StringComparer.Ordinal)
+    {
+        ["monthly"] = "Monthly",
+        ["month"] = "Monthly",
+        ["hourly"] = "Hourly",
+        ["hour"] = "Hourly",
+        ["daily"] = "Daily",
+        ["day"] = "Daily",
+        ["weekly"] = "Weekly",
+        ["week"] = "Weekly",
+        ["biweekly"] = "Biweekly",
+        ["biweek"] = "Biweekly",
+        ["fortnightly"] = "Biweekly",
+        ["yearly"] = "Yearly",
+        ["annual"] = "Yearly"
+    };
     private static readonly ConcurrentDictionary<Guid, BulkEmployeeCsvJobStatusResponse> CsvImportJobs = new();
     private static readonly string[] CsvStaticHeaders =
     [
@@ -28,6 +89,7 @@ public class EmployeesController(
         "FullName",
         "Email",
         "Phone",
+        "Company",
         "Department",
         "Designation",
         "Address",
@@ -97,8 +159,23 @@ public class EmployeesController(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] string? search = null,
+        [FromQuery] long? employeeCode = null,
+        [FromQuery] string? phone = null,
+        [FromQuery] string? nationalId = null,
+        [FromQuery] string? company = null,
         [FromQuery] string? department = null,
         [FromQuery] string? designation = null,
+        [FromQuery] string? employmentStatus = null,
+        [FromQuery] string? gender = null,
+        [FromQuery] string? religion = null,
+        [FromQuery] string? maritalStatus = null,
+        [FromQuery] string? bloodGroup = null,
+        [FromQuery] string? workingTime = null,
+        [FromQuery] string? salaryRule = null,
+        [FromQuery] string? weekend = null,
+        [FromQuery] string? salaryAccount = null,
+        [FromQuery] DateOnly? dateOfBirthFrom = null,
+        [FromQuery] DateOnly? dateOfBirthTo = null,
         [FromQuery] DateOnly? joiningDateFrom = null,
         [FromQuery] DateOnly? joiningDateTo = null,
         CancellationToken cancellationToken = default)
@@ -107,6 +184,10 @@ public class EmployeesController(
         {
             return BadRequest("joiningDateFrom cannot be later than joiningDateTo.");
         }
+        if (dateOfBirthFrom.HasValue && dateOfBirthTo.HasValue && dateOfBirthFrom > dateOfBirthTo)
+        {
+            return BadRequest("dateOfBirthFrom cannot be later than dateOfBirthTo.");
+        }
 
         var safePage = Math.Max(page, 1);
         var safePageSize = Math.Clamp(pageSize, 5, 100);
@@ -114,8 +195,23 @@ public class EmployeesController(
         var query = ApplyEmployeeFilters(
             dbContext.Employees.AsNoTracking().AsQueryable(),
             search,
+            employeeCode,
+            phone,
+            nationalId,
+            company,
             department,
             designation,
+            employmentStatus,
+            gender,
+            religion,
+            maritalStatus,
+            bloodGroup,
+            workingTime,
+            salaryRule,
+            weekend,
+            salaryAccount,
+            dateOfBirthFrom,
+            dateOfBirthTo,
             joiningDateFrom,
             joiningDateTo);
 
@@ -161,8 +257,23 @@ public class EmployeesController(
     [HttpGet("export")]
     public async Task<IActionResult> Export(
         [FromQuery] string? search = null,
+        [FromQuery] long? employeeCode = null,
+        [FromQuery] string? phone = null,
+        [FromQuery] string? nationalId = null,
+        [FromQuery] string? company = null,
         [FromQuery] string? department = null,
         [FromQuery] string? designation = null,
+        [FromQuery] string? employmentStatus = null,
+        [FromQuery] string? gender = null,
+        [FromQuery] string? religion = null,
+        [FromQuery] string? maritalStatus = null,
+        [FromQuery] string? bloodGroup = null,
+        [FromQuery] string? workingTime = null,
+        [FromQuery] string? salaryRule = null,
+        [FromQuery] string? weekend = null,
+        [FromQuery] string? salaryAccount = null,
+        [FromQuery] DateOnly? dateOfBirthFrom = null,
+        [FromQuery] DateOnly? dateOfBirthTo = null,
         [FromQuery] DateOnly? joiningDateFrom = null,
         [FromQuery] DateOnly? joiningDateTo = null,
         CancellationToken cancellationToken = default)
@@ -171,12 +282,31 @@ public class EmployeesController(
         {
             return BadRequest("joiningDateFrom cannot be later than joiningDateTo.");
         }
+        if (dateOfBirthFrom.HasValue && dateOfBirthTo.HasValue && dateOfBirthFrom > dateOfBirthTo)
+        {
+            return BadRequest("dateOfBirthFrom cannot be later than dateOfBirthTo.");
+        }
 
         var employees = await ApplyEmployeeFilters(
                 dbContext.Employees.AsNoTracking().AsQueryable(),
                 search,
+                employeeCode,
+                phone,
+                nationalId,
+                company,
                 department,
                 designation,
+                employmentStatus,
+                gender,
+                religion,
+                maritalStatus,
+                bloodGroup,
+                workingTime,
+                salaryRule,
+                weekend,
+                salaryAccount,
+                dateOfBirthFrom,
+                dateOfBirthTo,
                 joiningDateFrom,
                 joiningDateTo)
             .OrderBy(x => x.FullName)
@@ -331,6 +461,8 @@ public class EmployeesController(
         CancellationToken cancellationToken)
     {
         var requiredFieldError = ValidateRequiredEmployeeFields(
+            request.CompanyId,
+            request.Company,
             request.DepartmentId,
             request.Department,
             request.DesignationId,
@@ -347,12 +479,30 @@ public class EmployeesController(
             return Conflict($"Employee with code '{request.EmployeeCode}' already exists.");
         }
 
+        var companyResolutionResult = await ResolveCompanyAsync(
+            dbContext,
+            request.CompanyId,
+            request.Company,
+            cancellationToken,
+            allowNearMatchByName: true);
+        if (!string.IsNullOrWhiteSpace(companyResolutionResult.Error))
+        {
+            return BadRequest(companyResolutionResult.Error);
+        }
+
+        var companyResolution = companyResolutionResult.Value;
+        if (companyResolution is null)
+        {
+            return BadRequest("Company is required.");
+        }
+
         var departmentResolutionResult = await ResolveOrCreateDepartmentAsync(
             dbContext,
             request.DepartmentId,
             request.Department,
             createIfMissingByName: true,
-            cancellationToken);
+            cancellationToken,
+            allowNearMatchByName: true);
         if (!string.IsNullOrWhiteSpace(departmentResolutionResult.Error))
         {
             return BadRequest(departmentResolutionResult.Error);
@@ -369,7 +519,8 @@ public class EmployeesController(
             request.DesignationId,
             request.Designation,
             createIfMissingByName: true,
-            cancellationToken);
+            cancellationToken,
+            allowNearMatchByName: true);
         if (!string.IsNullOrWhiteSpace(designationResolutionResult.Error))
         {
             return BadRequest(designationResolutionResult.Error);
@@ -393,6 +544,36 @@ public class EmployeesController(
         }
 
         var shiftResolution = shiftResolutionResult.Value;
+        var normalizedGender = NormalizeGenderValue(request.Gender, strict: true, out var genderError);
+        if (genderError is not null || normalizedGender is null)
+        {
+            return BadRequest(genderError ?? "Gender is invalid.");
+        }
+
+        var normalizedEmploymentStatus = NormalizeEmploymentStatusValue(request.EmploymentStatus, strict: false, out var employmentStatusError);
+        if (employmentStatusError is not null || normalizedEmploymentStatus is null)
+        {
+            return BadRequest(employmentStatusError ?? "Employment status is invalid.");
+        }
+
+        var normalizedReligion = NormalizeReligionValue(request.Religion);
+        var normalizedMaritalStatus = NormalizeMaritalStatusValue(request.MaritalStatus, strict: false, out var maritalStatusError);
+        if (maritalStatusError is not null)
+        {
+            return BadRequest(maritalStatusError);
+        }
+
+        var normalizedBloodGroup = NormalizeBloodGroupValue(request.BloodGroup, strict: true, out var bloodGroupError);
+        if (bloodGroupError is not null)
+        {
+            return BadRequest(bloodGroupError);
+        }
+
+        var normalizedSalaryRule = NormalizeSalaryRuleValue(request.SalaryRule, strict: false, out var salaryRuleError);
+        if (salaryRuleError is not null)
+        {
+            return BadRequest(salaryRuleError);
+        }
 
         var existingKeys = await GetDynamicAttributeKeyCounts(cancellationToken);
         var employee = new Employee
@@ -402,6 +583,8 @@ public class EmployeesController(
             FullName = request.FullName.Trim(),
             Email = request.Email?.Trim(),
             Phone = request.Phone.Trim(),
+            CompanyId = companyResolution.Id,
+            Company = companyResolution.Name,
             DepartmentId = departmentResolution.Id,
             Department = departmentResolution.Name,
             DesignationId = designationResolution.Id,
@@ -413,17 +596,17 @@ public class EmployeesController(
             FatherPhone = request.FatherPhone?.Trim(),
             MotherPhone = request.MotherPhone?.Trim(),
             SpousePhone = request.SpousePhone?.Trim(),
-            Gender = request.Gender.Trim(),
-            Religion = request.Religion?.Trim(),
-            MaritalStatus = request.MaritalStatus?.Trim(),
-            BloodGroup = request.BloodGroup?.Trim(),
+            Gender = normalizedGender,
+            Religion = normalizedReligion,
+            MaritalStatus = normalizedMaritalStatus,
+            BloodGroup = normalizedBloodGroup,
             NationalId = request.NationalId?.Trim(),
-            EmploymentStatus = request.EmploymentStatus.Trim(),
+            EmploymentStatus = normalizedEmploymentStatus,
             Photo = FromBase64(request.PhotoBase64),
             Signature = FromBase64(request.SignatureBase64),
             ShiftId = shiftResolution?.Id,
             WorkingTime = shiftResolution?.DisplayName,
-            SalaryRule = request.SalaryRule?.Trim(),
+            SalaryRule = normalizedSalaryRule,
             GrossSalary = request.GrossSalary,
             BasicSalary = request.BasicSalary,
             Weekend = request.Weekend?.Trim(),
@@ -446,6 +629,8 @@ public class EmployeesController(
         CancellationToken cancellationToken)
     {
         var requiredFieldError = ValidateRequiredEmployeeFields(
+            request.CompanyId,
+            request.Company,
             request.DepartmentId,
             request.Department,
             request.DesignationId,
@@ -468,12 +653,30 @@ public class EmployeesController(
             return BadRequest("Employee code cannot be updated.");
         }
 
+        var companyResolutionResult = await ResolveCompanyAsync(
+            dbContext,
+            request.CompanyId,
+            request.Company,
+            cancellationToken,
+            allowNearMatchByName: true);
+        if (!string.IsNullOrWhiteSpace(companyResolutionResult.Error))
+        {
+            return BadRequest(companyResolutionResult.Error);
+        }
+
+        var companyResolution = companyResolutionResult.Value;
+        if (companyResolution is null)
+        {
+            return BadRequest("Company is required.");
+        }
+
         var departmentResolutionResult = await ResolveOrCreateDepartmentAsync(
             dbContext,
             request.DepartmentId,
             request.Department,
             createIfMissingByName: true,
-            cancellationToken);
+            cancellationToken,
+            allowNearMatchByName: true);
         if (!string.IsNullOrWhiteSpace(departmentResolutionResult.Error))
         {
             return BadRequest(departmentResolutionResult.Error);
@@ -490,7 +693,8 @@ public class EmployeesController(
             request.DesignationId,
             request.Designation,
             createIfMissingByName: true,
-            cancellationToken);
+            cancellationToken,
+            allowNearMatchByName: true);
         if (!string.IsNullOrWhiteSpace(designationResolutionResult.Error))
         {
             return BadRequest(designationResolutionResult.Error);
@@ -514,10 +718,42 @@ public class EmployeesController(
         }
 
         var shiftResolution = shiftResolutionResult.Value;
+        var normalizedGender = NormalizeGenderValue(request.Gender, strict: true, out var genderError);
+        if (genderError is not null || normalizedGender is null)
+        {
+            return BadRequest(genderError ?? "Gender is invalid.");
+        }
+
+        var normalizedEmploymentStatus = NormalizeEmploymentStatusValue(request.EmploymentStatus, strict: false, out var employmentStatusError);
+        if (employmentStatusError is not null || normalizedEmploymentStatus is null)
+        {
+            return BadRequest(employmentStatusError ?? "Employment status is invalid.");
+        }
+
+        var normalizedReligion = NormalizeReligionValue(request.Religion);
+        var normalizedMaritalStatus = NormalizeMaritalStatusValue(request.MaritalStatus, strict: false, out var maritalStatusError);
+        if (maritalStatusError is not null)
+        {
+            return BadRequest(maritalStatusError);
+        }
+
+        var normalizedBloodGroup = NormalizeBloodGroupValue(request.BloodGroup, strict: true, out var bloodGroupError);
+        if (bloodGroupError is not null)
+        {
+            return BadRequest(bloodGroupError);
+        }
+
+        var normalizedSalaryRule = NormalizeSalaryRuleValue(request.SalaryRule, strict: false, out var salaryRuleError);
+        if (salaryRuleError is not null)
+        {
+            return BadRequest(salaryRuleError);
+        }
 
         employee.FullName = request.FullName.Trim();
         employee.Email = request.Email?.Trim();
         employee.Phone = request.Phone.Trim();
+        employee.CompanyId = companyResolution.Id;
+        employee.Company = companyResolution.Name;
         employee.DepartmentId = departmentResolution.Id;
         employee.Department = departmentResolution.Name;
         employee.DesignationId = designationResolution.Id;
@@ -529,17 +765,17 @@ public class EmployeesController(
         employee.FatherPhone = request.FatherPhone?.Trim();
         employee.MotherPhone = request.MotherPhone?.Trim();
         employee.SpousePhone = request.SpousePhone?.Trim();
-        employee.Gender = request.Gender.Trim();
-        employee.Religion = request.Religion?.Trim();
-        employee.MaritalStatus = request.MaritalStatus?.Trim();
-        employee.BloodGroup = request.BloodGroup?.Trim();
+        employee.Gender = normalizedGender;
+        employee.Religion = normalizedReligion;
+        employee.MaritalStatus = normalizedMaritalStatus;
+        employee.BloodGroup = normalizedBloodGroup;
         employee.NationalId = request.NationalId?.Trim();
-        employee.EmploymentStatus = request.EmploymentStatus.Trim();
+        employee.EmploymentStatus = normalizedEmploymentStatus;
         employee.Photo = request.PhotoBase64 != null ? FromBase64(request.PhotoBase64) : employee.Photo;
         employee.Signature = request.SignatureBase64 != null ? FromBase64(request.SignatureBase64) : employee.Signature;
         employee.ShiftId = shiftResolution?.Id;
         employee.WorkingTime = shiftResolution?.DisplayName;
-        employee.SalaryRule = request.SalaryRule?.Trim();
+        employee.SalaryRule = normalizedSalaryRule;
         employee.GrossSalary = request.GrossSalary;
         employee.BasicSalary = request.BasicSalary;
         employee.Weekend = request.Weekend?.Trim();
@@ -553,6 +789,8 @@ public class EmployeesController(
     }
 
     private static string? ValidateRequiredEmployeeFields(
+        Guid? companyId,
+        string? company,
         Guid? departmentId,
         string? department,
         Guid? designationId,
@@ -560,6 +798,11 @@ public class EmployeesController(
         string gender,
         DateOnly? dateOfBirth)
     {
+        if (!companyId.HasValue && string.IsNullOrWhiteSpace(company))
+        {
+            return "Company is required.";
+        }
+
         if (!departmentId.HasValue && string.IsNullOrWhiteSpace(department))
         {
             return "Department is required.";
@@ -942,7 +1185,7 @@ public class EmployeesController(
             throw new CsvValidationException("CSV validation failed.", ["CSV must include an 'EmployeeCode' column."]);
         }
 
-        var missingCoreHeaders = new[] { "FullName", "Phone", "Department", "Designation", "Gender", "EmploymentStatus", "DateOfBirth", "JoiningDate" }
+        var missingCoreHeaders = new[] { "FullName", "Phone", "Company", "Department", "Designation", "Gender", "EmploymentStatus", "DateOfBirth", "JoiningDate" }
             .Where(header => !headerIndexes.ContainsKey(header))
             .ToArray();
 
@@ -1064,6 +1307,7 @@ public class EmployeesController(
             var rowErrorsBefore = errors.Count;
             var fullName = GetRequiredString(row, headerIndexes, "FullName", rowIndex, employee.FullName, errors);
             var phone = GetRequiredString(row, headerIndexes, "Phone", rowIndex, employee.Phone, errors);
+            var company = GetRequiredString(row, headerIndexes, "Company", rowIndex, employee.Company ?? string.Empty, errors);
             var department = GetRequiredString(row, headerIndexes, "Department", rowIndex, employee.Department ?? string.Empty, errors);
             var designation = GetRequiredString(row, headerIndexes, "Designation", rowIndex, employee.Designation ?? string.Empty, errors);
             var gender = GetRequiredString(row, headerIndexes, "Gender", rowIndex, employee.Gender ?? string.Empty, errors);
@@ -1075,6 +1319,7 @@ public class EmployeesController(
 
             if (fullName is null ||
                 phone is null ||
+                company is null ||
                 department is null ||
                 designation is null ||
                 gender is null ||
@@ -1094,13 +1339,29 @@ public class EmployeesController(
                 continue;
             }
 
+            var companyResolution = await ResolveCompanyAsync(
+                context,
+                null,
+                company,
+                cancellationToken,
+                lookupCache,
+                allowNearMatchByName: true);
+            if (companyResolution.Value is null)
+            {
+                errors.Add(companyResolution.Error ?? $"Row {rowIndex + 1}: Company '{company}' is invalid.");
+                failedCount++;
+                MarkProgress();
+                continue;
+            }
+
             var departmentResolution = await ResolveOrCreateDepartmentAsync(
                 context,
                 null,
                 department,
                 createIfMissingByName: true,
                 cancellationToken,
-                lookupCache);
+                lookupCache,
+                allowNearMatchByName: true);
             if (departmentResolution.Value is null)
             {
                 errors.Add(departmentResolution.Error ?? $"Row {rowIndex + 1}: Department '{department}' is invalid.");
@@ -1115,7 +1376,8 @@ public class EmployeesController(
                 designation,
                 createIfMissingByName: true,
                 cancellationToken,
-                lookupCache);
+                lookupCache,
+                allowNearMatchByName: true);
             if (designationResolution.Value is null)
             {
                 errors.Add(designationResolution.Error ?? $"Row {rowIndex + 1}: Designation '{designation}' is invalid.");
@@ -1140,14 +1402,72 @@ public class EmployeesController(
                 continue;
             }
 
+            var normalizedGender = NormalizeGenderValue(gender, strict: true, out var genderError);
+            if (normalizedGender is null || genderError is not null)
+            {
+                errors.Add(genderError ?? $"Row {rowIndex + 1}: Gender '{gender}' is invalid.");
+                failedCount++;
+                MarkProgress();
+                continue;
+            }
+
+            var normalizedEmploymentStatus = NormalizeEmploymentStatusValue(employmentStatus, strict: false, out var employmentStatusError, lookupCache.EmploymentStatuses);
+            if (normalizedEmploymentStatus is null || employmentStatusError is not null)
+            {
+                errors.Add(employmentStatusError ?? $"Row {rowIndex + 1}: EmploymentStatus '{employmentStatus}' is invalid.");
+                failedCount++;
+                MarkProgress();
+                continue;
+            }
+
+            var religionValue = GetOptionalString(row, headerIndexes, "Religion", employee.Religion);
+            var normalizedReligion = NormalizeReligionValue(religionValue, lookupCache.Religions);
+
+            var maritalStatusValue = GetOptionalString(row, headerIndexes, "MaritalStatus", employee.MaritalStatus);
+            var normalizedMaritalStatus = NormalizeMaritalStatusValue(maritalStatusValue, strict: false, out var maritalStatusError, lookupCache.MaritalStatuses);
+            if (maritalStatusError is not null)
+            {
+                errors.Add(maritalStatusError.Replace("Marital status", $"Row {rowIndex + 1}: Marital status"));
+                failedCount++;
+                MarkProgress();
+                continue;
+            }
+
+            var bloodGroupValue = GetOptionalString(row, headerIndexes, "BloodGroup", employee.BloodGroup);
+            var normalizedBloodGroup = NormalizeBloodGroupValue(bloodGroupValue, strict: true, out var bloodGroupError);
+            if (bloodGroupError is not null)
+            {
+                errors.Add($"Row {rowIndex + 1}: {bloodGroupError}");
+                failedCount++;
+                MarkProgress();
+                continue;
+            }
+
+            var salaryRuleValue = GetOptionalString(row, headerIndexes, "SalaryRule", employee.SalaryRule);
+            var normalizedSalaryRule = NormalizeSalaryRuleValue(salaryRuleValue, strict: false, out var salaryRuleError, lookupCache.SalaryRules);
+            if (salaryRuleError is not null)
+            {
+                errors.Add(salaryRuleError.Replace("Salary rule", $"Row {rowIndex + 1}: Salary rule"));
+                failedCount++;
+                MarkProgress();
+                continue;
+            }
+
+            AddDistinctValues(lookupCache.EmploymentStatuses, [normalizedEmploymentStatus]);
+            AddDistinctValues(lookupCache.Religions, [normalizedReligion]);
+            AddDistinctValues(lookupCache.MaritalStatuses, [normalizedMaritalStatus]);
+            AddDistinctValues(lookupCache.SalaryRules, [normalizedSalaryRule]);
+
             employee.FullName = fullName;
             employee.Phone = phone;
+            employee.CompanyId = companyResolution.Value.Id;
+            employee.Company = companyResolution.Value.Name;
             employee.DepartmentId = departmentResolution.Value.Id;
             employee.Department = departmentResolution.Value.Name;
             employee.DesignationId = designationResolution.Value.Id;
             employee.Designation = designationResolution.Value.Name;
-            employee.Gender = gender;
-            employee.EmploymentStatus = employmentStatus;
+            employee.Gender = normalizedGender;
+            employee.EmploymentStatus = normalizedEmploymentStatus;
             employee.DateOfBirth = dateOfBirth;
             employee.JoiningDate = joiningDate.Value;
             employee.Email = GetOptionalString(row, headerIndexes, "Email", employee.Email);
@@ -1158,13 +1478,13 @@ public class EmployeesController(
             employee.FatherPhone = GetOptionalString(row, headerIndexes, "FatherPhone", employee.FatherPhone);
             employee.MotherPhone = GetOptionalString(row, headerIndexes, "MotherPhone", employee.MotherPhone);
             employee.SpousePhone = GetOptionalString(row, headerIndexes, "SpousePhone", employee.SpousePhone);
-            employee.Religion = GetOptionalString(row, headerIndexes, "Religion", employee.Religion);
-            employee.MaritalStatus = GetOptionalString(row, headerIndexes, "MaritalStatus", employee.MaritalStatus);
-            employee.BloodGroup = GetOptionalString(row, headerIndexes, "BloodGroup", employee.BloodGroup);
+            employee.Religion = normalizedReligion;
+            employee.MaritalStatus = normalizedMaritalStatus;
+            employee.BloodGroup = normalizedBloodGroup;
             employee.NationalId = GetOptionalString(row, headerIndexes, "NationalId", employee.NationalId);
             employee.ShiftId = shiftResolution.Value?.Id;
             employee.WorkingTime = shiftResolution.Value?.DisplayName;
-            employee.SalaryRule = GetOptionalString(row, headerIndexes, "SalaryRule", employee.SalaryRule);
+            employee.SalaryRule = normalizedSalaryRule;
             employee.GrossSalary = grossSalary;
             employee.BasicSalary = basicSalary;
             employee.Weekend = GetOptionalString(row, headerIndexes, "Weekend", employee.Weekend);
@@ -1264,14 +1584,473 @@ public class EmployeesController(
 
     private sealed class LookupCache
     {
+        public Dictionary<string, Company> CompaniesByName { get; init; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, Department> DepartmentsByName { get; init; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, Designation> DesignationsByName { get; init; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<Guid, Shift> ShiftsById { get; init; } = new();
         public Dictionary<string, Shift> ShiftsByNameOrDisplay { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> EmploymentStatuses { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> Religions { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> MaritalStatuses { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> SalaryRules { get; init; } = new(StringComparer.OrdinalIgnoreCase);
     }
 
     private static string NormalizeLookupText(string? value) =>
         string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim().ToLowerInvariant();
+
+    private static string NormalizeAlphaNumericText(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var builder = new StringBuilder(value.Length);
+        foreach (var character in value.Trim().ToLowerInvariant())
+        {
+            if (char.IsLetterOrDigit(character))
+            {
+                builder.Append(character);
+            }
+        }
+
+        return builder.ToString();
+    }
+
+    private static string SingularizeKey(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        if (value.EndsWith("ies", StringComparison.Ordinal) && value.Length > 3)
+        {
+            return value[..^3] + "y";
+        }
+
+        if (value.EndsWith("es", StringComparison.Ordinal) && value.Length > 3)
+        {
+            return value[..^2];
+        }
+
+        if (value.EndsWith("s", StringComparison.Ordinal) && value.Length > 2)
+        {
+            return value[..^1];
+        }
+
+        return value;
+    }
+
+    private static int ComputeLevenshteinDistance(string source, string target, int maxDistance)
+    {
+        if (source == target)
+        {
+            return 0;
+        }
+
+        if (source.Length == 0)
+        {
+            return target.Length;
+        }
+
+        if (target.Length == 0)
+        {
+            return source.Length;
+        }
+
+        if (Math.Abs(source.Length - target.Length) > maxDistance)
+        {
+            return maxDistance + 1;
+        }
+
+        var previous = new int[target.Length + 1];
+        var current = new int[target.Length + 1];
+
+        for (var j = 0; j <= target.Length; j++)
+        {
+            previous[j] = j;
+        }
+
+        for (var i = 1; i <= source.Length; i++)
+        {
+            current[0] = i;
+            var minInRow = current[0];
+
+            for (var j = 1; j <= target.Length; j++)
+            {
+                var cost = source[i - 1] == target[j - 1] ? 0 : 1;
+                current[j] = Math.Min(
+                    Math.Min(current[j - 1] + 1, previous[j] + 1),
+                    previous[j - 1] + cost);
+
+                if (current[j] < minInRow)
+                {
+                    minInRow = current[j];
+                }
+            }
+
+            if (minInRow > maxDistance)
+            {
+                return maxDistance + 1;
+            }
+
+            (previous, current) = (current, previous);
+        }
+
+        return previous[target.Length];
+    }
+
+    private static void AddDistinctValues(HashSet<string> target, IEnumerable<string?> values)
+    {
+        foreach (var value in values)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                target.Add(value.Trim());
+            }
+        }
+    }
+
+    private static TEntity? FindNearEntityByName<TEntity>(IEnumerable<TEntity> candidates, string rawInput)
+        where TEntity : class
+    {
+        var inputKey = SingularizeKey(NormalizeAlphaNumericText(rawInput));
+        if (string.IsNullOrWhiteSpace(inputKey))
+        {
+            return null;
+        }
+
+        TEntity? bestMatch = null;
+        var bestDistance = int.MaxValue;
+        var ambiguous = false;
+
+        foreach (var candidate in candidates)
+        {
+            var candidateName = candidate switch
+            {
+                Company company => company.Name,
+                Department department => department.Name,
+                Designation designation => designation.Name,
+                _ => string.Empty
+            };
+
+            var candidateKey = SingularizeKey(NormalizeAlphaNumericText(candidateName));
+            if (string.IsNullOrWhiteSpace(candidateKey))
+            {
+                continue;
+            }
+
+            if (candidateKey == inputKey)
+            {
+                return candidate;
+            }
+
+            if (Math.Abs(candidateKey.Length - inputKey.Length) > 1)
+            {
+                continue;
+            }
+
+            var distance = ComputeLevenshteinDistance(inputKey, candidateKey, maxDistance: 1);
+            if (distance > 1)
+            {
+                continue;
+            }
+
+            if (distance < bestDistance)
+            {
+                bestMatch = candidate;
+                bestDistance = distance;
+                ambiguous = false;
+            }
+            else if (distance == bestDistance)
+            {
+                ambiguous = true;
+            }
+        }
+
+        return ambiguous ? null : bestMatch;
+    }
+
+    private static bool TryResolveCanonicalValue(
+        string rawValue,
+        IEnumerable<string> candidates,
+        IReadOnlyDictionary<string, string> aliases,
+        out string canonical)
+    {
+        var normalizedInput = SingularizeKey(NormalizeAlphaNumericText(rawValue));
+        if (string.IsNullOrWhiteSpace(normalizedInput))
+        {
+            canonical = rawValue.Trim();
+            return true;
+        }
+
+        if (aliases.TryGetValue(normalizedInput, out canonical!))
+        {
+            return true;
+        }
+
+        var candidateList = candidates
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        foreach (var candidate in candidateList)
+        {
+            if (SingularizeKey(NormalizeAlphaNumericText(candidate)) == normalizedInput)
+            {
+                canonical = candidate;
+                return true;
+            }
+        }
+
+        string? bestMatch = null;
+        var bestDistance = int.MaxValue;
+        var ambiguous = false;
+
+        foreach (var candidate in candidateList)
+        {
+            var candidateKey = SingularizeKey(NormalizeAlphaNumericText(candidate));
+            if (string.IsNullOrWhiteSpace(candidateKey))
+            {
+                continue;
+            }
+
+            if (Math.Abs(candidateKey.Length - normalizedInput.Length) > 1)
+            {
+                continue;
+            }
+
+            var distance = ComputeLevenshteinDistance(normalizedInput, candidateKey, maxDistance: 1);
+            if (distance > 1)
+            {
+                continue;
+            }
+
+            if (distance < bestDistance)
+            {
+                bestMatch = candidate;
+                bestDistance = distance;
+                ambiguous = false;
+            }
+            else if (distance == bestDistance)
+            {
+                ambiguous = true;
+            }
+        }
+
+        if (!ambiguous && bestMatch is not null)
+        {
+            canonical = bestMatch;
+            return true;
+        }
+
+        canonical = rawValue.Trim();
+        return false;
+    }
+
+    private static string? NormalizeGenderValue(string? value, bool strict, out string? error)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            error = strict ? "Gender is required." : null;
+            return null;
+        }
+
+        if (TryResolveCanonicalValue(value, DefaultGenders, GenderAliases, out var canonical))
+        {
+            error = null;
+            return canonical;
+        }
+
+        error = strict ? $"Gender '{value}' is invalid. Allowed values: {string.Join(", ", DefaultGenders)}." : null;
+        return strict ? null : value.Trim();
+    }
+
+    private static string? NormalizeEmploymentStatusValue(string? value, bool strict, out string? error, IEnumerable<string>? additionalCandidates = null)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            error = strict ? "Employment status is required." : null;
+            return null;
+        }
+
+        var candidates = (additionalCandidates ?? Array.Empty<string>())
+            .Concat(DefaultEmploymentStatuses)
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+        if (TryResolveCanonicalValue(value, candidates, EmploymentStatusAliases, out var canonical))
+        {
+            error = null;
+            return canonical;
+        }
+
+        error = strict ? $"Employment status '{value}' is invalid." : null;
+        return strict ? null : value.Trim();
+    }
+
+    private static string? NormalizeReligionValue(string? value, IEnumerable<string>? additionalCandidates = null)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var candidates = (additionalCandidates ?? Array.Empty<string>())
+            .Concat(DefaultReligions)
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+        if (TryResolveCanonicalValue(value, candidates, ReligionAliases, out var canonical))
+        {
+            return canonical;
+        }
+
+        return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(value.Trim().ToLowerInvariant());
+    }
+
+    private static string? NormalizeMaritalStatusValue(string? value, bool strict, out string? error, IEnumerable<string>? additionalCandidates = null)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            error = null;
+            return null;
+        }
+
+        var candidates = (additionalCandidates ?? Array.Empty<string>())
+            .Concat(DefaultMaritalStatuses)
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+        if (TryResolveCanonicalValue(value, candidates, MaritalStatusAliases, out var canonical))
+        {
+            error = null;
+            return canonical;
+        }
+
+        error = strict ? $"Marital status '{value}' is invalid." : null;
+        return strict ? null : value.Trim();
+    }
+
+    private static string? NormalizeSalaryRuleValue(string? value, bool strict, out string? error, IEnumerable<string>? additionalCandidates = null)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            error = null;
+            return null;
+        }
+
+        var candidates = (additionalCandidates ?? Array.Empty<string>())
+            .Concat(DefaultSalaryRules)
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+        if (TryResolveCanonicalValue(value, candidates, SalaryRuleAliases, out var canonical))
+        {
+            error = null;
+            return canonical;
+        }
+
+        error = strict ? $"Salary rule '{value}' is invalid." : null;
+        return strict ? null : value.Trim();
+    }
+
+    private static string? NormalizeBloodGroupValue(string? value, bool strict, out string? error)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            error = null;
+            return null;
+        }
+
+        var token = value.Trim().ToUpperInvariant().Replace(" ", string.Empty);
+        token = token.Replace("POSITIVE", "+").Replace("NEGATIVE", "-");
+        token = token switch
+        {
+            "APOS" => "A+",
+            "ANEG" => "A-",
+            "BPOS" => "B+",
+            "BNEG" => "B-",
+            "ABPOS" => "AB+",
+            "ABNEG" => "AB-",
+            "OPOS" => "O+",
+            "ONEG" => "O-",
+            _ => token
+        };
+
+        if (DefaultBloodGroups.Contains(token, StringComparer.OrdinalIgnoreCase))
+        {
+            error = null;
+            return token.ToUpperInvariant();
+        }
+
+        error = strict ? $"Blood group '{value}' is invalid. Allowed values: {string.Join(", ", DefaultBloodGroups)}." : null;
+        return strict ? null : value.Trim();
+    }
+
+    private static async Task<Designation?> FindNearDesignationMatchAsync(
+        AppDbContext context,
+        string designationName,
+        CancellationToken cancellationToken,
+        LookupCache? cache)
+    {
+        var inputKey = SingularizeKey(NormalizeAlphaNumericText(designationName));
+        if (string.IsNullOrWhiteSpace(inputKey))
+        {
+            return null;
+        }
+
+        var designations = cache is not null
+            ? cache.DesignationsByName.Values.DistinctBy(x => x.Id).ToList()
+            : await context.Designations.ToListAsync(cancellationToken);
+
+        Designation? bestMatch = null;
+        var bestDistance = int.MaxValue;
+        var ambiguous = false;
+
+        foreach (var designation in designations)
+        {
+            var candidateKey = SingularizeKey(NormalizeAlphaNumericText(designation.Name));
+            if (string.IsNullOrWhiteSpace(candidateKey))
+            {
+                continue;
+            }
+
+            if (candidateKey == inputKey)
+            {
+                return designation;
+            }
+
+            if (Math.Abs(candidateKey.Length - inputKey.Length) > 1)
+            {
+                continue;
+            }
+
+            var distance = ComputeLevenshteinDistance(inputKey, candidateKey, maxDistance: 1);
+            if (distance > 1)
+            {
+                continue;
+            }
+
+            if (distance < bestDistance)
+            {
+                bestMatch = designation;
+                bestDistance = distance;
+                ambiguous = false;
+                continue;
+            }
+
+            if (distance == bestDistance)
+            {
+                ambiguous = true;
+            }
+        }
+
+        if (ambiguous)
+        {
+            return null;
+        }
+
+        return bestMatch;
+    }
 
     private static string BuildShiftDisplayNameForEmployee(Shift shift)
     {
@@ -1298,11 +2077,31 @@ public class EmployeesController(
 
     private static async Task<LookupCache> BuildLookupCacheAsync(AppDbContext context, CancellationToken cancellationToken)
     {
+        var companies = await context.Companies.ToListAsync(cancellationToken);
         var departments = await context.Departments.ToListAsync(cancellationToken);
         var designations = await context.Designations.ToListAsync(cancellationToken);
         var shifts = await context.Shifts.ToListAsync(cancellationToken);
+        var employees = await context.Employees
+            .AsNoTracking()
+            .Select(x => new
+            {
+                x.EmploymentStatus,
+                x.Religion,
+                x.MaritalStatus,
+                x.SalaryRule
+            })
+            .ToListAsync(cancellationToken);
 
         var cache = new LookupCache();
+
+        foreach (var company in companies)
+        {
+            var key = NormalizeLookupText(company.Name);
+            if (!string.IsNullOrWhiteSpace(key))
+            {
+                cache.CompaniesByName[key] = company;
+            }
+        }
 
         foreach (var department in departments)
         {
@@ -1339,7 +2138,77 @@ public class EmployeesController(
             }
         }
 
+        AddDistinctValues(cache.EmploymentStatuses, DefaultEmploymentStatuses);
+        AddDistinctValues(cache.Religions, DefaultReligions);
+        AddDistinctValues(cache.MaritalStatuses, DefaultMaritalStatuses);
+        AddDistinctValues(cache.SalaryRules, DefaultSalaryRules);
+
+        foreach (var employee in employees)
+        {
+            AddDistinctValues(cache.EmploymentStatuses, [employee.EmploymentStatus]);
+            AddDistinctValues(cache.Religions, [employee.Religion]);
+            AddDistinctValues(cache.MaritalStatuses, [employee.MaritalStatus]);
+            AddDistinctValues(cache.SalaryRules, [employee.SalaryRule]);
+        }
+
         return cache;
+    }
+
+    private static async Task<(LookupResolution? Value, string? Error)> ResolveCompanyAsync(
+        AppDbContext context,
+        Guid? companyId,
+        string? companyName,
+        CancellationToken cancellationToken,
+        LookupCache? cache = null,
+        bool allowNearMatchByName = false)
+    {
+        if (companyId.HasValue)
+        {
+            var company = await context.Companies.FirstOrDefaultAsync(x => x.Id == companyId.Value, cancellationToken);
+            if (company is null)
+            {
+                return (null, $"Company '{companyId}' was not found.");
+            }
+
+            return (new LookupResolution { Id = company.Id, Name = company.Name }, null);
+        }
+
+        var normalized = NormalizeLookupText(companyName);
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return (null, null);
+        }
+
+        Company? existing = null;
+        if (cache is not null)
+        {
+            cache.CompaniesByName.TryGetValue(normalized, out existing);
+        }
+
+        existing ??= await context.Companies.FirstOrDefaultAsync(
+            x => x.Name.ToLower() == normalized,
+            cancellationToken);
+
+        if (existing is null && allowNearMatchByName)
+        {
+            var companies = cache is not null
+                ? cache.CompaniesByName.Values.DistinctBy(x => x.Id).ToList()
+                : await context.Companies.ToListAsync(cancellationToken);
+
+            existing = FindNearEntityByName(companies, companyName!);
+        }
+
+        if (existing is null)
+        {
+            return (null, $"Company '{companyName}' was not found.");
+        }
+
+        if (cache is not null)
+        {
+            cache.CompaniesByName[normalized] = existing;
+        }
+
+        return (new LookupResolution { Id = existing.Id, Name = existing.Name }, null);
     }
 
     private static async Task<(LookupResolution? Value, string? Error)> ResolveOrCreateDepartmentAsync(
@@ -1348,7 +2217,8 @@ public class EmployeesController(
         string? departmentName,
         bool createIfMissingByName,
         CancellationToken cancellationToken,
-        LookupCache? cache = null)
+        LookupCache? cache = null,
+        bool allowNearMatchByName = false)
     {
         if (departmentId.HasValue)
         {
@@ -1376,6 +2246,15 @@ public class EmployeesController(
         existing ??= await context.Departments.FirstOrDefaultAsync(
             x => x.Name.ToLower() == normalized,
             cancellationToken);
+
+        if (existing is null && allowNearMatchByName)
+        {
+            var departments = cache is not null
+                ? cache.DepartmentsByName.Values.DistinctBy(x => x.Id).ToList()
+                : await context.Departments.ToListAsync(cancellationToken);
+
+            existing = FindNearEntityByName(departments, departmentName!);
+        }
 
         if (existing is not null)
         {
@@ -1412,7 +2291,8 @@ public class EmployeesController(
         string? designationName,
         bool createIfMissingByName,
         CancellationToken cancellationToken,
-        LookupCache? cache = null)
+        LookupCache? cache = null,
+        bool allowNearMatchByName = false)
     {
         if (designationId.HasValue)
         {
@@ -1449,6 +2329,20 @@ public class EmployeesController(
             }
 
             return (new LookupResolution { Id = existing.Id, Name = existing.Name }, null);
+        }
+
+        if (allowNearMatchByName)
+        {
+            var nearMatch = await FindNearDesignationMatchAsync(context, designationName!, cancellationToken, cache);
+            if (nearMatch is not null)
+            {
+                if (cache is not null)
+                {
+                    cache.DesignationsByName[normalized] = nearMatch;
+                }
+
+                return (new LookupResolution { Id = nearMatch.Id, Name = nearMatch.Name }, null);
+            }
         }
 
         if (!createIfMissingByName)
@@ -1567,6 +2461,8 @@ public class EmployeesController(
             FullName = employee.FullName,
             Email = employee.Email,
             Phone = employee.Phone,
+            CompanyId = employee.CompanyId,
+            Company = employee.Company,
             DepartmentId = employee.DepartmentId,
             Department = employee.Department,
             DesignationId = employee.DesignationId,
@@ -1708,11 +2604,31 @@ public class EmployeesController(
     private static IQueryable<Employee> ApplyEmployeeFilters(
         IQueryable<Employee> query,
         string? search,
+        long? employeeCode,
+        string? phone,
+        string? nationalId,
+        string? company,
         string? department,
         string? designation,
+        string? employmentStatus,
+        string? gender,
+        string? religion,
+        string? maritalStatus,
+        string? bloodGroup,
+        string? workingTime,
+        string? salaryRule,
+        string? weekend,
+        string? salaryAccount,
+        DateOnly? dateOfBirthFrom,
+        DateOnly? dateOfBirthTo,
         DateOnly? joiningDateFrom,
         DateOnly? joiningDateTo)
     {
+        if (employeeCode.HasValue)
+        {
+            query = query.Where(x => x.EmployeeCode == employeeCode.Value);
+        }
+
         if (!string.IsNullOrWhiteSpace(search))
         {
             var rawTerm = search.Trim();
@@ -1725,6 +2641,24 @@ public class EmployeesController(
                 (x.Phone != null && EF.Functions.ILike(x.Phone, rawTerm)));
         }
 
+        if (!string.IsNullOrWhiteSpace(phone))
+        {
+            var term = $"%{phone.Trim()}%";
+            query = query.Where(x => x.Phone != null && EF.Functions.ILike(x.Phone, term));
+        }
+
+        if (!string.IsNullOrWhiteSpace(nationalId))
+        {
+            var term = $"%{nationalId.Trim()}%";
+            query = query.Where(x => x.NationalId != null && EF.Functions.ILike(x.NationalId, term));
+        }
+
+        if (!string.IsNullOrWhiteSpace(company))
+        {
+            var term = company.Trim();
+            query = query.Where(x => x.Company != null && EF.Functions.ILike(x.Company, term));
+        }
+
         if (!string.IsNullOrWhiteSpace(department))
         {
             var term = department.Trim();
@@ -1735,6 +2669,70 @@ public class EmployeesController(
         {
             var term = designation.Trim();
             query = query.Where(x => x.Designation != null && EF.Functions.ILike(x.Designation, term));
+        }
+
+        if (!string.IsNullOrWhiteSpace(employmentStatus))
+        {
+            var term = employmentStatus.Trim();
+            query = query.Where(x => x.EmploymentStatus != null && EF.Functions.ILike(x.EmploymentStatus, term));
+        }
+
+        if (!string.IsNullOrWhiteSpace(gender))
+        {
+            var term = gender.Trim();
+            query = query.Where(x => x.Gender != null && EF.Functions.ILike(x.Gender, term));
+        }
+
+        if (!string.IsNullOrWhiteSpace(religion))
+        {
+            var term = religion.Trim();
+            query = query.Where(x => x.Religion != null && EF.Functions.ILike(x.Religion, term));
+        }
+
+        if (!string.IsNullOrWhiteSpace(maritalStatus))
+        {
+            var term = maritalStatus.Trim();
+            query = query.Where(x => x.MaritalStatus != null && EF.Functions.ILike(x.MaritalStatus, term));
+        }
+
+        if (!string.IsNullOrWhiteSpace(bloodGroup))
+        {
+            var term = bloodGroup.Trim();
+            query = query.Where(x => x.BloodGroup != null && EF.Functions.ILike(x.BloodGroup, term));
+        }
+
+        if (!string.IsNullOrWhiteSpace(workingTime))
+        {
+            var term = workingTime.Trim();
+            query = query.Where(x => x.WorkingTime != null && EF.Functions.ILike(x.WorkingTime, term));
+        }
+
+        if (!string.IsNullOrWhiteSpace(salaryRule))
+        {
+            var term = salaryRule.Trim();
+            query = query.Where(x => x.SalaryRule != null && EF.Functions.ILike(x.SalaryRule, term));
+        }
+
+        if (!string.IsNullOrWhiteSpace(weekend))
+        {
+            var term = weekend.Trim();
+            query = query.Where(x => x.Weekend != null && EF.Functions.ILike(x.Weekend, term));
+        }
+
+        if (!string.IsNullOrWhiteSpace(salaryAccount))
+        {
+            var term = $"%{salaryAccount.Trim()}%";
+            query = query.Where(x => x.SalaryAccount != null && EF.Functions.ILike(x.SalaryAccount, term));
+        }
+
+        if (dateOfBirthFrom.HasValue)
+        {
+            query = query.Where(x => x.DateOfBirth.HasValue && x.DateOfBirth.Value >= dateOfBirthFrom.Value);
+        }
+
+        if (dateOfBirthTo.HasValue)
+        {
+            query = query.Where(x => x.DateOfBirth.HasValue && x.DateOfBirth.Value <= dateOfBirthTo.Value);
         }
 
         if (joiningDateFrom.HasValue)
@@ -1772,6 +2770,7 @@ public class EmployeesController(
                 employee.FullName,
                 employee.Email ?? string.Empty,
                 employee.Phone ?? string.Empty,
+                employee.Company ?? string.Empty,
                 employee.Department ?? string.Empty,
                 employee.Designation ?? string.Empty,
                 employee.Address ?? string.Empty,

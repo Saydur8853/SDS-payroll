@@ -17,6 +17,11 @@ public class Employee
     [MaxLength(50)]
     public required string Phone { get; set; }
 
+    [MaxLength(200)]
+    public string? Company { get; set; }
+    public Guid? CompanyId { get; set; }
+    public Company? CompanyLookup { get; set; }
+
     [MaxLength(100)]
     public string? Department { get; set; }
     public Guid? DepartmentId { get; set; }

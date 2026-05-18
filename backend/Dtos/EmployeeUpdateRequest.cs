@@ -18,6 +18,11 @@ public class EmployeeUpdateRequest
     [MaxLength(50)]
     public string Phone { get; set; } = string.Empty;
 
+    public Guid? CompanyId { get; set; }
+
+    [MaxLength(200)]
+    public string? Company { get; set; }
+
     public Guid? DepartmentId { get; set; }
 
     [MaxLength(100)]

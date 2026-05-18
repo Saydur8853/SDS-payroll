@@ -12,7 +12,7 @@
       <div class="brand-icon" *ngIf="!companyLogoSrc">
         <span class="material-symbols-rounded">paid</span>
       </div>
-      <img *ngIf="companyLogoSrc" class="brand-logo" [src]="companyLogoSrc" [alt]="companyBrandName + ' logo'" />
+      <img *ngIf="companyLogoSrc" class="brand-logo" [src]="companyLogoSrc" [alt]="companyBrandName + ' logo'" (error)="onBrandLogoError()" />
       <div class="brand-text">
         <h1>{{ companyBrandName }}</h1>
         <span class="brand-tagline">Management System</span>

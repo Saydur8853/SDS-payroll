@@ -216,6 +216,11 @@ input[type=number] {
   border-radius: 14px;
   padding: 1rem;
   margin-bottom: 1rem;
+
+  .filters-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 
 /* ── Employee Meta Grid ────────────────────────────────── */

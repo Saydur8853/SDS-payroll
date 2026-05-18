@@ -61,6 +61,7 @@ using (var scope = app.Services.CreateScope())
             "FullName" character varying(200) NOT NULL,
             "Email" character varying(200) NULL,
             "Phone" character varying(50) NOT NULL,
+            "Company" character varying(200) NULL,
             "Department" character varying(100) NULL,
             "Designation" character varying(100) NULL,
             "Address" character varying(500) NULL,
@@ -117,6 +118,8 @@ using (var scope = app.Services.CreateScope())
         ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "BasicSalary" numeric(18,2) NULL;
         ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "Weekend" character varying(100) NULL;
         ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "SalaryAccount" character varying(100) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "Company" character varying(200) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "CompanyId" uuid NULL;
         ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "DepartmentId" uuid NULL;
         ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "DesignationId" uuid NULL;
         ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "ShiftId" uuid NULL;
@@ -138,6 +141,7 @@ using (var scope = app.Services.CreateScope())
         """);
     dbContext.Database.ExecuteSqlRaw("""
         CREATE UNIQUE INDEX IF NOT EXISTS "IX_Employees_EmployeeCode" ON "Employees" ("EmployeeCode");
+        CREATE INDEX IF NOT EXISTS "IX_Employees_CompanyId" ON "Employees" ("CompanyId");
         CREATE INDEX IF NOT EXISTS "IX_Employees_DepartmentId" ON "Employees" ("DepartmentId");
         CREATE INDEX IF NOT EXISTS "IX_Employees_DesignationId" ON "Employees" ("DesignationId");
         CREATE INDEX IF NOT EXISTS "IX_Employees_ShiftId" ON "Employees" ("ShiftId");
@@ -221,6 +225,19 @@ using (var scope = app.Services.CreateScope())
             IF NOT EXISTS (
                 SELECT 1
                 FROM pg_constraint
+                WHERE conname = 'FK_Employees_Companies_CompanyId'
+            ) THEN
+                ALTER TABLE "Employees"
+                ADD CONSTRAINT "FK_Employees_Companies_CompanyId"
+                FOREIGN KEY ("CompanyId") REFERENCES "Companies" ("Id") ON DELETE SET NULL;
+            END IF;
+        END $$;
+
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1
+                FROM pg_constraint
                 WHERE conname = 'FK_Employees_Departments_DepartmentId'
             ) THEN
                 ALTER TABLE "Employees"
@@ -260,6 +277,7 @@ using (var scope = app.Services.CreateScope())
         """);
 
     // Backfill FK columns from existing text values, keeping legacy text columns for compatibility.
+    var companies = await dbContext.Companies.AsNoTracking().ToListAsync();
     var departments = await dbContext.Departments.AsNoTracking().ToListAsync();
     var designations = await dbContext.Designations.AsNoTracking().ToListAsync();
     var shifts = await dbContext.Shifts.AsNoTracking().ToListAsync();
@@ -278,6 +296,11 @@ using (var scope = app.Services.CreateScope())
         var end = DateTime.Today.Add(outTime.Value.ToTimeSpan()).ToString("hh:mm tt", System.Globalization.CultureInfo.InvariantCulture);
         return $"{name} - {start} : {end}";
     }
+
+    var companyByName = companies
+        .GroupBy(x => NormalizeLookup(x.Name))
+        .Where(g => !string.IsNullOrWhiteSpace(g.Key))
+        .ToDictionary(g => g.Key, g => g.First().Id);
 
     var departmentByName = departments
         .GroupBy(x => NormalizeLookup(x.Name))
@@ -306,12 +329,22 @@ using (var scope = app.Services.CreateScope())
     }
 
     var employeesToBackfill = await dbContext.Employees
-        .Where(x => x.DepartmentId == null || x.DesignationId == null || x.ShiftId == null)
+        .Where(x => x.CompanyId == null || x.DepartmentId == null || x.DesignationId == null || x.ShiftId == null)
         .ToListAsync();
 
     var backfilled = false;
     foreach (var employee in employeesToBackfill)
     {
+        if (employee.CompanyId == null)
+        {
+            var key = NormalizeLookup(employee.Company);
+            if (!string.IsNullOrWhiteSpace(key) && companyByName.TryGetValue(key, out var companyId))
+            {
+                employee.CompanyId = companyId;
+                backfilled = true;
+            }
+        }
+
         if (employee.DepartmentId == null)
         {
             var key = NormalizeLookup(employee.Department);

@@ -7,6 +7,8 @@ public class EmployeeResponse
     public string FullName { get; set; } = string.Empty;
     public string? Email { get; set; }
     public string? Phone { get; set; }
+    public Guid? CompanyId { get; set; }
+    public string? Company { get; set; }
     public Guid? DepartmentId { get; set; }
     public string? Department { get; set; }
     public Guid? DesignationId { get; set; }

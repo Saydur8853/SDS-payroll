@@ -52,11 +52,56 @@ export class EmployeeService {
     if (params.search?.trim()) {
       queryParams['search'] = params.search.trim();
     }
+    if (params.employeeCode !== null && params.employeeCode !== undefined) {
+      queryParams['employeeCode'] = String(params.employeeCode);
+    }
+    if (params.phone?.trim()) {
+      queryParams['phone'] = params.phone.trim();
+    }
+    if (params.nationalId?.trim()) {
+      queryParams['nationalId'] = params.nationalId.trim();
+    }
+    if (params.company?.trim()) {
+      queryParams['company'] = params.company.trim();
+    }
     if (params.department?.trim()) {
       queryParams['department'] = params.department.trim();
     }
     if (params.designation?.trim()) {
       queryParams['designation'] = params.designation.trim();
+    }
+    if (params.employmentStatus?.trim()) {
+      queryParams['employmentStatus'] = params.employmentStatus.trim();
+    }
+    if (params.gender?.trim()) {
+      queryParams['gender'] = params.gender.trim();
+    }
+    if (params.religion?.trim()) {
+      queryParams['religion'] = params.religion.trim();
+    }
+    if (params.maritalStatus?.trim()) {
+      queryParams['maritalStatus'] = params.maritalStatus.trim();
+    }
+    if (params.bloodGroup?.trim()) {
+      queryParams['bloodGroup'] = params.bloodGroup.trim();
+    }
+    if (params.workingTime?.trim()) {
+      queryParams['workingTime'] = params.workingTime.trim();
+    }
+    if (params.salaryRule?.trim()) {
+      queryParams['salaryRule'] = params.salaryRule.trim();
+    }
+    if (params.weekend?.trim()) {
+      queryParams['weekend'] = params.weekend.trim();
+    }
+    if (params.salaryAccount?.trim()) {
+      queryParams['salaryAccount'] = params.salaryAccount.trim();
+    }
+    if (params.dateOfBirthFrom?.trim()) {
+      queryParams['dateOfBirthFrom'] = params.dateOfBirthFrom.trim();
+    }
+    if (params.dateOfBirthTo?.trim()) {
+      queryParams['dateOfBirthTo'] = params.dateOfBirthTo.trim();
     }
     if (params.joiningDateFrom?.trim()) {
       queryParams['joiningDateFrom'] = params.joiningDateFrom.trim();
@@ -74,11 +119,56 @@ export class EmployeeService {
     if (params.search?.trim()) {
       queryParams['search'] = params.search.trim();
     }
+    if (params.employeeCode !== null && params.employeeCode !== undefined) {
+      queryParams['employeeCode'] = String(params.employeeCode);
+    }
+    if (params.phone?.trim()) {
+      queryParams['phone'] = params.phone.trim();
+    }
+    if (params.nationalId?.trim()) {
+      queryParams['nationalId'] = params.nationalId.trim();
+    }
+    if (params.company?.trim()) {
+      queryParams['company'] = params.company.trim();
+    }
     if (params.department?.trim()) {
       queryParams['department'] = params.department.trim();
     }
     if (params.designation?.trim()) {
       queryParams['designation'] = params.designation.trim();
+    }
+    if (params.employmentStatus?.trim()) {
+      queryParams['employmentStatus'] = params.employmentStatus.trim();
+    }
+    if (params.gender?.trim()) {
+      queryParams['gender'] = params.gender.trim();
+    }
+    if (params.religion?.trim()) {
+      queryParams['religion'] = params.religion.trim();
+    }
+    if (params.maritalStatus?.trim()) {
+      queryParams['maritalStatus'] = params.maritalStatus.trim();
+    }
+    if (params.bloodGroup?.trim()) {
+      queryParams['bloodGroup'] = params.bloodGroup.trim();
+    }
+    if (params.workingTime?.trim()) {
+      queryParams['workingTime'] = params.workingTime.trim();
+    }
+    if (params.salaryRule?.trim()) {
+      queryParams['salaryRule'] = params.salaryRule.trim();
+    }
+    if (params.weekend?.trim()) {
+      queryParams['weekend'] = params.weekend.trim();
+    }
+    if (params.salaryAccount?.trim()) {
+      queryParams['salaryAccount'] = params.salaryAccount.trim();
+    }
+    if (params.dateOfBirthFrom?.trim()) {
+      queryParams['dateOfBirthFrom'] = params.dateOfBirthFrom.trim();
+    }
+    if (params.dateOfBirthTo?.trim()) {
+      queryParams['dateOfBirthTo'] = params.dateOfBirthTo.trim();
     }
     if (params.joiningDateFrom?.trim()) {
       queryParams['joiningDateFrom'] = params.joiningDateFrom.trim();

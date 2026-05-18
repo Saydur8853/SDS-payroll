@@ -4,6 +4,8 @@ export interface Employee {
   fullName: string;
   email?: string | null;
   phone?: string | null;
+  companyId?: string | null;
+  company?: string | null;
   departmentId?: string | null;
   department?: string | null;
   designationId?: string | null;
@@ -41,8 +43,23 @@ export interface EmployeeSearchParams {
   page?: number;
   pageSize?: number;
   search?: string | null;
+  employeeCode?: number | null;
+  phone?: string | null;
+  nationalId?: string | null;
+  company?: string | null;
   department?: string | null;
   designation?: string | null;
+  employmentStatus?: string | null;
+  gender?: string | null;
+  religion?: string | null;
+  maritalStatus?: string | null;
+  bloodGroup?: string | null;
+  workingTime?: string | null;
+  salaryRule?: string | null;
+  weekend?: string | null;
+  salaryAccount?: string | null;
+  dateOfBirthFrom?: string | null;
+  dateOfBirthTo?: string | null;
   joiningDateFrom?: string | null;
   joiningDateTo?: string | null;
 }
@@ -60,6 +77,8 @@ export interface CreateEmployeeRequest {
   fullName: string;
   email?: string | null;
   phone?: string | null;
+  companyId?: string | null;
+  company?: string | null;
   departmentId?: string | null;
   department?: string | null;
   designationId?: string | null;

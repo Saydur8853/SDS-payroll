@@ -8,6 +8,7 @@ import { Employee } from '../../models/employee.model';
 import { LookupItem } from '../../models/lookup.model';
 import { LookupService } from '../../services/lookup.service';
 import { ShiftService } from '../../services/shift.service';
+import { CompanyService } from '../../services/company.service';
 
 type Meridiem = 'AM' | 'PM';
 
@@ -28,6 +29,7 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
   private readonly minimumAgeYears = 18;
 
   employees: Employee[] = [];
+  companies: LookupItem[] = [];
   departments: LookupItem[] = [];
   designations: LookupItem[] = [];
   shifts: LookupItem[] = [];
@@ -39,6 +41,7 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
   fullName = '';
   email = '';
   phone = '';
+  company = '';
   department = '';
   designation = '';
   employmentStatus = '';
@@ -124,8 +127,23 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
   readonly shiftMeridiemOptions: Meridiem[] = ['AM', 'PM'];
 
   searchText = '';
-  filterDepartment = '';
-  filterDesignation = '';
+  filterEmployeeCode: number | null = null;
+  filterPhone = '';
+  filterNationalId = '';
+  filterCompany: string | null = null;
+  filterDepartment: string | null = null;
+  filterDesignation: string | null = null;
+  filterEmploymentStatus: string | null = null;
+  filterGender: string | null = null;
+  filterReligion: string | null = null;
+  filterMaritalStatus: string | null = null;
+  filterBloodGroup: string | null = null;
+  filterWorkingTime: string | null = null;
+  filterSalaryRule = '';
+  filterWeekend = '';
+  filterSalaryAccount = '';
+  filterDateOfBirthFrom = '';
+  filterDateOfBirthTo = '';
   filterJoiningDateFrom = '';
   filterJoiningDateTo = '';
   page = 1;
@@ -166,6 +184,7 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
   };
 
   ngOnInit(): void {
+    this.resetFilters();
     this.loadLookups();
     this.onAttributeKeyInput(0);
   }
@@ -566,13 +585,14 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
       !this.fullName.trim() ||
       !this.phone.trim() ||
       !this.employmentStatus.trim() ||
+      !this.company.trim() ||
       !this.department.trim() ||
       !this.designation.trim() ||
       !this.gender.trim() ||
       !this.dateOfBirth ||
       !this.joiningDate
     ) {
-      this.message = 'Employee code, name, phone, status, department, designation, gender, date of birth and joining date are required.';
+      this.message = 'Employee code, name, phone, status, company, department, designation, gender, date of birth and joining date are required.';
       return;
     }
     if (!this.isEmailValid(this.email)) {
@@ -602,6 +622,7 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
       fullName: this.fullName.trim(),
       email: this.email.trim() || null,
       phone: this.phone.trim() || null,
+      company: this.company.trim() || null,
       department: this.department.trim() || null,
       designation: this.designation.trim() || null,
       employmentStatus: this.employmentStatus.trim() || null,
@@ -665,6 +686,7 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
     this.fullName = employee.fullName;
     this.email = employee.email ?? '';
     this.phone = employee.phone ?? '';
+    this.company = employee.company ?? '';
     this.department = employee.department ?? '';
     this.designation = employee.designation ?? '';
     this.employmentStatus = employee.employmentStatus ?? '';
@@ -690,6 +712,10 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
     this.salaryAccount = employee.salaryAccount ?? '';
     this.dateOfBirth = employee.dateOfBirth ?? '';
     this.joiningDate = employee.joiningDate;
+    if (this.company && !this.companies.some(x => x.name.toLowerCase() === this.company.toLowerCase())) {
+      this.companies = [...this.companies, { id: `legacy-company-${employee.id}`, name: this.company }]
+        .sort((a, b) => a.name.localeCompare(b.name));
+    }
     if (this.workingTime && !this.shifts.some(x => x.name.toLowerCase() === this.workingTime.toLowerCase())) {
       this.shifts = [...this.shifts, { id: `legacy-${employee.id}`, name: this.workingTime }]
         .sort((a, b) => a.name.localeCompare(b.name));
@@ -732,8 +758,8 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
       this.message = 'Please use a unique employee code.';
       return;
     }
-    if (this.editEmployeeCode === null || this.editEmployeeCode === undefined || !this.editFullName.trim() || !this.editJoiningDate || !this.editPhone.trim() || !this.editEmploymentStatus.trim()) {
-      this.message = 'Employee code, name, joining date, phone and status are required.';
+    if (this.editEmployeeCode === null || this.editEmployeeCode === undefined || !this.editFullName.trim() || !this.editJoiningDate || !this.editPhone.trim() || !this.editEmploymentStatus.trim() || !this.company.trim()) {
+      this.message = 'Employee code, name, joining date, phone, company and status are required.';
       return;
     }
     if (!this.isEmailValid(this.editEmail)) {
@@ -759,6 +785,7 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
         fullName: this.editFullName.trim(),
         email: this.editEmail.trim() || null,
         phone: this.editPhone.trim() || null,
+        company: this.company.trim() || null,
         department: this.editDepartment.trim() || null,
         designation: this.editDesignation.trim() || null,
         employmentStatus: this.editEmploymentStatus.trim() || null,
@@ -832,8 +859,23 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
       page: this.page,
       pageSize: this.pageSize,
       search: this.searchText,
+      employeeCode: this.filterEmployeeCode,
+      phone: this.filterPhone,
+      nationalId: this.filterNationalId,
+      company: this.filterCompany,
       department: this.filterDepartment,
       designation: this.filterDesignation,
+      employmentStatus: this.filterEmploymentStatus,
+      gender: this.filterGender,
+      religion: this.filterReligion,
+      maritalStatus: this.filterMaritalStatus,
+      bloodGroup: this.filterBloodGroup,
+      workingTime: this.filterWorkingTime,
+      salaryRule: this.filterSalaryRule,
+      weekend: this.filterWeekend,
+      salaryAccount: this.filterSalaryAccount,
+      dateOfBirthFrom: this.filterDateOfBirthFrom,
+      dateOfBirthTo: this.filterDateOfBirthTo,
       joiningDateFrom: this.filterJoiningDateFrom,
       joiningDateTo: this.filterJoiningDateTo
     }).subscribe({
@@ -856,6 +898,15 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
   }
 
   applyFilters(): void {
+    if (this.filterDateOfBirthFrom && this.filterDateOfBirthTo && this.filterDateOfBirthFrom > this.filterDateOfBirthTo) {
+      this.message = 'DOB From date cannot be later than DOB To date.';
+      return;
+    }
+    if (this.filterJoiningDateFrom && this.filterJoiningDateTo && this.filterJoiningDateFrom > this.filterJoiningDateTo) {
+      this.message = 'Joining From date cannot be later than Joining To date.';
+      return;
+    }
+
     this.page = 1;
     this.hasRequestedEmployees = true;
     this.loadEmployees();
@@ -863,8 +914,23 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
 
   resetFilters(): void {
     this.searchText = '';
-    this.filterDepartment = '';
-    this.filterDesignation = '';
+    this.filterEmployeeCode = null;
+    this.filterPhone = '';
+    this.filterNationalId = '';
+    this.filterCompany = null;
+    this.filterDepartment = null;
+    this.filterDesignation = null;
+    this.filterEmploymentStatus = null;
+    this.filterGender = null;
+    this.filterReligion = null;
+    this.filterMaritalStatus = null;
+    this.filterBloodGroup = null;
+    this.filterWorkingTime = null;
+    this.filterSalaryRule = '';
+    this.filterWeekend = '';
+    this.filterSalaryAccount = '';
+    this.filterDateOfBirthFrom = '';
+    this.filterDateOfBirthTo = '';
     this.filterJoiningDateFrom = '';
     this.filterJoiningDateTo = '';
     this.pageSize = 20;
@@ -900,8 +966,23 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
     this.exporting = true;
     this.employeeService.export({
       search: this.searchText,
+      employeeCode: this.filterEmployeeCode,
+      phone: this.filterPhone,
+      nationalId: this.filterNationalId,
+      company: this.filterCompany,
       department: this.filterDepartment,
       designation: this.filterDesignation,
+      employmentStatus: this.filterEmploymentStatus,
+      gender: this.filterGender,
+      religion: this.filterReligion,
+      maritalStatus: this.filterMaritalStatus,
+      bloodGroup: this.filterBloodGroup,
+      workingTime: this.filterWorkingTime,
+      salaryRule: this.filterSalaryRule,
+      weekend: this.filterWeekend,
+      salaryAccount: this.filterSalaryAccount,
+      dateOfBirthFrom: this.filterDateOfBirthFrom,
+      dateOfBirthTo: this.filterDateOfBirthTo,
       joiningDateFrom: this.filterJoiningDateFrom,
       joiningDateTo: this.filterJoiningDateTo
     }).subscribe({
@@ -1134,6 +1215,17 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
   }
 
   private loadLookups(): void {
+    this.companyService.getAll().subscribe({
+      next: (items) => {
+        this.companies = items
+          .map((item) => ({ id: item.id, name: item.name }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+        if (!this.company.trim()) {
+          this.company = this.companies[0]?.name ?? '';
+        }
+      }
+    });
+
     this.lookupService.getDepartments().subscribe({
       next: (items) => {
         this.departments = items;
@@ -1181,6 +1273,7 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
     this.fullName = '';
     this.email = '';
     this.phone = '';
+    this.company = this.companies[0]?.name ?? '';
     this.department = '';
     this.designation = '';
     this.employmentStatus = this.statusOptions[0] ?? '';
@@ -1268,7 +1361,8 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
   constructor(
     private readonly employeeService: EmployeeService,
     private readonly lookupService: LookupService,
-    private readonly shiftService: ShiftService
+    private readonly shiftService: ShiftService,
+    private readonly companyService: CompanyService
   ) {}
 
   getEmployeePhotoSrc(employee: Employee): string | null {

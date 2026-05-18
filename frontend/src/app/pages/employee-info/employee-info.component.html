@@ -188,6 +188,13 @@
       </div>
       <div class="field-grid cols-3">
         <label>
+          <span class="label-text">Company <span class="required-star">*</span></span>
+          <select [(ngModel)]="company">
+            <option value="">Select Company</option>
+            <option *ngFor="let item of companies" [value]="item.name">{{ item.name }}</option>
+          </select>
+        </label>
+        <label>
           <span class="label-text">Department <span class="required-star">*</span></span>
           <select [(ngModel)]="department" (ngModelChange)="onDepartmentChange($event)">
             <option value="">Select Department</option>
@@ -321,25 +328,106 @@
             (keyup.enter)="applyFilters()" />
         </label>
         <label>
+          Employee Code
+          <input type="number" [(ngModel)]="filterEmployeeCode" placeholder="Exact code" />
+        </label>
+        <label>
+          Phone
+          <input type="text" [(ngModel)]="filterPhone" placeholder="Phone contains" />
+        </label>
+        <label>
+          National ID
+          <input type="text" [(ngModel)]="filterNationalId" placeholder="NID contains" />
+        </label>
+        <label>
+          Company
+          <select [(ngModel)]="filterCompany">
+            <option [ngValue]="null">All Companies</option>
+            <option *ngFor="let item of companies" [value]="item.name">{{ item.name }}</option>
+          </select>
+        </label>
+        <label>
           Department
           <select [(ngModel)]="filterDepartment">
-            <option value="">All Departments</option>
+            <option [ngValue]="null">All Departments</option>
             <option *ngFor="let item of departments" [value]="item.name">{{ item.name }}</option>
           </select>
         </label>
         <label>
           Designation
           <select [(ngModel)]="filterDesignation">
-            <option value="">All Designations</option>
+            <option [ngValue]="null">All Designations</option>
             <option *ngFor="let item of designations" [value]="item.name">{{ item.name }}</option>
           </select>
         </label>
         <label>
-          From
+          Status
+          <select [(ngModel)]="filterEmploymentStatus">
+            <option [ngValue]="null">All Statuses</option>
+            <option *ngFor="let item of statusOptions" [value]="item">{{ item }}</option>
+          </select>
+        </label>
+        <label>
+          Gender
+          <select [(ngModel)]="filterGender">
+            <option [ngValue]="null">All Genders</option>
+            <option *ngFor="let item of genderOptions" [value]="item">{{ item }}</option>
+          </select>
+        </label>
+        <label>
+          Religion
+          <select [(ngModel)]="filterReligion">
+            <option [ngValue]="null">All Religions</option>
+            <option *ngFor="let item of religionOptions" [value]="item">{{ item }}</option>
+          </select>
+        </label>
+        <label>
+          Marital Status
+          <select [(ngModel)]="filterMaritalStatus">
+            <option [ngValue]="null">All Marital Statuses</option>
+            <option *ngFor="let item of maritalStatusOptions" [value]="item">{{ item }}</option>
+          </select>
+        </label>
+        <label>
+          Blood Group
+          <select [(ngModel)]="filterBloodGroup">
+            <option [ngValue]="null">All Blood Groups</option>
+            <option *ngFor="let item of bloodGroupOptions" [value]="item">{{ item }}</option>
+          </select>
+        </label>
+        <label>
+          Working Time
+          <select [(ngModel)]="filterWorkingTime">
+            <option [ngValue]="null">All Working Times</option>
+            <option *ngFor="let item of shifts" [value]="item.name">{{ item.name }}</option>
+          </select>
+        </label>
+        <label>
+          Salary Rule
+          <input type="text" [(ngModel)]="filterSalaryRule" placeholder="e.g. Monthly" />
+        </label>
+        <label>
+          Weekend
+          <input type="text" [(ngModel)]="filterWeekend" placeholder="Weekend value" />
+        </label>
+        <label>
+          Salary Account
+          <input type="text" [(ngModel)]="filterSalaryAccount" placeholder="Account contains" />
+        </label>
+        <label>
+          DOB From
+          <input type="date" [(ngModel)]="filterDateOfBirthFrom" />
+        </label>
+        <label>
+          DOB To
+          <input type="date" [(ngModel)]="filterDateOfBirthTo" />
+        </label>
+        <label>
+          Joining From
           <input type="date" [(ngModel)]="filterJoiningDateFrom" />
         </label>
         <label>
-          To
+          Joining To
           <input type="date" [(ngModel)]="filterJoiningDateTo" />
         </label>
         <label>
@@ -397,6 +485,7 @@
           <p class="emp-service-line">Length Of Service: {{ getLengthOfService(employee.joiningDate) }}</p>
           <div class="emp-meta-grid">
             <span><strong>Code:</strong> {{ employee.employeeCode || '-' }}</span>
+            <span *ngIf="employee.company"><strong>Company:</strong> {{ employee.company }}</span>
             <span *ngIf="employee.department"><strong>Dept:</strong> {{ employee.department }}</span>
             <span *ngIf="employee.designation"><strong>Desig:</strong> {{ employee.designation }}</span>
             <span *ngIf="employee.email"><strong>Email:</strong> {{ employee.email }}</span>
