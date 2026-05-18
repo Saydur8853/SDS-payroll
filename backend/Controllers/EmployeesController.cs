@@ -1229,7 +1229,19 @@ public class EmployeesController(
                 continue;
             }
 
-            if (row.Count != headers.Length)
+            if (row.Count < headers.Length)
+            {
+                var padded = new List<string>(row);
+                while (padded.Count < headers.Length)
+                {
+                    padded.Add(string.Empty);
+                }
+
+                rows[rowIndex] = padded;
+                row = padded;
+            }
+
+            if (row.Count > headers.Length)
             {
                 errors.Add($"Row {rowIndex + 1}: column count mismatch. Expected {headers.Length}, found {row.Count}.");
                 invalidStructureRows.Add(rowIndex);
@@ -1307,7 +1319,25 @@ public class EmployeesController(
             var rowErrorsBefore = errors.Count;
             var fullName = GetRequiredString(row, headerIndexes, "FullName", rowIndex, employee.FullName, errors);
             var phone = GetRequiredString(row, headerIndexes, "Phone", rowIndex, employee.Phone, errors);
-            var company = GetRequiredString(row, headerIndexes, "Company", rowIndex, employee.Company ?? string.Empty, errors);
+            var company = GetOptionalString(row, headerIndexes, "Company", employee.Company);
+            if (string.IsNullOrWhiteSpace(company))
+            {
+                company = employee.Company;
+            }
+
+            if (string.IsNullOrWhiteSpace(company))
+            {
+                company = lookupCache.CompaniesByName.Values
+                    .Select(x => x.Name?.Trim())
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+                    .FirstOrDefault();
+            }
+
+            if (string.IsNullOrWhiteSpace(company))
+            {
+                errors.Add($"Row {rowIndex + 1}: 'Company' is required.");
+            }
             var department = GetRequiredString(row, headerIndexes, "Department", rowIndex, employee.Department ?? string.Empty, errors);
             var designation = GetRequiredString(row, headerIndexes, "Designation", rowIndex, employee.Designation ?? string.Empty, errors);
             var gender = GetRequiredString(row, headerIndexes, "Gender", rowIndex, employee.Gender ?? string.Empty, errors);
@@ -1319,7 +1349,6 @@ public class EmployeesController(
 
             if (fullName is null ||
                 phone is null ||
-                company is null ||
                 department is null ||
                 designation is null ||
                 gender is null ||
@@ -1580,6 +1609,15 @@ public class EmployeesController(
     {
         public Guid Id { get; init; }
         public string DisplayName { get; init; } = string.Empty;
+    }
+
+    private sealed class ParsedShiftWorkingTime
+    {
+        public string Name { get; init; } = string.Empty;
+        public TimeOnly? InTime { get; init; }
+        public TimeOnly? OutTime { get; init; }
+        public bool HasTimeRange => InTime.HasValue && OutTime.HasValue;
+        public bool IsTimeOnlyInput { get; init; }
     }
 
     private sealed class LookupCache
@@ -2075,6 +2113,137 @@ public class EmployeesController(
         return shiftValue;
     }
 
+    private static ParsedShiftWorkingTime ParseShiftWorkingTime(string raw)
+    {
+        var value = raw.Trim();
+        if (TryParseShiftTimeRange(value, out var directInTime, out var directOutTime))
+        {
+            var directName = $"{FormatShiftTime(directInTime)} - {FormatShiftTime(directOutTime)}";
+            return new ParsedShiftWorkingTime
+            {
+                Name = directName,
+                InTime = directInTime,
+                OutTime = directOutTime,
+                IsTimeOnlyInput = true
+            };
+        }
+
+        var parts = value.Split(" - ", 2, StringSplitOptions.TrimEntries);
+        if (parts.Length == 2 && !string.IsNullOrWhiteSpace(parts[0]) && TryParseShiftTimeRange(parts[1], out var inTime, out var outTime))
+        {
+            return new ParsedShiftWorkingTime
+            {
+                Name = parts[0],
+                InTime = inTime,
+                OutTime = outTime,
+                IsTimeOnlyInput = false
+            };
+        }
+
+        return new ParsedShiftWorkingTime
+        {
+            Name = ExtractShiftNameCandidate(value),
+            IsTimeOnlyInput = false
+        };
+    }
+
+    private static bool TryParseShiftTimeRange(string value, out TimeOnly inTime, out TimeOnly outTime)
+    {
+        inTime = default;
+        outTime = default;
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var normalized = value.Trim()
+            .Replace('–', '-')
+            .Replace('—', '-');
+
+        string[] separators = [" to ", " : ", " - "];
+        foreach (var separator in separators)
+        {
+            var index = normalized.IndexOf(separator, StringComparison.OrdinalIgnoreCase);
+            if (index <= 0 || index + separator.Length >= normalized.Length)
+            {
+                continue;
+            }
+
+            var left = normalized[..index].Trim();
+            var right = normalized[(index + separator.Length)..].Trim();
+            if (TryParseShiftTime(left, out inTime) && TryParseShiftTime(right, out outTime))
+            {
+                return true;
+            }
+        }
+
+        for (var i = 1; i < normalized.Length - 1; i++)
+        {
+            if (normalized[i] != '-')
+            {
+                continue;
+            }
+
+            var left = normalized[..i].Trim();
+            var right = normalized[(i + 1)..].Trim();
+            if (TryParseShiftTime(left, out inTime) && TryParseShiftTime(right, out outTime))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool TryParseShiftTime(string raw, out TimeOnly time)
+    {
+        time = default;
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return false;
+        }
+
+        var value = raw.Trim()
+            .Replace(".", string.Empty)
+            .ToUpperInvariant();
+
+        string[] formats =
+        [
+            "h:mm tt",
+            "hh:mm tt",
+            "h:mmtt",
+            "hh:mmtt",
+            "h tt",
+            "hh tt",
+            "htt",
+            "hhtt",
+            "H:mm",
+            "HH:mm"
+        ];
+
+        if (TimeOnly.TryParseExact(value, formats, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out time))
+        {
+            return true;
+        }
+
+        if (TimeOnly.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out time))
+        {
+            return true;
+        }
+
+        if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out var dateTime))
+        {
+            time = TimeOnly.FromDateTime(dateTime);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static string FormatShiftTime(TimeOnly value) =>
+        DateTime.Today.Add(value.ToTimeSpan()).ToString("hh:mm tt", CultureInfo.InvariantCulture);
+
     private static async Task<LookupCache> BuildLookupCacheAsync(AppDbContext context, CancellationToken cancellationToken)
     {
         var companies = await context.Companies.ToListAsync(cancellationToken);
@@ -2396,6 +2565,8 @@ public class EmployeesController(
             return (null, null);
         }
 
+        var parsedWorkingTime = ParseShiftWorkingTime(workingTime!);
+
         Shift? existing = null;
         if (cache is not null)
         {
@@ -2410,6 +2581,28 @@ public class EmployeesController(
             existing = allShifts.FirstOrDefault(x =>
                 string.Equals(NormalizeLookupText(x.Name), normalized, StringComparison.Ordinal) ||
                 string.Equals(NormalizeLookupText(BuildShiftDisplayNameForEmployee(x)), normalized, StringComparison.Ordinal));
+
+            if (existing is null && parsedWorkingTime.HasTimeRange)
+            {
+                existing = allShifts.FirstOrDefault(x =>
+                    x.InTime.HasValue &&
+                    x.OutTime.HasValue &&
+                    x.InTime.Value == parsedWorkingTime.InTime!.Value &&
+                    x.OutTime.Value == parsedWorkingTime.OutTime!.Value &&
+                    string.Equals(
+                        NormalizeLookupText(x.Name),
+                        NormalizeLookupText(parsedWorkingTime.Name),
+                        StringComparison.Ordinal));
+
+                if (existing is null && parsedWorkingTime.IsTimeOnlyInput)
+                {
+                    existing = allShifts.FirstOrDefault(x =>
+                        x.InTime.HasValue &&
+                        x.OutTime.HasValue &&
+                        x.InTime.Value == parsedWorkingTime.InTime!.Value &&
+                        x.OutTime.Value == parsedWorkingTime.OutTime!.Value);
+                }
+            }
         }
 
         if (existing is not null)
@@ -2429,17 +2622,27 @@ public class EmployeesController(
             return (null, $"Shift '{workingTime}' was not found.");
         }
 
-        var shiftName = ExtractShiftNameCandidate(workingTime!.Trim());
+        var shiftName = parsedWorkingTime.Name;
         var normalizedShiftName = NormalizeLookupText(shiftName);
         if (cache is not null && cache.ShiftsByNameOrDisplay.TryGetValue(normalizedShiftName, out var existingByName))
         {
+            if (parsedWorkingTime.HasTimeRange &&
+                (!existingByName.InTime.HasValue || !existingByName.OutTime.HasValue))
+            {
+                existingByName.InTime = parsedWorkingTime.InTime;
+                existingByName.OutTime = parsedWorkingTime.OutTime;
+                existingByName.UpdatedAtUtc = DateTime.UtcNow;
+            }
+
             return (new ShiftResolution { Id = existingByName.Id, DisplayName = BuildShiftDisplayNameForEmployee(existingByName) }, null);
         }
 
         var created = new Shift
         {
             Id = Guid.NewGuid(),
-            Name = shiftName
+            Name = shiftName,
+            InTime = parsedWorkingTime.InTime,
+            OutTime = parsedWorkingTime.OutTime
         };
         context.Shifts.Add(created);
 

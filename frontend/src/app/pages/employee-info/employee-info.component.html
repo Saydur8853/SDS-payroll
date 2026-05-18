@@ -250,7 +250,24 @@
         </label>
         <label>
           Weekend
-          <input type="text" [(ngModel)]="weekend" placeholder="e.g. Friday, Saturday" />
+          <div class="weekend-multi-select" [class.open]="isWeekendDropdownOpen">
+            <button type="button" class="weekend-trigger" (click)="toggleWeekendDropdown()">
+              <span class="weekend-trigger-text">{{ getWeekendDisplayValue() }}</span>
+              <span class="material-symbols-rounded weekend-trigger-icon">expand_more</span>
+            </button>
+
+            <div class="weekend-menu" *ngIf="isWeekendDropdownOpen">
+              <button
+                type="button"
+                class="weekend-option"
+                *ngFor="let day of weekendDayOptions"
+                [class.selected]="isWeekendDaySelected(day)"
+                (click)="toggleWeekendDay(day)">
+                <span>{{ day }}</span>
+                <span class="material-symbols-rounded weekend-check">check</span>
+              </button>
+            </div>
+          </div>
         </label>
         <label>
           Salary Account

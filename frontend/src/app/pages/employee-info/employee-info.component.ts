@@ -27,6 +27,26 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
   private readonly phoneRegex = /^\d{10,}$/;
   private readonly monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   private readonly minimumAgeYears = 18;
+  private readonly weekendDayAliases: Record<string, string> = {
+    sun: 'Sunday',
+    sunday: 'Sunday',
+    mon: 'Monday',
+    monday: 'Monday',
+    tue: 'Tuesday',
+    tues: 'Tuesday',
+    tuesday: 'Tuesday',
+    wed: 'Wednesday',
+    weds: 'Wednesday',
+    wednesday: 'Wednesday',
+    thu: 'Thursday',
+    thur: 'Thursday',
+    thurs: 'Thursday',
+    thursday: 'Thursday',
+    fri: 'Friday',
+    friday: 'Friday',
+    sat: 'Saturday',
+    saturday: 'Saturday'
+  };
 
   employees: Employee[] = [];
   companies: LookupItem[] = [];
@@ -64,6 +84,9 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
   grossSalary: number | null = null;
   basicSalary: number | null = null;
   weekend = '';
+  selectedWeekendDays: string[] = [];
+  readonly weekendDayOptions = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  isWeekendDropdownOpen = false;
   salaryAccount = '';
   dateOfBirth = '';
   joiningDate = '';
@@ -333,6 +356,14 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
       const delta = event.deltaY > 0 ? -0.1 : 0.1;
       this.scale = Math.max(0.1, Math.min(5, this.scale + delta));
       this.updateTransform();
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement | null;
+    if (!target?.closest('.weekend-multi-select')) {
+      this.isWeekendDropdownOpen = false;
     }
   }
 
@@ -617,6 +648,8 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
     }
 
     this.saving = true;
+    const weekendValue = this.formatWeekendValue(this.selectedWeekendDays);
+    this.weekend = weekendValue;
     const updateRequest = {
       employeeCode: this.employeeCode!,
       fullName: this.fullName.trim(),
@@ -644,7 +677,7 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
       salaryRule: this.salaryRule.trim() || null,
       grossSalary: this.normalizeOptionalNumber(this.grossSalary),
       basicSalary: this.normalizeOptionalNumber(this.basicSalary),
-      weekend: this.weekend.trim() || null,
+      weekend: weekendValue || null,
       salaryAccount: this.salaryAccount.trim() || null,
       dateOfBirth: this.dateOfBirth || null,
       joiningDate: this.joiningDate
@@ -708,7 +741,7 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
     this.salaryRule = employee.salaryRule ?? '';
     this.grossSalary = employee.grossSalary ?? null;
     this.basicSalary = employee.basicSalary ?? null;
-    this.weekend = employee.weekend ?? '';
+    this.setWeekendSelectionFromValue(employee.weekend);
     this.salaryAccount = employee.salaryAccount ?? '';
     this.dateOfBirth = employee.dateOfBirth ?? '';
     this.joiningDate = employee.joiningDate;
@@ -1296,6 +1329,7 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
     this.grossSalary = null;
     this.basicSalary = null;
     this.weekend = '';
+    this.selectedWeekendDays = [];
     this.salaryAccount = '';
     this.dateOfBirth = '';
     this.joiningDate = '';
@@ -1568,6 +1602,64 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
 
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  toggleWeekendDropdown(): void {
+    this.isWeekendDropdownOpen = !this.isWeekendDropdownOpen;
+  }
+
+  toggleWeekendDay(day: string): void {
+    const selected = new Set(this.selectedWeekendDays);
+    if (selected.has(day)) {
+      selected.delete(day);
+    } else {
+      selected.add(day);
+    }
+
+    this.selectedWeekendDays = this.normalizeWeekendDays(Array.from(selected));
+    this.weekend = this.formatWeekendValue(this.selectedWeekendDays);
+  }
+
+  isWeekendDaySelected(day: string): boolean {
+    return this.selectedWeekendDays.includes(day);
+  }
+
+  getWeekendDisplayValue(): string {
+    return this.selectedWeekendDays.length > 0
+      ? this.selectedWeekendDays.join(', ')
+      : 'Select weekend days';
+  }
+
+  private setWeekendSelectionFromValue(value: string | null | undefined): void {
+    this.weekend = value?.trim() ?? '';
+    this.selectedWeekendDays = this.parseWeekendDays(this.weekend);
+    this.isWeekendDropdownOpen = false;
+  }
+
+  private parseWeekendDays(value: string): string[] {
+    const source = value.trim().toLowerCase();
+    if (!source) {
+      return [];
+    }
+
+    const tokens = source.includes(',')
+      ? source.split(',')
+      : source.split(/\s+/);
+
+    const mapped = tokens
+      .map((token) => this.weekendDayAliases[token.trim()])
+      .filter((token): token is string => !!token);
+
+    return this.normalizeWeekendDays(mapped);
+  }
+
+  private normalizeWeekendDays(days: string[]): string[] {
+    const selected = new Set(days);
+    return this.weekendDayOptions.filter((day) => selected.has(day));
+  }
+
+  private formatWeekendValue(days: string[]): string {
+    return this.normalizeWeekendDays(days).join(', ');
   }
 
   private normalizeShiftTime(timeValue: string | null | undefined): string {
