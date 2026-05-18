@@ -3,6 +3,32 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LookupItem } from '../models/lookup.model';
 
+export interface DesignationUsageEmployee {
+  id: string;
+  employeeCode: number;
+  fullName: string;
+}
+
+export interface DesignationUsageResponse {
+  designationId: string;
+  designationName: string;
+  employeeCount: number;
+  employees: DesignationUsageEmployee[];
+}
+
+export interface DepartmentUsageEmployee {
+  id: string;
+  employeeCode: number;
+  fullName: string;
+}
+
+export interface DepartmentUsageResponse {
+  departmentId: string;
+  departmentName: string;
+  employeeCount: number;
+  employees: DepartmentUsageEmployee[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -29,6 +55,26 @@ export class LookupService {
     return this.http.delete<void>(`${this.departmentApi}/${id}`);
   }
 
+  getDepartmentUsage(id: string): Observable<DepartmentUsageResponse> {
+    return this.http.get<DepartmentUsageResponse>(`${this.departmentApi}/${id}/usage`);
+  }
+
+  moveDepartmentEmployees(
+    sourceDepartmentId: string,
+    targetDepartmentId: string,
+    deleteSourceDepartmentAfterMove = true,
+    employeeIds?: string[]
+  ): Observable<{ movedCount: number; sourceDeleted: boolean }> {
+    return this.http.post<{ movedCount: number; sourceDeleted: boolean }>(
+      `${this.departmentApi}/${sourceDepartmentId}/move-employees`,
+      {
+        targetDepartmentId,
+        deleteSourceDepartmentAfterMove,
+        employeeIds
+      }
+    );
+  }
+
   getDesignations(): Observable<LookupItem[]> {
     return this.http.get<LookupItem[]>(this.designationApi);
   }
@@ -43,6 +89,26 @@ export class LookupService {
 
   deleteDesignation(id: string): Observable<void> {
     return this.http.delete<void>(`${this.designationApi}/${id}`);
+  }
+
+  getDesignationUsage(id: string): Observable<DesignationUsageResponse> {
+    return this.http.get<DesignationUsageResponse>(`${this.designationApi}/${id}/usage`);
+  }
+
+  moveDesignationEmployees(
+    sourceDesignationId: string,
+    targetDesignationId: string,
+    deleteSourceDesignationAfterMove = true,
+    employeeIds?: string[]
+  ): Observable<{ movedCount: number; sourceDeleted: boolean }> {
+    return this.http.post<{ movedCount: number; sourceDeleted: boolean }>(
+      `${this.designationApi}/${sourceDesignationId}/move-employees`,
+      {
+        targetDesignationId,
+        deleteSourceDesignationAfterMove,
+        employeeIds
+      }
+    );
   }
 
   getShifts(): Observable<LookupItem[]> {

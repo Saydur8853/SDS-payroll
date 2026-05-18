@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { LookupItem } from '../../models/lookup.model';
-import { LookupService } from '../../services/lookup.service';
+import { DepartmentUsageEmployee, LookupService } from '../../services/lookup.service';
 
 @Component({
   selector: 'app-departments',
@@ -18,6 +19,17 @@ export class DepartmentsComponent implements OnInit {
   editName = '';
   editDynamicEntries: Array<{ key: string; value: string }> = [{ key: '', value: '' }];
   message = '';
+  isDeleteConfirmOpen = false;
+  deleteConfirmCandidate: LookupItem | null = null;
+  isDeleting = false;
+  isMoveModalOpen = false;
+  deleteCandidate: LookupItem | null = null;
+  moveMode: 'delete' | 'manual' = 'delete';
+  moveTargetDepartmentId = '';
+  moveCandidateEmployees: DepartmentUsageEmployee[] = [];
+  moveCandidateEmployeeCount = 0;
+  selectedMoveEmployeeIds: string[] = [];
+  isMoving = false;
 
   constructor(private readonly lookupService: LookupService) {}
 
@@ -81,19 +93,128 @@ export class DepartmentsComponent implements OnInit {
   }
 
   delete(item: LookupItem): void {
-    if (!window.confirm(`Delete department "${item.name}"?`)) {
+    this.deleteConfirmCandidate = item;
+    this.isDeleteConfirmOpen = true;
+  }
+
+  cancelDeleteConfirm(): void {
+    this.isDeleteConfirmOpen = false;
+    this.deleteConfirmCandidate = null;
+    this.isDeleting = false;
+  }
+
+  confirmDelete(): void {
+    if (!this.deleteConfirmCandidate) {
       return;
     }
 
-    this.lookupService.deleteDepartment(item.id).subscribe({
+    const candidate = this.deleteConfirmCandidate;
+    this.isDeleting = true;
+
+    this.lookupService.deleteDepartment(candidate.id).subscribe({
       next: () => {
         this.message = 'Department deleted.';
+        this.cancelDeleteConfirm();
         this.load();
       },
-      error: () => {
+      error: (error: HttpErrorResponse) => {
+        this.cancelDeleteConfirm();
+        if (error.status === 409) {
+          this.openMoveModal(candidate, 'delete');
+          return;
+        }
+
         this.message = 'Failed to delete department.';
       }
     });
+  }
+
+  closeMoveModal(): void {
+    this.isMoveModalOpen = false;
+    this.deleteCandidate = null;
+    this.moveMode = 'delete';
+    this.moveTargetDepartmentId = '';
+    this.moveCandidateEmployees = [];
+    this.moveCandidateEmployeeCount = 0;
+    this.selectedMoveEmployeeIds = [];
+    this.isMoving = false;
+  }
+
+  startManualMove(item: LookupItem): void {
+    this.openMoveModal(item, 'manual');
+  }
+
+  moveEmployees(): void {
+    if (!this.deleteCandidate) {
+      return;
+    }
+
+    if (!this.moveTargetDepartmentId) {
+      this.message = 'Select a target department to move employees.';
+      return;
+    }
+
+    if (!this.selectedMoveEmployeeIds.length) {
+      this.message = 'Select at least one employee to move.';
+      return;
+    }
+
+    this.isMoving = true;
+    const shouldDeleteSource = this.moveMode === 'delete';
+    const employeeIds = shouldDeleteSource
+      ? this.moveCandidateEmployees.map((x) => x.id)
+      : this.selectedMoveEmployeeIds;
+
+    this.lookupService
+      .moveDepartmentEmployees(this.deleteCandidate.id, this.moveTargetDepartmentId, shouldDeleteSource, employeeIds)
+      .subscribe({
+        next: (result) => {
+          if (!shouldDeleteSource) {
+            this.message = `${result.movedCount} employee(s) moved successfully.`;
+          } else {
+            this.message = result.sourceDeleted
+              ? `${result.movedCount} employee(s) moved and department deleted.`
+              : `${result.movedCount} employee(s) moved.`;
+          }
+          this.closeMoveModal();
+          this.load();
+        },
+        error: () => {
+          this.isMoving = false;
+          this.message = 'Failed to move employees.';
+        }
+      });
+  }
+
+  getMoveTargetOptions(): LookupItem[] {
+    if (!this.deleteCandidate) {
+      return this.items;
+    }
+
+    return this.items.filter((x) => x.id !== this.deleteCandidate!.id);
+  }
+
+  isEmployeeSelected(id: string): boolean {
+    return this.selectedMoveEmployeeIds.includes(id);
+  }
+
+  toggleEmployeeSelection(id: string, checked: boolean): void {
+    if (checked) {
+      if (!this.selectedMoveEmployeeIds.includes(id)) {
+        this.selectedMoveEmployeeIds = [...this.selectedMoveEmployeeIds, id];
+      }
+      return;
+    }
+
+    this.selectedMoveEmployeeIds = this.selectedMoveEmployeeIds.filter((x) => x !== id);
+  }
+
+  areAllEmployeesSelected(): boolean {
+    return this.moveCandidateEmployees.length > 0 && this.selectedMoveEmployeeIds.length === this.moveCandidateEmployees.length;
+  }
+
+  toggleSelectAllEmployees(checked: boolean): void {
+    this.selectedMoveEmployeeIds = checked ? this.moveCandidateEmployees.map((x) => x.id) : [];
   }
 
   addNewDynamicAttributeRow(): void {
@@ -126,6 +247,28 @@ export class DepartmentsComponent implements OnInit {
     this.lookupService.getDepartments().subscribe({
       next: (data) => {
         this.items = data;
+      }
+    });
+  }
+
+  private openMoveModal(item: LookupItem, mode: 'delete' | 'manual'): void {
+    this.deleteCandidate = item;
+    this.moveMode = mode;
+    this.isMoveModalOpen = true;
+    this.moveTargetDepartmentId = '';
+    this.moveCandidateEmployees = [];
+    this.moveCandidateEmployeeCount = 0;
+    this.selectedMoveEmployeeIds = [];
+    this.isMoving = false;
+
+    this.lookupService.getDepartmentUsage(item.id).subscribe({
+      next: (usage) => {
+        this.moveCandidateEmployeeCount = usage.employeeCount;
+        this.moveCandidateEmployees = usage.employees;
+        this.selectedMoveEmployeeIds = usage.employees.map((x) => x.id);
+      },
+      error: () => {
+        this.message = 'Failed to load department employee list.';
       }
     });
   }

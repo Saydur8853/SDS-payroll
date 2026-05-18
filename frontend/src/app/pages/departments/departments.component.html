@@ -32,6 +32,7 @@
           </div>
         </div>
         <div class="company-actions">
+          <button type="button" class="btn tiny primary" (click)="startManualMove(item)">Move</button>
           <button type="button" class="btn tiny secondary" (click)="startEdit(item)">Edit</button>
           <button type="button" class="btn tiny danger" (click)="delete(item)">Delete</button>
         </div>
@@ -59,3 +60,68 @@
     </div>
   </section>
 </main>
+
+<div class="move-modal-backdrop" *ngIf="isDeleteConfirmOpen">
+  <div class="move-modal confirm-modal">
+    <h3>Confirm Delete</h3>
+    <p *ngIf="deleteConfirmCandidate">
+      Delete department <strong>"{{ deleteConfirmCandidate.name }}"</strong>?
+    </p>
+    <div class="modal-actions">
+      <button type="button" class="btn secondary" (click)="cancelDeleteConfirm()" [disabled]="isDeleting">Cancel</button>
+      <button type="button" class="btn danger" (click)="confirmDelete()" [disabled]="isDeleting">
+        {{ isDeleting ? 'Deleting...' : 'Delete' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="move-modal-backdrop" *ngIf="isMoveModalOpen">
+  <div class="move-modal">
+    <h3>{{ moveMode === 'delete' ? 'Move Employees Before Delete' : 'Move Employees To Another Department' }}</h3>
+    <p *ngIf="deleteCandidate">
+      Department <strong>{{ deleteCandidate.name }}</strong> has {{ moveCandidateEmployeeCount }} employee(s).
+      <span *ngIf="moveMode === 'delete'">Move all of them to continue delete.</span>
+      <span *ngIf="moveMode === 'manual'">Select the employees you want to move.</span>
+    </p>
+
+    <label class="field-label">Target Department</label>
+    <select [(ngModel)]="moveTargetDepartmentId">
+      <option value="">Select department</option>
+      <option *ngFor="let option of getMoveTargetOptions()" [value]="option.id">
+        {{ option.name }}
+      </option>
+    </select>
+
+    <div class="emp-preview" *ngIf="moveCandidateEmployees.length > 0">
+      <div class="emp-preview-row emp-preview-header">
+        <label class="select-all">
+          <input
+            type="checkbox"
+            [checked]="areAllEmployeesSelected()"
+            (change)="toggleSelectAllEmployees($any($event.target).checked)"
+            [disabled]="moveMode === 'delete'" />
+          <span>Select all</span>
+        </label>
+      </div>
+      <div class="emp-preview-row" *ngFor="let emp of moveCandidateEmployees">
+        <label class="emp-check">
+          <input
+            type="checkbox"
+            [checked]="isEmployeeSelected(emp.id)"
+            (change)="toggleEmployeeSelection(emp.id, $any($event.target).checked)"
+            [disabled]="moveMode === 'delete'" />
+          <span>{{ emp.employeeCode }}</span>
+        </label>
+        <span>{{ emp.fullName }}</span>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn secondary" (click)="closeMoveModal()" [disabled]="isMoving">Cancel</button>
+      <button type="button" class="btn danger" (click)="moveEmployees()" [disabled]="isMoving">
+        {{ isMoving ? 'Moving...' : (moveMode === 'delete' ? 'Move & Delete' : 'Move Selected') }}
+      </button>
+    </div>
+  </div>
+</div>

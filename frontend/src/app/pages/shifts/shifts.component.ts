@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   Shift,
   ShiftTemporaryOverride,
   ShiftTemporaryOverrideUpsertRequest
 } from '../../models/shift.model';
-import { ShiftService } from '../../services/shift.service';
+import { ShiftService, ShiftUsageEmployee } from '../../services/shift.service';
 
 type OverrideFormState = {
   dateFrom: string;
@@ -59,6 +60,17 @@ export class ShiftsComponent implements OnInit {
   editOverrideReason = '';
   editOverrideIsActive = true;
   createOverrideOpenByShift: Record<string, boolean> = {};
+  isDeleteConfirmOpen = false;
+  deleteConfirmCandidate: Shift | null = null;
+  isDeleting = false;
+  isMoveModalOpen = false;
+  moveCandidate: Shift | null = null;
+  moveMode: 'delete' | 'manual' = 'delete';
+  moveTargetShiftId = '';
+  moveCandidateEmployees: ShiftUsageEmployee[] = [];
+  moveCandidateEmployeeCount = 0;
+  selectedMoveEmployeeIds: string[] = [];
+  isMoving = false;
 
   constructor(private readonly shiftService: ShiftService) {}
 
@@ -151,19 +163,129 @@ export class ShiftsComponent implements OnInit {
   }
 
   delete(item: Shift): void {
-    if (!window.confirm(`Delete shift "${item.displayName}"?`)) {
+    this.deleteConfirmCandidate = item;
+    this.isDeleteConfirmOpen = true;
+  }
+
+  cancelDeleteConfirm(): void {
+    this.isDeleteConfirmOpen = false;
+    this.deleteConfirmCandidate = null;
+    this.isDeleting = false;
+  }
+
+  confirmDelete(): void {
+    if (!this.deleteConfirmCandidate) {
       return;
     }
 
-    this.shiftService.delete(item.id).subscribe({
+    const candidate = this.deleteConfirmCandidate;
+    this.isDeleting = true;
+
+    this.shiftService.delete(candidate.id).subscribe({
       next: () => {
         this.message = 'Shift deleted.';
+        this.cancelDeleteConfirm();
         this.load();
       },
-      error: () => {
+      error: (error: HttpErrorResponse) => {
+        this.cancelDeleteConfirm();
+        if (error.status === 409) {
+          this.openMoveModal(candidate, 'delete');
+          return;
+        }
+
         this.message = 'Failed to delete shift.';
       }
     });
+  }
+
+  startManualMove(item: Shift): void {
+    this.openMoveModal(item, 'manual');
+  }
+
+  closeMoveModal(): void {
+    this.isMoveModalOpen = false;
+    this.moveCandidate = null;
+    this.moveMode = 'delete';
+    this.moveTargetShiftId = '';
+    this.moveCandidateEmployees = [];
+    this.moveCandidateEmployeeCount = 0;
+    this.selectedMoveEmployeeIds = [];
+    this.isMoving = false;
+  }
+
+  moveEmployees(): void {
+    if (!this.moveCandidate) {
+      return;
+    }
+
+    if (!this.moveTargetShiftId) {
+      this.message = 'Select a target shift to move employees.';
+      return;
+    }
+
+    if (!this.selectedMoveEmployeeIds.length) {
+      this.message = 'Select at least one employee to move.';
+      return;
+    }
+
+    this.isMoving = true;
+    const shouldDeleteSource = this.moveMode === 'delete';
+    const employeeIds = shouldDeleteSource
+      ? this.moveCandidateEmployees.map((x) => x.id)
+      : this.selectedMoveEmployeeIds;
+
+    this.shiftService
+      .moveEmployees(this.moveCandidate.id, this.moveTargetShiftId, shouldDeleteSource, employeeIds)
+      .subscribe({
+        next: (result) => {
+          if (!shouldDeleteSource) {
+            this.message = `${result.movedCount} employee(s) moved successfully.`;
+          } else {
+            this.message = result.sourceDeleted
+              ? `${result.movedCount} employee(s) moved and shift deleted.`
+              : `${result.movedCount} employee(s) moved.`;
+          }
+
+          this.closeMoveModal();
+          this.load();
+        },
+        error: () => {
+          this.isMoving = false;
+          this.message = 'Failed to move employees.';
+        }
+      });
+  }
+
+  getMoveTargetOptions(): Shift[] {
+    if (!this.moveCandidate) {
+      return this.items;
+    }
+
+    return this.items.filter((x) => x.id !== this.moveCandidate!.id);
+  }
+
+  isEmployeeSelected(id: string): boolean {
+    return this.selectedMoveEmployeeIds.includes(id);
+  }
+
+  toggleEmployeeSelection(id: string, checked: boolean): void {
+    if (checked) {
+      if (!this.selectedMoveEmployeeIds.includes(id)) {
+        this.selectedMoveEmployeeIds = [...this.selectedMoveEmployeeIds, id];
+      }
+      return;
+    }
+
+    this.selectedMoveEmployeeIds = this.selectedMoveEmployeeIds.filter((x) => x !== id);
+  }
+
+  areAllEmployeesSelected(): boolean {
+    return this.moveCandidateEmployees.length > 0 && this.selectedMoveEmployeeIds.length === this.moveCandidateEmployees.length;
+  }
+
+  toggleSelectAllEmployees(checked: boolean): void {
+    this.selectedMoveEmployeeIds = checked ? this.moveCandidateEmployees.map((x) => x.id) : [];
   }
 
   getOverrideForm(shiftId: string): OverrideFormState {
@@ -362,6 +484,28 @@ export class ShiftsComponent implements OnInit {
       next: (data) => {
         this.items = data;
         this.items.forEach((x) => this.getOverrideForm(x.id));
+      }
+    });
+  }
+
+  private openMoveModal(item: Shift, mode: 'delete' | 'manual'): void {
+    this.moveCandidate = item;
+    this.moveMode = mode;
+    this.isMoveModalOpen = true;
+    this.moveTargetShiftId = '';
+    this.moveCandidateEmployees = [];
+    this.moveCandidateEmployeeCount = 0;
+    this.selectedMoveEmployeeIds = [];
+    this.isMoving = false;
+
+    this.shiftService.getUsage(item.id).subscribe({
+      next: (usage) => {
+        this.moveCandidateEmployeeCount = usage.employeeCount;
+        this.moveCandidateEmployees = usage.employees;
+        this.selectedMoveEmployeeIds = usage.employees.map((x) => x.id);
+      },
+      error: () => {
+        this.message = 'Failed to load shift employee list.';
       }
     });
   }

@@ -3,6 +3,20 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Shift, ShiftTemporaryOverride, ShiftTemporaryOverrideUpsertRequest, ShiftUpsertRequest } from '../models/shift.model';
 
+export interface ShiftUsageEmployee {
+  id: string;
+  employeeCode: number;
+  fullName: string;
+}
+
+export interface ShiftUsageResponse {
+  shiftId: string;
+  shiftName: string;
+  shiftDisplayName: string;
+  employeeCount: number;
+  employees: ShiftUsageEmployee[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -25,6 +39,26 @@ export class ShiftService {
 
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  getUsage(shiftId: string): Observable<ShiftUsageResponse> {
+    return this.http.get<ShiftUsageResponse>(`${this.apiUrl}/${shiftId}/usage`);
+  }
+
+  moveEmployees(
+    sourceShiftId: string,
+    targetShiftId: string,
+    deleteSourceShiftAfterMove = true,
+    employeeIds?: string[]
+  ): Observable<{ movedCount: number; sourceDeleted: boolean }> {
+    return this.http.post<{ movedCount: number; sourceDeleted: boolean }>(
+      `${this.apiUrl}/${sourceShiftId}/move-employees`,
+      {
+        targetShiftId,
+        deleteSourceShiftAfterMove,
+        employeeIds
+      }
+    );
   }
 
   getOverrides(shiftId: string): Observable<ShiftTemporaryOverride[]> {
