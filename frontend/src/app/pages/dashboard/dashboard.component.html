@@ -86,6 +86,18 @@
       </div>
       <div class="card-glow glow-purple"></div>
     </div>
+
+    <!-- Attendance Card -->
+    <div class="glass-card stat-card" id="stat-attendance">
+      <div class="card-icon icon-emerald">
+        <span class="material-symbols-rounded">fact_check</span>
+      </div>
+      <div class="card-body">
+        <span class="stat-value">{{ attendanceCount }}</span>
+        <span class="stat-label">Attendance Punches</span>
+      </div>
+      <div class="card-glow glow-emerald"></div>
+    </div>
   </section>
 
   <!-- Loading State -->
@@ -119,6 +131,10 @@
       <a routerLink="/authorizers" class="glass-card action-card" id="action-authorizers">
         <span class="material-symbols-rounded">verified_user</span>
         <span>Manage Authorizers</span>
+      </a>
+      <a routerLink="/attendance" class="glass-card action-card" id="action-attendance">
+        <span class="material-symbols-rounded">fact_check</span>
+        <span>Manage Attendance</span>
       </a>
     </div>
   </section>

@@ -79,7 +79,7 @@ public class Employee
     public Guid? ShiftId { get; set; }
     public Shift? ShiftLookup { get; set; }
 
-    [MaxLength(100)]
+    [MaxLength(150)]
     public string? SalaryRule { get; set; }
 
     public decimal? GrossSalary { get; set; }

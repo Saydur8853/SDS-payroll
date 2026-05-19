@@ -1,0 +1,149 @@
+@use '../_shared-glass-page';
+
+.page {
+  grid-template-columns: minmax(520px, 1.15fr) minmax(420px, 1fr);
+  align-items: start;
+}
+
+.panel {
+  min-height: 100%;
+}
+
+.form-panel,
+.list-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-note {
+  margin: 0 0 0.85rem;
+  color: #cbd5e1;
+  font-size: 0.84rem;
+}
+
+.salary-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.salary-grid .span-2 {
+  grid-column: span 2;
+}
+
+.dynamic-section {
+  margin-top: 0.85rem;
+  padding: 0.8rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dynamic-header {
+  margin-top: 0;
+}
+
+.dynamic-row,
+.edit-dynamic-row {
+  grid-template-columns: minmax(140px, 1fr) minmax(140px, 1fr) auto;
+  align-items: center;
+}
+
+.list-shell {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.25rem;
+  max-height: 70vh;
+  overflow: auto;
+  padding-right: 0.2rem;
+}
+
+.salary-rule-item {
+  margin-bottom: 0;
+}
+
+.item-content {
+  min-width: 0;
+}
+
+.item-content h3 {
+  margin: 0;
+}
+
+.salary-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.salary-meta span {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.34rem 0.5rem;
+  font-size: 0.81rem;
+  color: #dbeafe;
+}
+
+.item-attributes {
+  margin-top: 0.55rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.empty-state {
+  margin-top: 0.6rem;
+  min-height: 220px;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 1rem;
+}
+
+.empty-state h3 {
+  margin: 0;
+}
+
+.empty-state p {
+  margin-top: 0.3rem;
+}
+
+@media (max-width: 1280px) {
+  .page {
+    grid-template-columns: 1fr;
+  }
+
+  .list-shell {
+    max-height: none;
+  }
+}
+
+@media (max-width: 820px) {
+  .salary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .salary-grid .span-2 {
+    grid-column: span 1;
+  }
+
+  .dynamic-row,
+  .edit-dynamic-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}

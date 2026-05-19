@@ -1,0 +1,134 @@
+<main class="page">
+  <section class="panel form-panel">
+    <h1>Salary Rules</h1>
+    <p class="panel-note">Create fixed salary components and add optional dynamic fields.</p>
+
+    <div class="form-grid salary-grid">
+      <label class="span-2">
+        Rule Name
+        <input type="text" [(ngModel)]="newRuleName" placeholder="e.g. Monthly Rule A" />
+      </label>
+      <label>
+        Basic Salary
+        <input type="number" min="0" step="0.01" [(ngModel)]="newBasicSalary" placeholder="0" />
+      </label>
+      <label>
+        House Rent
+        <input type="number" min="0" step="0.01" [(ngModel)]="newHouseRent" placeholder="0" />
+      </label>
+      <label>
+        Medical Bill
+        <input type="number" min="0" step="0.01" [(ngModel)]="newMedicalBill" placeholder="0" />
+      </label>
+      <label>
+        Transport Bill
+        <input type="number" min="0" step="0.01" [(ngModel)]="newTransportBill" placeholder="0" />
+      </label>
+      <label>
+        Food Allowance
+        <input type="number" min="0" step="0.01" [(ngModel)]="newFoodAllowance" placeholder="0" />
+      </label>
+    </div>
+
+    <div class="edit-dynamic-list dynamic-section">
+      <div class="dynamic-header">
+        <h4>Dynamic Fields</h4>
+        <button type="button" class="btn tiny secondary" (click)="addNewDynamicAttributeRow()">+ Add Field</button>
+      </div>
+      <div class="dynamic-row" *ngFor="let entry of newDynamicEntries; let i = index">
+        <input type="text" [(ngModel)]="entry.key" placeholder="Field name" />
+        <input type="text" [(ngModel)]="entry.value" placeholder="Value" />
+        <button type="button" class="btn tiny danger" (click)="removeNewDynamicAttributeRow(i)">Remove</button>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn primary" (click)="create()">Add Salary Rule</button>
+    </div>
+
+    <p class="message">{{ message }}</p>
+  </section>
+
+  <section class="panel list-panel">
+    <h2>Rule List</h2>
+    <p class="panel-note">Saved salary rules will appear here.</p>
+
+    <div class="empty-state" *ngIf="items.length === 0">
+      <h3>No salary rules yet</h3>
+      <p>Add a rule from the left panel to populate this list.</p>
+    </div>
+
+    <div class="list-shell" *ngIf="items.length > 0">
+      <div class="item salary-rule-item" *ngFor="let item of items">
+        <div *ngIf="editingId !== item.id" class="company-header">
+          <div class="item-content">
+            <h3>{{ item.ruleName }}</h3>
+            <div class="salary-meta">
+              <span><strong>Basic:</strong> {{ item.basicSalary }}</span>
+              <span><strong>House:</strong> {{ item.houseRent }}</span>
+              <span><strong>Medical:</strong> {{ item.medicalBill }}</span>
+              <span><strong>Transport:</strong> {{ item.transportBill }}</span>
+              <span><strong>Food:</strong> {{ item.foodAllowance }}</span>
+            </div>
+            <div class="item-attributes" *ngIf="item.dynamicAttributes && (item.dynamicAttributes | keyvalue).length > 0">
+              <span class="chip" *ngFor="let attribute of item.dynamicAttributes | keyvalue">
+                {{ attribute.key }}: {{ attribute.value || '-' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="company-actions">
+            <button type="button" class="btn tiny secondary" (click)="startEdit(item)">Edit</button>
+            <button type="button" class="btn tiny danger" (click)="delete(item)">Delete</button>
+          </div>
+        </div>
+
+        <div *ngIf="editingId === item.id" class="edit-panel">
+          <div class="form-grid salary-grid">
+            <label class="span-2">
+              Rule Name
+              <input type="text" [(ngModel)]="editRuleName" />
+            </label>
+            <label>
+              Basic Salary
+              <input type="number" min="0" step="0.01" [(ngModel)]="editBasicSalary" />
+            </label>
+            <label>
+              House Rent
+              <input type="number" min="0" step="0.01" [(ngModel)]="editHouseRent" />
+            </label>
+            <label>
+              Medical Bill
+              <input type="number" min="0" step="0.01" [(ngModel)]="editMedicalBill" />
+            </label>
+            <label>
+              Transport Bill
+              <input type="number" min="0" step="0.01" [(ngModel)]="editTransportBill" />
+            </label>
+            <label>
+              Food Allowance
+              <input type="number" min="0" step="0.01" [(ngModel)]="editFoodAllowance" />
+            </label>
+          </div>
+
+          <div class="edit-dynamic-list dynamic-section">
+            <div class="dynamic-header">
+              <h4>Dynamic Fields</h4>
+              <button type="button" class="btn tiny secondary" (click)="addEditDynamicAttributeRow()">+ Add Field</button>
+            </div>
+            <div class="edit-dynamic-row" *ngFor="let entry of editDynamicEntries; let i = index">
+              <input type="text" [(ngModel)]="entry.key" placeholder="Field name" />
+              <input type="text" [(ngModel)]="entry.value" placeholder="Value" />
+              <button type="button" class="btn tiny danger" (click)="removeEditDynamicAttributeRow(i)">Remove</button>
+            </div>
+          </div>
+
+          <div class="edit-actions">
+            <button type="button" class="btn tiny primary" (click)="saveEdit(item)">Save</button>
+            <button type="button" class="btn tiny secondary" (click)="cancelEdit()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>

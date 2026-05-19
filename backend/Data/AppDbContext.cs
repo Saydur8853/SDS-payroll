@@ -8,10 +8,36 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<Authorizer> Authorizers => Set<Authorizer>();
+    public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
     public DbSet<Department> Departments => Set<Department>();
     public DbSet<Designation> Designations => Set<Designation>();
+    public DbSet<SalaryRule> SalaryRules => Set<SalaryRule>();
     public DbSet<Shift> Shifts => Set<Shift>();
     public DbSet<ShiftTemporaryOverride> ShiftTemporaryOverrides => Set<ShiftTemporaryOverride>();
+
+    public override int SaveChanges()
+    {
+        NormalizeTrackedDateTimesToUtc();
+        return base.SaveChanges();
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        NormalizeTrackedDateTimesToUtc();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        NormalizeTrackedDateTimesToUtc();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        NormalizeTrackedDateTimesToUtc();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -57,7 +83,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(e => e.Signature);
             entity.Property(e => e.WorkingTime).HasMaxLength(100);
             entity.Property(e => e.ShiftId);
-            entity.Property(e => e.SalaryRule).HasMaxLength(100);
+            entity.Property(e => e.SalaryRule).HasMaxLength(150);
             entity.Property(e => e.GrossSalary).HasColumnType("numeric(18,2)");
             entity.Property(e => e.BasicSalary).HasColumnType("numeric(18,2)");
             entity.Property(e => e.Weekend).HasMaxLength(100);
@@ -116,6 +142,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
+        modelBuilder.Entity<AttendanceRecord>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.EmployeeCode).IsRequired();
+            entity.Property(e => e.PunchTime).IsRequired();
+            entity.Property(e => e.AttendanceDate).IsRequired();
+            entity.Property(e => e.SourceType).IsRequired().HasMaxLength(30);
+            entity.Property(e => e.SourceFileName).IsRequired().HasMaxLength(260);
+            entity.Property(e => e.DeviceEmployeeCode).HasMaxLength(100);
+            entity.Property(e => e.Remarks).HasMaxLength(200);
+            entity.Property(e => e.CreatedAtUtc).IsRequired();
+            entity.Property(e => e.UpdatedAtUtc).IsRequired();
+            entity.HasIndex(e => new { e.EmployeeCode, e.PunchTime }).IsUnique();
+            entity.HasIndex(e => e.AttendanceDate);
+            entity.HasIndex(e => e.SourceType);
+        });
+
         modelBuilder.Entity<Department>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -132,6 +175,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(e => e.DynamicAttributes).HasColumnType("jsonb");
             entity.Property(e => e.CreatedAtUtc).IsRequired();
             entity.Property(e => e.UpdatedAtUtc).IsRequired();
+        });
+
+        modelBuilder.Entity<SalaryRule>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.RuleName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.BasicSalary).HasColumnType("numeric(18,2)");
+            entity.Property(e => e.HouseRent).HasColumnType("numeric(18,2)");
+            entity.Property(e => e.MedicalBill).HasColumnType("numeric(18,2)");
+            entity.Property(e => e.TransportBill).HasColumnType("numeric(18,2)");
+            entity.Property(e => e.FoodAllowance).HasColumnType("numeric(18,2)");
+            entity.Property(e => e.DynamicAttributes).HasColumnType("jsonb");
+            entity.Property(e => e.CreatedAtUtc).IsRequired();
+            entity.Property(e => e.UpdatedAtUtc).IsRequired();
+            entity.HasIndex(e => e.RuleName).IsUnique();
         });
 
         modelBuilder.Entity<Shift>(entity =>
@@ -166,5 +224,43 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.HasIndex(e => e.ShiftId);
             entity.HasIndex(e => new { e.ShiftId, e.DateFrom, e.DateTo });
         });
+    }
+
+    private void NormalizeTrackedDateTimesToUtc()
+    {
+        var entries = ChangeTracker.Entries()
+            .Where(entry => entry.State is EntityState.Added or EntityState.Modified);
+
+        foreach (var entry in entries)
+        {
+            foreach (var property in entry.Properties)
+            {
+                var clrType = property.Metadata.ClrType;
+                if (clrType == typeof(DateTime))
+                {
+                    if (property.CurrentValue is DateTime dt)
+                    {
+                        property.CurrentValue = NormalizeToUtc(dt);
+                    }
+                }
+                else if (clrType == typeof(DateTime?))
+                {
+                    if (property.CurrentValue is DateTime nullableDt)
+                    {
+                        property.CurrentValue = NormalizeToUtc(nullableDt);
+                    }
+                }
+            }
+        }
+    }
+
+    private static DateTime NormalizeToUtc(DateTime value)
+    {
+        return value.Kind switch
+        {
+            DateTimeKind.Utc => value,
+            DateTimeKind.Local => value.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
+        };
     }
 }

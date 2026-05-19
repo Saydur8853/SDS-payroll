@@ -7,6 +7,7 @@ import { EmployeeService } from '../../services/employee.service';
 import { LookupService } from '../../services/lookup.service';
 import { ShiftService } from '../../services/shift.service';
 import { AuthorizerService } from '../../services/authorizer.service';
+import { AttendanceService } from '../../services/attendance.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -21,6 +22,7 @@ export class DashboardComponent implements OnInit {
   designationCount = 0;
   shiftCount = 0;
   authorizerCount = 0;
+  attendanceCount = 0;
   loading = true;
   today = new Date();
 
@@ -29,7 +31,8 @@ export class DashboardComponent implements OnInit {
     private readonly employeeService: EmployeeService,
     private readonly lookupService: LookupService,
     private readonly shiftService: ShiftService,
-    private readonly authorizerService: AuthorizerService
+    private readonly authorizerService: AuthorizerService,
+    private readonly attendanceService: AttendanceService
   ) {}
 
   ngOnInit(): void {
@@ -39,7 +42,8 @@ export class DashboardComponent implements OnInit {
       departments: this.lookupService.getDepartments(),
       designations: this.lookupService.getDesignations(),
       shifts: this.shiftService.getAll(),
-      authorizers: this.authorizerService.getAll()
+      authorizers: this.authorizerService.getAll(),
+      attendance: this.attendanceService.getAll({ page: 1, pageSize: 1 })
     }).subscribe({
       next: (data) => {
         this.companyCount = data.companies.length;
@@ -48,6 +52,7 @@ export class DashboardComponent implements OnInit {
         this.designationCount = data.designations.length;
         this.shiftCount = data.shifts.length;
         this.authorizerCount = data.authorizers.length;
+        this.attendanceCount = data.attendance.totalCount ?? data.attendance.items?.length ?? 0;
       },
       complete: () => {
         this.loading = false;

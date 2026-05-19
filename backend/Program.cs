@@ -1,5 +1,6 @@
 using Hangfire;
 using Hangfire.PostgreSql;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Payroll.Api.Configuration;
@@ -11,6 +12,10 @@ DotEnvLoader.Load();
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 600_000_000;
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors(options =>
@@ -80,7 +85,7 @@ using (var scope = app.Services.CreateScope())
             "Photo" bytea NULL,
             "Signature" bytea NULL,
             "WorkingTime" character varying(100) NULL,
-            "SalaryRule" character varying(100) NULL,
+            "SalaryRule" character varying(150) NULL,
             "GrossSalary" numeric(18,2) NULL,
             "BasicSalary" numeric(18,2) NULL,
             "Weekend" character varying(100) NULL,
@@ -113,7 +118,7 @@ using (var scope = app.Services.CreateScope())
         ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "PhotoUrl" character varying(2000) NULL;
         ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "SignatureUrl" character varying(2000) NULL;
         ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "WorkingTime" character varying(100) NULL;
-        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "SalaryRule" character varying(100) NULL;
+        ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "SalaryRule" character varying(150) NULL;
         ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "GrossSalary" numeric(18,2) NULL;
         ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "BasicSalary" numeric(18,2) NULL;
         ALTER TABLE "Employees" ADD COLUMN IF NOT EXISTS "Weekend" character varying(100) NULL;
@@ -126,6 +131,7 @@ using (var scope = app.Services.CreateScope())
         """);
     dbContext.Database.ExecuteSqlRaw("""
         ALTER TABLE "Employees" ALTER COLUMN "EmployeeCode" TYPE bigint USING "EmployeeCode"::bigint;
+        ALTER TABLE "Employees" ALTER COLUMN "SalaryRule" TYPE character varying(150);
         """);
     dbContext.Database.ExecuteSqlRaw("""
         ALTER TABLE "Employees" DROP COLUMN IF EXISTS "PhotoUrl";
@@ -173,6 +179,38 @@ using (var scope = app.Services.CreateScope())
     dbContext.Database.ExecuteSqlRaw("""
         ALTER TABLE "Designations" ADD COLUMN IF NOT EXISTS "DynamicAttributes" jsonb NOT NULL DEFAULT '{{}}'::jsonb;
         UPDATE "Designations" SET "DynamicAttributes" = '{{}}'::jsonb WHERE "DynamicAttributes" IS NULL;
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        CREATE TABLE IF NOT EXISTS "SalaryRules" (
+            "Id" uuid NOT NULL,
+            "RuleName" character varying(150) NOT NULL,
+            "BasicSalary" numeric(18,2) NOT NULL,
+            "HouseRent" numeric(18,2) NOT NULL,
+            "MedicalBill" numeric(18,2) NOT NULL,
+            "TransportBill" numeric(18,2) NOT NULL,
+            "FoodAllowance" numeric(18,2) NOT NULL,
+            "DynamicAttributes" jsonb NOT NULL,
+            "CreatedAtUtc" timestamp with time zone NOT NULL,
+            "UpdatedAtUtc" timestamp with time zone NOT NULL,
+            CONSTRAINT "PK_SalaryRules" PRIMARY KEY ("Id")
+        );
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        ALTER TABLE "SalaryRules" ADD COLUMN IF NOT EXISTS "RuleName" character varying(150) NULL;
+        ALTER TABLE "SalaryRules" ADD COLUMN IF NOT EXISTS "BasicSalary" numeric(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE "SalaryRules" ADD COLUMN IF NOT EXISTS "HouseRent" numeric(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE "SalaryRules" ADD COLUMN IF NOT EXISTS "MedicalBill" numeric(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE "SalaryRules" ADD COLUMN IF NOT EXISTS "TransportBill" numeric(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE "SalaryRules" ADD COLUMN IF NOT EXISTS "FoodAllowance" numeric(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE "SalaryRules" ADD COLUMN IF NOT EXISTS "DynamicAttributes" jsonb NOT NULL DEFAULT '{{}}'::jsonb;
+        ALTER TABLE "SalaryRules" ADD COLUMN IF NOT EXISTS "CreatedAtUtc" timestamp with time zone NOT NULL DEFAULT NOW();
+        ALTER TABLE "SalaryRules" ADD COLUMN IF NOT EXISTS "UpdatedAtUtc" timestamp with time zone NOT NULL DEFAULT NOW();
+        UPDATE "SalaryRules" SET "RuleName" = CONCAT('Rule-', LEFT("Id"::text, 8)) WHERE "RuleName" IS NULL OR BTRIM("RuleName") = '';
+        ALTER TABLE "SalaryRules" ALTER COLUMN "RuleName" SET NOT NULL;
+        UPDATE "SalaryRules" SET "DynamicAttributes" = '{{}}'::jsonb WHERE "DynamicAttributes" IS NULL;
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_SalaryRules_RuleName" ON "SalaryRules" ("RuleName");
         """);
     dbContext.Database.ExecuteSqlRaw("""
         CREATE TABLE IF NOT EXISTS "Shifts" (
@@ -245,6 +283,30 @@ using (var scope = app.Services.CreateScope())
         CREATE UNIQUE INDEX IF NOT EXISTS "IX_Authorizers_Name" ON "Authorizers" ("Name");
         CREATE INDEX IF NOT EXISTS "IX_Authorizers_DepartmentId" ON "Authorizers" ("DepartmentId");
         CREATE INDEX IF NOT EXISTS "IX_Authorizers_DesignationId" ON "Authorizers" ("DesignationId");
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        CREATE TABLE IF NOT EXISTS "AttendanceRecords" (
+            "Id" uuid NOT NULL,
+            "EmployeeCode" bigint NOT NULL,
+            "PunchTime" timestamp with time zone NOT NULL,
+            "AttendanceDate" date NOT NULL,
+            "SourceType" character varying(30) NOT NULL,
+            "SourceFileName" character varying(260) NOT NULL,
+            "DeviceEmployeeCode" character varying(100) NULL,
+            "Remarks" character varying(200) NULL,
+            "CreatedAtUtc" timestamp with time zone NOT NULL,
+            "UpdatedAtUtc" timestamp with time zone NOT NULL,
+            CONSTRAINT "PK_AttendanceRecords" PRIMARY KEY ("Id")
+        );
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        ALTER TABLE "AttendanceRecords" ADD COLUMN IF NOT EXISTS "DeviceEmployeeCode" character varying(100) NULL;
+        ALTER TABLE "AttendanceRecords" ADD COLUMN IF NOT EXISTS "Remarks" character varying(200) NULL;
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_AttendanceRecords_EmployeeCode_PunchTime" ON "AttendanceRecords" ("EmployeeCode", "PunchTime");
+        CREATE INDEX IF NOT EXISTS "IX_AttendanceRecords_AttendanceDate" ON "AttendanceRecords" ("AttendanceDate");
+        CREATE INDEX IF NOT EXISTS "IX_AttendanceRecords_SourceType" ON "AttendanceRecords" ("SourceType");
         """);
     dbContext.Database.ExecuteSqlRaw("""
         DO $$

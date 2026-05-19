@@ -1,0 +1,279 @@
+<main class="page attendance-page">
+  <div class="top-controls">
+    <section class="panel controls-panel">
+      <h2>Attendance View Controls</h2>
+
+      <div class="view-mode-row">
+        <label>
+          View Type
+          <select [ngModel]="viewMode" (ngModelChange)="onViewModeChange($event)">
+            <option value="details">Daily Details (In/Out)</option>
+            <option value="raw">Raw Punch Logs</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filters-grid">
+          <label class="search-field">
+            Search
+            <input type="text" [(ngModel)]="searchText" placeholder="File name / device code / employee code" (keyup.enter)="applyFilters()" />
+          </label>
+
+          <label>
+            Employee Code
+            <input type="number" [(ngModel)]="filterEmployeeCode" />
+          </label>
+
+          <label>
+            Source Type
+            <select [(ngModel)]="filterSourceType">
+              <option [ngValue]="null">All</option>
+              <option value="att2000">att2000</option>
+              <option value="onspot">onspot</option>
+            </select>
+          </label>
+
+          <label>
+            From Date
+            <input type="date" [(ngModel)]="filterFromDate" />
+          </label>
+
+          <label>
+            To Date
+            <input type="date" [(ngModel)]="filterToDate" />
+          </label>
+
+          <label>
+            Company
+            <select [(ngModel)]="filterCompany">
+              <option [ngValue]="null">All Companies</option>
+              <option *ngFor="let item of companies" [value]="item.name">{{ item.name }}</option>
+            </select>
+          </label>
+
+          <label>
+            Department
+            <select [(ngModel)]="filterDepartment">
+              <option [ngValue]="null">All Departments</option>
+              <option *ngFor="let item of departments" [value]="item.name">{{ item.name }}</option>
+            </select>
+          </label>
+
+          <label>
+            Designation
+            <select [(ngModel)]="filterDesignation">
+              <option [ngValue]="null">All Designations</option>
+              <option *ngFor="let item of designations" [value]="item.name">{{ item.name }}</option>
+            </select>
+          </label>
+
+          <label>
+            Per Page
+            <select [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
+              <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="filters-actions">
+          <button type="button" class="btn tiny primary" (click)="applyFilters()">Apply</button>
+          <button type="button" class="btn tiny secondary" (click)="resetFilters()">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel upload-panel">
+      <h2>Upload Attendance</h2>
+
+      <div class="upload-grid">
+        <label class="mdb-file-field">
+          Source MDB File
+          <input type="file" accept=".mdb" (change)="onFileSelected($event)" />
+        </label>
+
+        <label>
+          Source Type
+          <select [(ngModel)]="uploadSourceType">
+            <option value="">Auto Detect</option>
+            <option value="att2000">att2000</option>
+            <option value="onspot">Onspot / eTimeMJ</option>
+          </select>
+        </label>
+
+        <label>
+          From Date
+          <input type="date" [(ngModel)]="uploadFromDate" />
+        </label>
+
+        <label>
+          To Date
+          <input type="date" [(ngModel)]="uploadToDate" />
+        </label>
+
+        <label>
+          Company Filter
+          <select [(ngModel)]="uploadCompany">
+            <option [ngValue]="null">All Companies</option>
+            <option *ngFor="let item of companies" [value]="item.name">{{ item.name }}</option>
+          </select>
+        </label>
+
+        <label>
+          Department Filter
+          <select [(ngModel)]="uploadDepartment">
+            <option [ngValue]="null">All Departments</option>
+            <option *ngFor="let item of departments" [value]="item.name">{{ item.name }}</option>
+          </select>
+        </label>
+
+        <label>
+          Designation Filter
+          <select [(ngModel)]="uploadDesignation">
+            <option [ngValue]="null">All Designations</option>
+            <option *ngFor="let item of designations" [value]="item.name">{{ item.name }}</option>
+          </select>
+        </label>
+
+        <label class="employee-codes-field">
+          Employee Codes (CSV)
+          <input type="text" [(ngModel)]="uploadEmployeeCodesCsv" placeholder="e.g. 1001,1002,1003" />
+        </label>
+      </div>
+
+      <label class="checkbox-row">
+        <input type="checkbox" [(ngModel)]="uploadReplaceExisting" />
+        <span>Replace existing attendance rows in selected date range for matched employees</span>
+      </label>
+
+      <div class="actions">
+        <button type="button" class="btn primary" [disabled]="uploading" (click)="uploadAttendance()">
+          {{ uploading ? 'Uploading...' : 'Upload MDB' }}
+        </button>
+      </div>
+
+      <div class="upload-progress-wrap" *ngIf="uploading">
+        <div class="upload-progress-track" role="progressbar" [attr.aria-valuenow]="uploadProgressPercent" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuetext]="uploadProgressLabel">
+          <div class="upload-progress-fill" [style.width.%]="uploadProgressPercent"></div>
+        </div>
+        <p class="upload-progress-text">{{ uploadProgressLabel || ('Uploading... ' + uploadProgressPercent + '%') }}</p>
+      </div>
+    </section>
+  </div>
+
+  <p class="message" *ngIf="message">{{ message }}</p>
+
+  <section class="panel">
+    <h2>Attendance View</h2>
+
+    <div class="list-toolbar">
+      <p class="list-meta">Showing {{ pageStartIndex }}-{{ pageEndIndex }} of {{ totalCount }} records</p>
+    </div>
+
+    <p *ngIf="loading" class="list-state">Loading attendance...</p>
+    <p *ngIf="!loading && totalCount === 0" class="list-state">No attendance records found.</p>
+
+    <div class="table-wrap" *ngIf="viewMode === 'details' && detailItems.length > 0">
+      <table class="attendance-grid">
+        <thead>
+          <tr>
+            <th>Emp Code</th>
+            <th>Name</th>
+            <th>Date</th>
+            <th>In Time</th>
+            <th>Out Time</th>
+            <th>Status</th>
+            <th>Worked</th>
+            <th>Late</th>
+            <th>Early Out</th>
+            <th>Shift</th>
+            <th>Department</th>
+            <th>Designation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of detailItems">
+            <td>{{ item.employeeCode }}</td>
+            <td>{{ item.employeeName || '-' }}</td>
+            <td>{{ formatDate(item.attendanceDate) }}</td>
+            <td>{{ formatPunchTime(item.inTime) }}</td>
+            <td>{{ item.outTime ? formatPunchTime(item.outTime) : 'Missing' }}</td>
+            <td>{{ item.status }}</td>
+            <td>{{ formatMinutesAsDuration(item.workedMinutes) }}</td>
+            <td [class.minutes-alert]="(item.lateMinutes ?? 0) > 0">{{ formatMinutesCompact(item.lateMinutes) }}</td>
+            <td [class.minutes-alert]="(item.earlyOutMinutes ?? 0) > 0">{{ formatMinutesCompact(item.earlyOutMinutes) }}</td>
+            <td>{{ item.shiftDisplayName || item.shiftName || '-' }}</td>
+            <td>{{ item.department || '-' }}</td>
+            <td>{{ item.designation || '-' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-wrap" *ngIf="viewMode === 'raw' && items.length > 0">
+      <table class="attendance-grid">
+        <thead>
+          <tr>
+            <th>Emp Code</th>
+            <th>Name</th>
+            <th>Punch Time</th>
+            <th>Device Code</th>
+            <th>Department</th>
+            <th>Designation</th>
+            <th>Remarks</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let item of items">
+            <tr *ngIf="editingId !== item.id">
+              <td>{{ item.employeeCode }}</td>
+              <td>{{ item.employeeName || '-' }}</td>
+              <td>{{ formatPunchTime(item.punchTime) }}</td>
+              <td>{{ item.deviceEmployeeCode || '-' }}</td>
+              <td>{{ item.department || '-' }}</td>
+              <td>{{ item.designation || '-' }}</td>
+              <td>{{ item.remarks || '-' }}</td>
+              <td class="actions-cell">
+                <button type="button" class="btn tiny secondary" (click)="startEdit(item)">Edit</button>
+                <button type="button" class="btn tiny danger" [disabled]="deletingId === item.id" (click)="delete(item)">
+                  {{ deletingId === item.id ? 'Deleting...' : 'Delete' }}
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="editingId === item.id" class="edit-row">
+              <td colspan="8">
+                <div class="edit-grid">
+                  <label>
+                    Employee Code
+                    <input type="number" [(ngModel)]="editEmployeeCode" />
+                  </label>
+                  <label>
+                    Punch Time
+                    <input type="datetime-local" [(ngModel)]="editPunchTime" />
+                  </label>
+                  <label class="span-2">
+                    Remarks
+                    <input type="text" [(ngModel)]="editRemarks" placeholder="Optional note" />
+                  </label>
+                </div>
+                <div class="edit-actions">
+                  <button type="button" class="btn tiny primary" [disabled]="saving" (click)="saveEdit(item)">
+                    {{ saving ? 'Saving...' : 'Save' }}
+                  </button>
+                  <button type="button" class="btn tiny secondary" [disabled]="saving" (click)="cancelEdit()">Cancel</button>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination" *ngIf="totalCount > 0">
+      <button type="button" class="btn tiny secondary" [disabled]="!hasPreviousPage() || loading" (click)="goToPage(page - 1)">Previous</button>
+      <span>Page {{ page }} of {{ totalPages || 1 }}</span>
+      <button type="button" class="btn tiny secondary" [disabled]="!hasNextPage() || loading" (click)="goToPage(page + 1)">Next</button>
+    </div>
+  </section>
+</main>
