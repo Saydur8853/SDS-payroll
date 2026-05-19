@@ -220,6 +220,33 @@ using (var scope = app.Services.CreateScope())
         CREATE INDEX IF NOT EXISTS "IX_ShiftTemporaryOverrides_ShiftId_DateFrom_DateTo" ON "ShiftTemporaryOverrides" ("ShiftId", "DateFrom", "DateTo");
         """);
     dbContext.Database.ExecuteSqlRaw("""
+        CREATE TABLE IF NOT EXISTS "Authorizers" (
+            "Id" uuid NOT NULL,
+            "Name" character varying(200) NOT NULL,
+            "Designation" character varying(100) NOT NULL,
+            "DesignationId" uuid NULL,
+            "Department" character varying(100) NOT NULL,
+            "DepartmentId" uuid NULL,
+            "Photo" bytea NULL,
+            "Signature" bytea NULL,
+            "PinPassword" character varying(200) NOT NULL,
+            "CreatedAtUtc" timestamp with time zone NOT NULL,
+            "UpdatedAtUtc" timestamp with time zone NOT NULL,
+            CONSTRAINT "PK_Authorizers" PRIMARY KEY ("Id")
+        );
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        ALTER TABLE "Authorizers" ADD COLUMN IF NOT EXISTS "DesignationId" uuid NULL;
+        ALTER TABLE "Authorizers" ADD COLUMN IF NOT EXISTS "DepartmentId" uuid NULL;
+        ALTER TABLE "Authorizers" ADD COLUMN IF NOT EXISTS "Photo" bytea NULL;
+        ALTER TABLE "Authorizers" ADD COLUMN IF NOT EXISTS "Signature" bytea NULL;
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_Authorizers_Name" ON "Authorizers" ("Name");
+        CREATE INDEX IF NOT EXISTS "IX_Authorizers_DepartmentId" ON "Authorizers" ("DepartmentId");
+        CREATE INDEX IF NOT EXISTS "IX_Authorizers_DesignationId" ON "Authorizers" ("DesignationId");
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
         DO $$
         BEGIN
             IF NOT EXISTS (
@@ -269,6 +296,32 @@ using (var scope = app.Services.CreateScope())
                 ALTER TABLE "Employees"
                 ADD CONSTRAINT "FK_Employees_Shifts_ShiftId"
                 FOREIGN KEY ("ShiftId") REFERENCES "Shifts" ("Id") ON DELETE SET NULL;
+            END IF;
+        END $$;
+
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1
+                FROM pg_constraint
+                WHERE conname = 'FK_Authorizers_Departments_DepartmentId'
+            ) THEN
+                ALTER TABLE "Authorizers"
+                ADD CONSTRAINT "FK_Authorizers_Departments_DepartmentId"
+                FOREIGN KEY ("DepartmentId") REFERENCES "Departments" ("Id") ON DELETE SET NULL;
+            END IF;
+        END $$;
+
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1
+                FROM pg_constraint
+                WHERE conname = 'FK_Authorizers_Designations_DesignationId'
+            ) THEN
+                ALTER TABLE "Authorizers"
+                ADD CONSTRAINT "FK_Authorizers_Designations_DesignationId"
+                FOREIGN KEY ("DesignationId") REFERENCES "Designations" ("Id") ON DELETE SET NULL;
             END IF;
         END $$;
         """);
@@ -371,6 +424,32 @@ using (var scope = app.Services.CreateScope())
             if (!string.IsNullOrWhiteSpace(key) && shiftByKey.TryGetValue(key, out var shiftId))
             {
                 employee.ShiftId = shiftId;
+                backfilled = true;
+            }
+        }
+    }
+
+    var authorizersToBackfill = await dbContext.Authorizers
+        .Where(x => x.DepartmentId == null || x.DesignationId == null)
+        .ToListAsync();
+    foreach (var authorizer in authorizersToBackfill)
+    {
+        if (authorizer.DepartmentId == null)
+        {
+            var key = NormalizeLookup(authorizer.Department);
+            if (!string.IsNullOrWhiteSpace(key) && departmentByName.TryGetValue(key, out var departmentId))
+            {
+                authorizer.DepartmentId = departmentId;
+                backfilled = true;
+            }
+        }
+
+        if (authorizer.DesignationId == null)
+        {
+            var key = NormalizeLookup(authorizer.Designation);
+            if (!string.IsNullOrWhiteSpace(key) && designationByName.TryGetValue(key, out var designationId))
+            {
+                authorizer.DesignationId = designationId;
                 backfilled = true;
             }
         }

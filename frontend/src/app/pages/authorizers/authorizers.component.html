@@ -1,0 +1,209 @@
+<main class="page authorizers-page">
+  <section class="panel">
+    <div class="panel-header">
+      <div class="panel-icon icon-cyan">
+        <span class="material-symbols-rounded">verified_user</span>
+      </div>
+      <div>
+        <h1>{{ editingId ? 'Edit Authorizer' : 'Add Authorizer' }}</h1>
+        <p class="panel-subtitle">Manage approvers with photo, signature and security credentials.</p>
+      </div>
+    </div>
+
+    <div class="basic-info-media-layout">
+      <div class="form-grid form-fields">
+        <label>
+          <span class="label-text">Authorizer Name <span class="required-star">*</span></span>
+          <input type="text" [(ngModel)]="name" placeholder="Enter authorizer name" />
+        </label>
+
+        <label>
+          <span class="label-text">Designation <span class="required-star">*</span></span>
+          <select [(ngModel)]="designation">
+            <option value="">Select designation</option>
+            <option *ngFor="let item of designations" [value]="item.name">{{ item.name }}</option>
+          </select>
+        </label>
+
+        <label>
+          <span class="label-text">Department <span class="required-star">*</span></span>
+          <select [(ngModel)]="department">
+            <option value="">Select department</option>
+            <option *ngFor="let item of departments" [value]="item.name">{{ item.name }}</option>
+          </select>
+        </label>
+
+        <label>
+          <span class="label-text">PIN / Password <span class="required-star">*</span></span>
+          <div class="credential-input-wrap">
+            <input
+              [type]="showPinPasswordTemporarily ? 'text' : 'password'"
+              [(ngModel)]="pinPassword"
+              placeholder="Use 4 digits for PIN or text for password" />
+            <button
+              type="button"
+              class="btn tiny secondary icon-btn eye-btn"
+              (click)="revealPinPasswordForMoment()"
+              [disabled]="!pinPassword.trim()">
+              <span class="material-symbols-rounded">{{ showPinPasswordTemporarily ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+        </label>
+      </div>
+
+      <div class="media-column">
+        <div class="image-preview" [class.empty]="!photoBase64">
+          <img *ngIf="photoBase64" [src]="photoBase64" alt="Authorizer photo preview" />
+          <div *ngIf="!photoBase64" class="placeholder">
+            <span class="material-symbols-rounded">account_circle</span>
+          </div>
+          <div class="image-overlay" *ngIf="photoBase64">
+            <button class="btn tiny icon-btn danger" (click)="removeImage('photo')" type="button">
+              <span class="material-symbols-rounded">delete</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="media-actions">
+          <label class="btn tiny primary upload-btn flex-1">
+            <span class="material-symbols-rounded">upload</span> Photo
+            <input type="file" (change)="onFileChange($event, 'photo')" accept="image/*" hidden />
+          </label>
+          <label class="btn tiny primary upload-btn flex-1">
+            <span class="material-symbols-rounded">upload</span> Signature *
+            <input type="file" (change)="onFileChange($event, 'signature')" accept="image/*" hidden />
+          </label>
+        </div>
+
+        <div class="image-preview signature" [class.empty]="!signatureBase64">
+          <img *ngIf="signatureBase64" [src]="signatureBase64" alt="Authorizer signature preview" />
+          <div *ngIf="!signatureBase64" class="placeholder">
+            <span class="material-symbols-rounded">draw</span>
+          </div>
+          <div class="image-overlay" *ngIf="signatureBase64">
+            <button class="btn tiny icon-btn danger" (click)="removeImage('signature')" type="button">
+              <span class="material-symbols-rounded">delete</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn primary" [disabled]="saving" (click)="save()">
+        <span class="material-symbols-rounded" style="font-size:18px">save</span>
+        {{ saving ? 'Saving...' : (editingId ? 'Update Authorizer' : 'Save Authorizer') }}
+      </button>
+      <button type="button" class="btn secondary" *ngIf="editingId" [disabled]="saving" (click)="cancelEdit()">
+        Cancel Edit
+      </button>
+    </div>
+
+    <p class="message" *ngIf="message">{{ message }}</p>
+  </section>
+
+  <section class="panel">
+    <h2>Authorizer List</h2>
+
+    <p *ngIf="authorizers.length === 0" class="list-state">No authorizers added yet.</p>
+
+    <div class="employee-card" *ngFor="let item of authorizers">
+      <div class="employee-header">
+        <div class="authorizer-info">
+          <h3>{{ item.name }}</h3>
+          <div class="authorizer-meta-grid">
+            <span><strong>Designation:</strong> {{ item.designation }}</span>
+            <span><strong>Department:</strong> {{ item.department }}</span>
+            <span><strong>PIN/Password:</strong> {{ getMaskedPin(item.pinPassword) }}</span>
+          </div>
+        </div>
+
+        <div class="employee-media-stack">
+          <div class="employee-photo-thumb" [class.empty]="!getPhotoSrc(item)">
+            <img *ngIf="getPhotoSrc(item) as photoSrc" [src]="photoSrc" [alt]="item.name + ' photo'" />
+            <span *ngIf="!getPhotoSrc(item)" class="material-symbols-rounded">account_circle</span>
+          </div>
+          <div class="employee-signature-thumb" [class.empty]="!getSignatureSrc(item)">
+            <img *ngIf="getSignatureSrc(item) as signatureSrc" [src]="signatureSrc" [alt]="item.name + ' signature'" />
+            <span *ngIf="!getSignatureSrc(item)" class="material-symbols-rounded">draw</span>
+          </div>
+        </div>
+
+        <div class="employee-actions">
+          <button type="button" class="btn tiny secondary" (click)="startEdit(item)">
+            <span class="material-symbols-rounded" style="font-size:16px">edit</span> Edit
+          </button>
+          <button
+            type="button"
+            class="btn tiny danger"
+            [disabled]="deletingId === item.id"
+            (click)="delete(item)">
+            <span class="material-symbols-rounded" style="font-size:16px">delete</span>
+            {{ deletingId === item.id ? 'Deleting...' : 'Delete' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="modal-backdrop" *ngIf="showCropper">
+  <div class="modal cropper-modal">
+    <div class="modal-header">
+      <div class="header-content">
+        <div class="header-icon">
+          <span class="material-symbols-rounded">crop</span>
+        </div>
+        <div>
+          <h3>Crop {{ croppingFor === 'photo' ? 'Photo' : 'Signature' }}</h3>
+          <p class="modal-subtitle">Adjust image size and position before saving</p>
+        </div>
+      </div>
+      <button type="button" class="btn-close" (click)="cancelCrop()">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="cropper-container">
+        <image-cropper
+          [imageChangedEvent]="imageChangedEvent"
+          [maintainAspectRatio]="true"
+          [cropperStaticWidth]="croppingFor === 'photo' ? 300 : 450"
+          [cropperStaticHeight]="croppingFor === 'photo' ? 375 : 150"
+          [onlyScaleDown]="false"
+          format="webp"
+          [roundCropper]="false"
+          [canvasRotation]="0"
+          [transform]="transform"
+          [alignImage]="'center'"
+          (imageCropped)="imageCropped($event)"
+          (imageLoaded)="imageLoaded($event)"
+          (cropperReady)="cropperReady()"
+          (loadImageFailed)="loadImageFailed()"
+          [imageQuality]="90"
+          [resizeToWidth]="croppingFor === 'photo' ? 400 : 600"
+          class="cropper-element">
+        </image-cropper>
+      </div>
+
+      <div class="cropper-controls">
+        <button type="button" class="btn tiny secondary icon-btn" (click)="zoomOut()">
+          <span class="material-symbols-rounded">remove</span>
+        </button>
+        <span class="zoom-label">{{ (scale * 100).toFixed(0) }}%</span>
+        <button type="button" class="btn tiny secondary icon-btn" (click)="zoomIn()">
+          <span class="material-symbols-rounded">add</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn secondary" (click)="cancelCrop()">Cancel</button>
+      <button type="button" class="btn primary" (click)="applyCrop()">
+        <span class="material-symbols-rounded">check</span>
+        Apply Crop
+      </button>
+    </div>
+  </div>
+</div>

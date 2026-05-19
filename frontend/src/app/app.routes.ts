@@ -6,6 +6,7 @@ import { EmployeeInfoComponent } from './pages/employee-info/employee-info.compo
 import { DepartmentsComponent } from './pages/departments/departments.component';
 import { DesignationsComponent } from './pages/designations/designations.component';
 import { ShiftsComponent } from './pages/shifts/shifts.component';
+import { AuthorizersComponent } from './pages/authorizers/authorizers.component';
 
 export const routes: Routes = [
   {
@@ -16,6 +17,7 @@ export const routes: Routes = [
       { path: 'dashboard', component: DashboardComponent },
       { path: 'company-info', component: CompanyInfoComponent },
       { path: 'employee-info', component: EmployeeInfoComponent },
+      { path: 'authorizers', component: AuthorizersComponent },
       { path: 'departments', component: DepartmentsComponent },
       { path: 'designations', component: DesignationsComponent },
       { path: 'shifts', component: ShiftsComponent }

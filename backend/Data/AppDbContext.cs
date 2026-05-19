@@ -7,6 +7,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 {
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<Employee> Employees => Set<Employee>();
+    public DbSet<Authorizer> Authorizers => Set<Authorizer>();
     public DbSet<Department> Departments => Set<Department>();
     public DbSet<Designation> Designations => Set<Designation>();
     public DbSet<Shift> Shifts => Set<Shift>();
@@ -86,6 +87,32 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.HasOne(e => e.ShiftLookup)
                 .WithMany()
                 .HasForeignKey(e => e.ShiftId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<Authorizer>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Designation).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.DesignationId);
+            entity.Property(e => e.Department).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.DepartmentId);
+            entity.Property(e => e.Photo);
+            entity.Property(e => e.Signature);
+            entity.Property(e => e.PinPassword).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.CreatedAtUtc).IsRequired();
+            entity.Property(e => e.UpdatedAtUtc).IsRequired();
+            entity.HasIndex(e => e.Name).IsUnique();
+            entity.HasIndex(e => e.DepartmentId);
+            entity.HasIndex(e => e.DesignationId);
+            entity.HasOne(e => e.DepartmentLookup)
+                .WithMany()
+                .HasForeignKey(e => e.DepartmentId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(e => e.DesignationLookup)
+                .WithMany()
+                .HasForeignKey(e => e.DesignationId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
 

@@ -74,6 +74,18 @@
       </div>
       <div class="card-glow glow-rose"></div>
     </div>
+
+    <!-- Authorizers Card -->
+    <div class="glass-card stat-card" id="stat-authorizers">
+      <div class="card-icon icon-purple">
+        <span class="material-symbols-rounded">verified_user</span>
+      </div>
+      <div class="card-body">
+        <span class="stat-value">{{ authorizerCount }}</span>
+        <span class="stat-label">Authorizers</span>
+      </div>
+      <div class="card-glow glow-purple"></div>
+    </div>
   </section>
 
   <!-- Loading State -->
@@ -103,6 +115,10 @@
       <a routerLink="/shifts" class="glass-card action-card" id="action-shifts">
         <span class="material-symbols-rounded">more_time</span>
         <span>Manage Shifts</span>
+      </a>
+      <a routerLink="/authorizers" class="glass-card action-card" id="action-authorizers">
+        <span class="material-symbols-rounded">verified_user</span>
+        <span>Manage Authorizers</span>
       </a>
     </div>
   </section>
