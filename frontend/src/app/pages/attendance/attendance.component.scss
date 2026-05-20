@@ -4,20 +4,27 @@
   grid-template-columns: 1fr;
 }
 
-.top-controls {
-  display: grid;
-  grid-template-columns: 1.45fr 1fr;
-  gap: 1rem;
+.common-params-panel {
+  margin-bottom: 0;
 }
 
-.controls-panel .filter-bar {
-  margin-top: 0.4rem;
-  margin-bottom: 0;
+.common-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.85rem;
+  margin-top: 0;
+}
+
+.common-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
 }
 
 .upload-panel .upload-grid {
   margin-top: 0.4rem;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
 }
 
 .upload-grid {
@@ -46,8 +53,10 @@
   white-space: nowrap;
 }
 
-.employee-codes-field input {
-  font-variant-numeric: tabular-nums;
+input[type='date']::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.9;
+  cursor: pointer;
 }
 
 .checkbox-row {
@@ -89,22 +98,11 @@
   color: var(--text-secondary);
 }
 
-.filter-bar {
-  margin-top: 0.5rem;
-  margin-bottom: 0.8rem;
-  padding: 0.85rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.filters-grid {
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-}
-
 .table-wrap {
   width: 100%;
   overflow: auto;
+  max-height: 62vh;
+  scroll-behavior: smooth;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
 }
@@ -154,10 +152,6 @@
   background: rgba(255, 255, 255, 0.03);
 }
 
-.search-field {
-  grid-column: span 2;
-}
-
 .emp-info {
   flex: 1;
   min-width: 0;
@@ -186,25 +180,50 @@
   margin-bottom: 0.5rem;
 }
 
+.view-page-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 170px;
+  justify-content: flex-end;
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.view-page-size select {
+  min-width: 90px;
+}
+
+.attendance-page .list-toolbar {
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+
+.attendance-page .list-meta {
+  margin: 0;
+}
+
 .span-2 {
   grid-column: span 2;
 }
 
 @media (max-width: 760px) {
-  .top-controls {
-    grid-template-columns: 1fr;
-  }
-
   .upload-grid {
     grid-template-columns: 1fr;
   }
 
-  .filters-grid {
-    grid-template-columns: 1fr;
+  .table-wrap {
+    max-height: 54vh;
   }
 
-  .search-field {
-    grid-column: span 1;
+  .list-toolbar {
+    align-items: center;
+  }
+
+  .view-page-size {
+    width: 100%;
+    justify-content: flex-end;
   }
 
   .edit-grid {
@@ -217,8 +236,7 @@
 }
 
 @media (min-width: 1280px) {
-  .mdb-file-field,
-  .employee-codes-field {
+  .mdb-file-field {
     grid-column: span 1;
   }
 }

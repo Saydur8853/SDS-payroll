@@ -1,0 +1,103 @@
+<main class="page raw-page">
+  <p class="message" *ngIf="message">{{ message }}</p>
+
+  <section class="panel">
+    <h2>Attendance Raw Data</h2>
+
+    <div class="upload-block">
+      <div class="upload-grid">
+        <label>
+          MDB File
+          <input type="file" accept=".mdb" (change)="onFileSelected($event)" />
+        </label>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn primary" [disabled]="uploading" (click)="uploadMdb()">
+          {{ uploading ? 'Uploading...' : 'Upload Raw MDB' }}
+        </button>
+      </div>
+
+      <div class="upload-progress-wrap" *ngIf="uploading">
+        <div class="upload-progress-track" role="progressbar" [attr.aria-valuenow]="uploadProgressPercent" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuetext]="uploadProgressLabel">
+          <div class="upload-progress-fill" [style.width.%]="uploadProgressPercent"></div>
+        </div>
+        <p class="upload-progress-text">{{ uploadProgressLabel || ('Uploading... ' + uploadProgressPercent + '%') }}</p>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <div class="filters-grid">
+        <label>
+          Emp Code
+          <input type="text" [(ngModel)]="filterEmployeeCode" placeholder="e.g. 200105 or E200105" />
+        </label>
+
+        <label>
+          Source Type
+          <select [(ngModel)]="filterSourceType">
+            <option value="">All Source Types</option>
+            <option value="att2000">att2000</option>
+            <option value="onspot">onspot</option>
+          </select>
+        </label>
+
+        <label>
+          From Punch Date
+          <input type="date" [(ngModel)]="filterFromPunchDate" />
+        </label>
+
+        <label>
+          To Punch Date
+          <input type="date" [(ngModel)]="filterToPunchDate" />
+        </label>
+
+        <label>
+          Per Page
+          <select [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
+            <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+          </select>
+        </label>
+      </div>
+      <div class="filters-actions">
+        <button type="button" class="btn tiny primary" (click)="applyFilters()">Apply</button>
+        <button type="button" class="btn tiny danger" [disabled]="deletingRange" (click)="deleteByDateRange()">
+          {{ deletingRange ? 'Deleting...' : 'Delete Date Range' }}
+        </button>
+        <button type="button" class="btn tiny secondary" (click)="resetFilters()">Reset</button>
+      </div>
+    </div>
+
+    <div class="list-toolbar">
+      <p class="list-meta">Showing page {{ page }} of {{ totalPages || 1 }} ({{ totalCount }} rows)</p>
+    </div>
+
+    <p *ngIf="loading" class="list-state">Loading raw data...</p>
+    <p *ngIf="!loading && totalCount === 0" class="list-state">No raw data rows found.</p>
+
+    <div class="table-wrap" *ngIf="items.length > 0">
+      <table class="attendance-grid">
+        <thead>
+          <tr>
+            <th>Emp Code</th>
+            <th>Punch Time</th>
+            <th>File Name</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of items">
+            <td>{{ item.employeeCode ?? '-' }}</td>
+            <td>{{ formatDateTime(item.punchTime) }}</td>
+            <td>{{ item.sourceFileName }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination" *ngIf="totalCount > 0">
+      <button type="button" class="btn tiny secondary" [disabled]="!hasPreviousPage || loading" (click)="goToPage(page - 1)">Previous</button>
+      <span>Page {{ page }} of {{ totalPages || 1 }}</span>
+      <button type="button" class="btn tiny secondary" [disabled]="!hasNextPage || loading" (click)="goToPage(page + 1)">Next</button>
+    </div>
+  </section>
+</main>

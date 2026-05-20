@@ -1,14 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpEventType } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 import { AttendanceDailyDetail, AttendanceRecord } from '../../models/attendance.model';
 import { LookupItem } from '../../models/lookup.model';
-import { Company } from '../../models/company.model';
 import { AttendanceService } from '../../services/attendance.service';
 import { LookupService } from '../../services/lookup.service';
-import { CompanyService } from '../../services/company.service';
 
 @Component({
   selector: 'app-attendance',
@@ -18,24 +16,17 @@ import { CompanyService } from '../../services/company.service';
 })
 export class AttendanceComponent implements OnInit {
   private readonly monthShortNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  viewMode: 'details' | 'raw' = 'details';
+  private readonly scrollBottomThresholdPx = 80;
+  @ViewChild('detailsTableWrap') private detailsTableWrap?: ElementRef<HTMLDivElement>;
   detailItems: AttendanceDailyDetail[] = [];
-  items: AttendanceRecord[] = [];
-  companies: Company[] = [];
   departments: LookupItem[] = [];
   designations: LookupItem[] = [];
 
   uploadFile: File | null = null;
-  uploadSourceType = '';
-  uploadFromDate = this.today;
-  uploadToDate = this.today;
   uploadReplaceExisting = true;
-  uploadCompany: string | null = null;
-  uploadDepartment: string | null = null;
-  uploadDesignation: string | null = null;
-  uploadEmployeeCodesCsv = '';
 
   loading = false;
+  loadingMore = false;
   uploading = false;
   uploadProgressPercent = 0;
   uploadProgressLabel = '';
@@ -43,14 +34,11 @@ export class AttendanceComponent implements OnInit {
   deletingId: string | null = null;
   message = '';
 
-  searchText = '';
   filterEmployeeCode: number | null = null;
-  filterSourceType: string | null = null;
-  filterFromDate = '';
-  filterToDate = '';
-  filterCompany: string | null = null;
-  filterDepartment: string | null = null;
-  filterDesignation: string | null = null;
+  commonFromDate = '';
+  commonToDate = '';
+  commonDepartment: string | null = null;
+  commonDesignation: string | null = null;
 
   page = 1;
   pageSize = 50;
@@ -66,8 +54,7 @@ export class AttendanceComponent implements OnInit {
 
   constructor(
     private readonly attendanceService: AttendanceService,
-    private readonly lookupService: LookupService,
-    private readonly companyService: CompanyService
+    private readonly lookupService: LookupService
   ) {}
 
   ngOnInit(): void {
@@ -75,22 +62,12 @@ export class AttendanceComponent implements OnInit {
     this.loadAttendance();
   }
 
-  private get today(): string {
-    const now = new Date();
-    const yyyy = now.getFullYear();
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const dd = String(now.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  }
-
   loadLookups(): void {
     forkJoin({
-      companies: this.companyService.getAll(),
       departments: this.lookupService.getDepartments(),
       designations: this.lookupService.getDesignations()
     }).subscribe({
       next: (data) => {
-        this.companies = data.companies;
         this.departments = data.departments;
         this.designations = data.designations;
       },
@@ -111,12 +88,12 @@ export class AttendanceComponent implements OnInit {
       return;
     }
 
-    if (!this.uploadFromDate || !this.uploadToDate) {
+    if (!this.commonFromDate || !this.commonToDate) {
       this.message = 'From and To date are required.';
       return;
     }
 
-    if (this.uploadToDate < this.uploadFromDate) {
+    if (this.commonToDate < this.commonFromDate) {
       this.message = 'To date cannot be earlier than From date.';
       return;
     }
@@ -126,14 +103,14 @@ export class AttendanceComponent implements OnInit {
     this.uploadProgressLabel = 'Starting upload...';
     this.attendanceService.uploadMdb({
       file: this.uploadFile,
-      sourceType: this.uploadSourceType || null,
-      fromDate: this.uploadFromDate,
-      toDate: this.uploadToDate,
+      sourceType: null,
+      fromDate: this.commonFromDate,
+      toDate: this.commonToDate,
       replaceExisting: this.uploadReplaceExisting,
-      company: this.uploadCompany,
-      department: this.uploadDepartment,
-      designation: this.uploadDesignation,
-      employeeCodesCsv: this.uploadEmployeeCodesCsv || null
+      company: null,
+      department: this.commonDepartment,
+      designation: this.commonDesignation,
+      employeeCodesCsv: null
     }).subscribe({
       next: (event) => {
         if (event.type === HttpEventType.Sent) {
@@ -181,70 +158,71 @@ export class AttendanceComponent implements OnInit {
     });
   }
 
-  loadAttendance(): void {
+  loadAttendance(options: { append?: boolean; previousPage?: number; resetScrollTop?: boolean } = {}): void {
+    const append = options.append ?? false;
     this.loading = true;
     const params = {
       page: this.page,
       pageSize: this.pageSize,
-      search: this.searchText || null,
       employeeCode: this.filterEmployeeCode,
-      sourceType: this.filterSourceType,
-      fromDate: this.filterFromDate || null,
-      toDate: this.filterToDate || null,
-      company: this.filterCompany,
-      department: this.filterDepartment,
-      designation: this.filterDesignation
+      fromDate: this.commonFromDate || null,
+      toDate: this.commonToDate || null,
+      company: null,
+      department: this.commonDepartment,
+      designation: this.commonDesignation
     };
 
-    if (this.viewMode === 'details') {
-      this.attendanceService.getDetails(params).subscribe({
-        next: (response) => {
-          this.detailItems = response.items;
-          this.items = [];
-          this.totalCount = response.totalCount;
-          this.totalPages = response.totalPages;
-        },
-        error: () => {
-          this.message = 'Failed to load attendance details.';
-        },
-        complete: () => {
-          this.loading = false;
-        }
-      });
-      return;
-    }
-
-    this.attendanceService.getAll(params).subscribe({
+    this.attendanceService.getDetails(params).subscribe({
       next: (response) => {
-        this.detailItems = [];
-        this.items = response.items;
+        this.detailItems = append ? [...this.detailItems, ...response.items] : response.items;
         this.totalCount = response.totalCount;
+        this.page = response.page;
+        this.pageSize = response.pageSize;
         this.totalPages = response.totalPages;
       },
       error: () => {
-        this.message = 'Failed to load attendance records.';
+        this.message = 'Failed to load attendance details.';
+        if (append && options.previousPage) {
+          this.page = options.previousPage;
+        }
       },
       complete: () => {
         this.loading = false;
+        this.loadingMore = false;
+        if (options.resetScrollTop) {
+          this.resetGridScrollTop();
+        }
       }
     });
   }
 
-  onViewModeChange(mode: string): void {
-    if (mode !== 'details' && mode !== 'raw') {
+  onGridScroll(event: Event): void {
+    if (this.loading || this.loadingMore || !this.hasNextPage()) {
       return;
     }
 
-    if (this.viewMode === mode) {
+    const container = event.target as HTMLElement | null;
+    if (!container) {
       return;
     }
 
-    this.viewMode = mode;
-    if (this.editingId) {
-      this.cancelEdit();
+    const remainingDistance = container.scrollHeight - container.scrollTop - container.clientHeight;
+    if (remainingDistance > this.scrollBottomThresholdPx) {
+      return;
     }
-    this.page = 1;
-    this.loadAttendance();
+
+    this.loadNextPageOnScroll();
+  }
+
+  private loadNextPageOnScroll(): void {
+    if (this.loading || this.loadingMore || !this.hasNextPage()) {
+      return;
+    }
+
+    const previousPage = this.page;
+    this.page += 1;
+    this.loadingMore = true;
+    this.loadAttendance({ append: true, previousPage });
   }
 
   applyFilters(): void {
@@ -253,14 +231,11 @@ export class AttendanceComponent implements OnInit {
   }
 
   resetFilters(): void {
-    this.searchText = '';
     this.filterEmployeeCode = null;
-    this.filterSourceType = null;
-    this.filterFromDate = '';
-    this.filterToDate = '';
-    this.filterCompany = null;
-    this.filterDepartment = null;
-    this.filterDesignation = null;
+    this.commonFromDate = '';
+    this.commonToDate = '';
+    this.commonDepartment = null;
+    this.commonDesignation = null;
     this.page = 1;
     this.loadAttendance();
   }
@@ -276,7 +251,7 @@ export class AttendanceComponent implements OnInit {
       return;
     }
     this.page = page;
-    this.loadAttendance();
+    this.loadAttendance({ resetScrollTop: true });
   }
 
   startEdit(item: AttendanceRecord): void {
@@ -346,6 +321,9 @@ export class AttendanceComponent implements OnInit {
     if (this.totalCount === 0) {
       return 0;
     }
+    if (this.loadedRecordsCount > this.pageSize) {
+      return 1;
+    }
     return (this.page - 1) * this.pageSize + 1;
   }
 
@@ -353,7 +331,14 @@ export class AttendanceComponent implements OnInit {
     if (this.totalCount === 0) {
       return 0;
     }
+    if (this.loadedRecordsCount > this.pageSize) {
+      return Math.min(this.loadedRecordsCount, this.totalCount);
+    }
     return Math.min(this.page * this.pageSize, this.totalCount);
+  }
+
+  get loadedRecordsCount(): number {
+    return this.detailItems.length;
   }
 
   formatDate(value: string): string {
@@ -420,6 +405,13 @@ export class AttendanceComponent implements OnInit {
 
   hasNextPage(): boolean {
     return this.page < this.totalPages;
+  }
+
+  private resetGridScrollTop(): void {
+    setTimeout(() => {
+      const container = this.detailsTableWrap?.nativeElement;
+      container?.scrollTo({ top: 0, behavior: 'auto' });
+    });
   }
 
   private toDateTimeLocalValue(value: string): string {

@@ -1,0 +1,207 @@
+.page.raw-page {
+  display: grid;
+  gap: 1rem;
+  padding: 0.25rem;
+  color: #f8fafc;
+}
+
+.panel {
+  background: linear-gradient(145deg, rgba(70, 69, 121, 0.86), rgba(48, 45, 88, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+h2 {
+  margin: 0 0 0.9rem;
+  font-size: 1.1rem;
+}
+
+.upload-block {
+  margin-bottom: 1rem;
+}
+
+.upload-block h3 {
+  margin: 0 0 0.8rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.upload-grid,
+.filters-grid {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+input,
+select {
+  width: 100%;
+  min-height: 2.35rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  padding: 0.5rem 0.75rem;
+}
+
+select option {
+  color: #111827;
+  background: #ffffff;
+}
+
+input::placeholder {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+input[type='file'] {
+  padding: 0.4rem;
+}
+
+.actions,
+.filters-actions,
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+.filters-actions {
+  justify-content: flex-end;
+}
+
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 0.55rem 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  color: #ffffff;
+}
+
+.btn.secondary {
+  background: rgba(255, 255, 255, 0.15);
+  color: #f8fafc;
+}
+
+.btn.danger {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: #ffffff;
+}
+
+.btn.tiny {
+  padding: 0.45rem 0.75rem;
+  font-size: 0.86rem;
+}
+
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.message {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.list-toolbar {
+  margin-top: 0.9rem;
+}
+
+.list-meta,
+.list-state {
+  margin: 0;
+  color: #cbd5e1;
+}
+
+.filter-bar {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.table-wrap {
+  margin-top: 0.8rem;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+}
+
+.attendance-grid {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 980px;
+}
+
+.attendance-grid th,
+.attendance-grid td {
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+  vertical-align: top;
+}
+
+.attendance-grid th {
+  position: sticky;
+  top: 0;
+  background: rgba(20, 20, 50, 0.95);
+  font-size: 0.82rem;
+}
+
+.raw-json-cell pre {
+  margin: 0.35rem 0 0;
+  max-width: 480px;
+  max-height: 220px;
+  overflow: auto;
+  padding: 0.5rem;
+  border-radius: 8px;
+  background: rgba(12, 17, 42, 0.82);
+}
+
+.upload-progress-wrap {
+  margin-top: 0.8rem;
+}
+
+.upload-progress-track {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  overflow: hidden;
+}
+
+.upload-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #22c55e, #06b6d4);
+  transition: width 0.2s ease;
+}
+
+.upload-progress-text {
+  margin: 0.45rem 0 0;
+  font-size: 0.84rem;
+  color: #e2e8f0;
+}
+
+@media (max-width: 900px) {
+  .panel {
+    padding: 0.85rem;
+  }
+
+  .attendance-grid {
+    min-width: 820px;
+  }
+}

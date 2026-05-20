@@ -6,9 +6,11 @@ import { ImageCropperComponent, ImageCroppedEvent, LoadedImage } from 'ngx-image
 import { EmployeeService, EmployeeCsvImportJobStatus } from '../../services/employee.service';
 import { Employee } from '../../models/employee.model';
 import { LookupItem } from '../../models/lookup.model';
+import { SalaryRule, SalaryRuleUpsertRequest } from '../../models/salary-rule.model';
 import { LookupService } from '../../services/lookup.service';
 import { ShiftService } from '../../services/shift.service';
 import { CompanyService } from '../../services/company.service';
+import { SalaryRuleService } from '../../services/salary-rule.service';
 
 type Meridiem = 'AM' | 'PM';
 
@@ -23,6 +25,7 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
   private readonly addDesignationOption = '__add_new_designation__';
   private readonly addStatusOption = '__add_new_status__';
   private readonly addShiftOption = '__add_new_shift__';
+  private readonly addSalaryRuleOption = '__add_new_salary_rule__';
   private readonly emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   private readonly phoneRegex = /^\d{10,}$/;
   private readonly monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -53,6 +56,7 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
   departments: LookupItem[] = [];
   designations: LookupItem[] = [];
   shifts: LookupItem[] = [];
+  salaryRules: SalaryRule[] = [];
   statusOptions: string[] = [];
   loadingEmployees = false;
   hasRequestedEmployees = false;
@@ -135,6 +139,7 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
   showDesignationModal = false;
   showStatusModal = false;
   showShiftModal = false;
+  showSalaryRuleModal = false;
   newDepartmentName = '';
   newDesignationName = '';
   newStatusName = '';
@@ -145,6 +150,13 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
   newShiftOutTimeGrace = '';
   newShiftBreakStartTime = '';
   newShiftBreakEndTime = '';
+  newSalaryRuleName = '';
+  newSalaryRuleBasicSalary: number | null = null;
+  newSalaryRuleHouseRent: number | null = null;
+  newSalaryRuleMedicalBill: number | null = null;
+  newSalaryRuleTransportBill: number | null = null;
+  newSalaryRuleFoodAllowance: number | null = null;
+  newSalaryRuleDynamicEntries: Array<{ key: string; value: string }> = [{ key: '', value: '' }];
   readonly shiftHourOptions = Array.from({ length: 12 }, (_, index) => (index + 1).toString().padStart(2, '0'));
   readonly shiftMinuteOptions = Array.from({ length: 60 }, (_, index) => index.toString().padStart(2, '0'));
   readonly shiftMeridiemOptions: Meridiem[] = ['AM', 'PM'];
@@ -479,6 +491,24 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
     }
   }
 
+  onSalaryRuleChange(value: string): void {
+    if (value === this.addSalaryRuleOption) {
+      this.showSalaryRuleModal = true;
+      this.salaryRule = '';
+    } else {
+      this.salaryRule = value;
+    }
+  }
+
+  onEditSalaryRuleChange(value: string): void {
+    if (value === this.addSalaryRuleOption) {
+      this.showSalaryRuleModal = true;
+      this.editSalaryRule = '';
+    } else {
+      this.editSalaryRule = value;
+    }
+  }
+
   closeDepartmentModal(): void {
     this.showDepartmentModal = false;
     this.newDepartmentName = '';
@@ -503,6 +533,17 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
     this.newShiftOutTimeGrace = '';
     this.newShiftBreakStartTime = '';
     this.newShiftBreakEndTime = '';
+  }
+
+  closeSalaryRuleModal(): void {
+    this.showSalaryRuleModal = false;
+    this.newSalaryRuleName = '';
+    this.newSalaryRuleBasicSalary = null;
+    this.newSalaryRuleHouseRent = null;
+    this.newSalaryRuleMedicalBill = null;
+    this.newSalaryRuleTransportBill = null;
+    this.newSalaryRuleFoodAllowance = null;
+    this.newSalaryRuleDynamicEntries = [{ key: '', value: '' }];
   }
 
   createDepartment(): void {
@@ -603,6 +644,51 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
         this.message = 'Failed to create shift.';
       }
     });
+  }
+
+  createSalaryRule(): void {
+    const ruleName = this.newSalaryRuleName.trim();
+    if (!ruleName) {
+      this.message = 'Salary rule name is required.';
+      return;
+    }
+
+    const request: SalaryRuleUpsertRequest = {
+      ruleName,
+      basicSalary: this.normalizeSalaryRuleAmount(this.newSalaryRuleBasicSalary),
+      houseRent: this.normalizeSalaryRuleAmount(this.newSalaryRuleHouseRent),
+      medicalBill: this.normalizeSalaryRuleAmount(this.newSalaryRuleMedicalBill),
+      transportBill: this.normalizeSalaryRuleAmount(this.newSalaryRuleTransportBill),
+      foodAllowance: this.normalizeSalaryRuleAmount(this.newSalaryRuleFoodAllowance),
+      dynamicAttributes: this.buildDynamicAttributesPayload(this.newSalaryRuleDynamicEntries)
+    };
+
+    this.salaryRuleService.create(request).subscribe({
+      next: (created) => {
+        this.salaryRules = [...this.salaryRules, created].sort((a, b) => a.ruleName.localeCompare(b.ruleName));
+        this.salaryRule = created.ruleName;
+        if (this.editingEmployeeId) {
+          this.editSalaryRule = created.ruleName;
+        }
+        this.closeSalaryRuleModal();
+      },
+      error: (error) => {
+        this.message = typeof error?.error === 'string' ? error.error : 'Failed to create salary rule.';
+      }
+    });
+  }
+
+  addNewSalaryRuleDynamicAttributeRow(): void {
+    this.newSalaryRuleDynamicEntries.push({ key: '', value: '' });
+  }
+
+  removeNewSalaryRuleDynamicAttributeRow(index: number): void {
+    if (this.newSalaryRuleDynamicEntries.length === 1) {
+      this.newSalaryRuleDynamicEntries[0] = { key: '', value: '' };
+      return;
+    }
+
+    this.newSalaryRuleDynamicEntries.splice(index, 1);
   }
 
   async saveEmployee(): Promise<void> {
@@ -756,6 +842,7 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
     if (this.employmentStatus && !this.statusOptions.some(x => x.toLowerCase() === this.employmentStatus.toLowerCase())) {
       this.statusOptions = [...this.statusOptions, this.employmentStatus].sort((a, b) => a.localeCompare(b));
     }
+    this.ensureSalaryRuleOption(this.salaryRule, `legacy-salary-rule-${employee.id}`);
     this.dynamicEntries = Object.entries(employee.dynamicAttributes).map(([key, value]) => ({
       key,
       value: value ?? ''
@@ -1288,6 +1375,14 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
         }
       }
     });
+
+    this.salaryRuleService.getAll().subscribe({
+      next: (items) => {
+        this.salaryRules = [...items].sort((a, b) => a.ruleName.localeCompare(b.ruleName));
+        this.ensureSalaryRuleOption(this.salaryRule, 'legacy-salary-rule-create');
+        this.ensureSalaryRuleOption(this.editSalaryRule, 'legacy-salary-rule-edit');
+      }
+    });
   }
 
   private buildDynamicAttributesPayload(entries: Array<{ key: string; value: string }>): Record<string, string> {
@@ -1298,6 +1393,41 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
       }
       return accumulator;
     }, {} as Record<string, string>);
+  }
+
+  private ensureSalaryRuleOption(value: string | null | undefined, fallbackIdPrefix: string): void {
+    const ruleName = value?.trim();
+    if (!ruleName) {
+      return;
+    }
+
+    if (this.salaryRules.some((x) => x.ruleName.toLowerCase() === ruleName.toLowerCase())) {
+      return;
+    }
+
+    this.salaryRules = [
+      ...this.salaryRules,
+      {
+        id: `${fallbackIdPrefix}-${ruleName}`,
+        ruleName,
+        basicSalary: 0,
+        houseRent: 0,
+        medicalBill: 0,
+        transportBill: 0,
+        foodAllowance: 0,
+        dynamicAttributes: {},
+        createdAtUtc: '',
+        updatedAtUtc: ''
+      }
+    ].sort((a, b) => a.ruleName.localeCompare(b.ruleName));
+  }
+
+  private normalizeSalaryRuleAmount(value: number | null): number {
+    if (value === null || value === undefined || Number.isNaN(value)) {
+      return 0;
+    }
+
+    return value;
   }
 
   private resetCreateForm(): void {
@@ -1392,11 +1522,16 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
     return this.addShiftOption;
   }
 
+  get addSalaryRuleValue(): string {
+    return this.addSalaryRuleOption;
+  }
+
   constructor(
     private readonly employeeService: EmployeeService,
     private readonly lookupService: LookupService,
     private readonly shiftService: ShiftService,
-    private readonly companyService: CompanyService
+    private readonly companyService: CompanyService,
+    private readonly salaryRuleService: SalaryRuleService
   ) {}
 
   getEmployeePhotoSrc(employee: Employee): string | null {

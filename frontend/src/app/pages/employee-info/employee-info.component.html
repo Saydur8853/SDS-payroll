@@ -158,20 +158,20 @@
           <input type="text" [(ngModel)]="fatherName" />
         </label>
         <label>
-          Mother's Name
-          <input type="text" [(ngModel)]="motherName" />
-        </label>
-        <label>
-          Spouse Name
-          <input type="text" [(ngModel)]="spouseName" />
-        </label>
-        <label>
           Father's Phone
           <input type="text" [(ngModel)]="fatherPhone" />
         </label>
         <label>
+          Mother's Name
+          <input type="text" [(ngModel)]="motherName" />
+        </label>
+        <label>
           Mother's Phone
           <input type="text" [(ngModel)]="motherPhone" />
+        </label>
+        <label>
+          Spouse Name
+          <input type="text" [(ngModel)]="spouseName" />
         </label>
         <label>
           Spouse Phone
@@ -238,7 +238,11 @@
         </label>
         <label>
           Salary Rule
-          <input type="text" [(ngModel)]="salaryRule" placeholder="e.g. Monthly" />
+          <select [(ngModel)]="salaryRule" (ngModelChange)="onSalaryRuleChange($event)">
+            <option value="">Select Salary Rule</option>
+            <option *ngFor="let item of salaryRules" [value]="item.ruleName">{{ item.ruleName }}</option>
+            <option [value]="addSalaryRuleValue" class="add-option">+ Add New Salary Rule</option>
+          </select>
         </label>
         <label>
           Gross Salary
@@ -421,7 +425,10 @@
         </label>
         <label>
           Salary Rule
-          <input type="text" [(ngModel)]="filterSalaryRule" placeholder="e.g. Monthly" />
+          <select [(ngModel)]="filterSalaryRule">
+            <option value="">All Salary Rules</option>
+            <option *ngFor="let item of salaryRules" [value]="item.ruleName">{{ item.ruleName }}</option>
+          </select>
         </label>
         <label>
           Weekend
@@ -664,20 +671,20 @@
             <input type="text" [(ngModel)]="editFatherName" />
           </label>
           <label>
-            Mother's Name
-            <input type="text" [(ngModel)]="editMotherName" />
-          </label>
-          <label>
-            Spouse Name
-            <input type="text" [(ngModel)]="editSpouseName" />
-          </label>
-          <label>
             Father's Phone
             <input type="text" [(ngModel)]="editFatherPhone" />
           </label>
           <label>
+            Mother's Name
+            <input type="text" [(ngModel)]="editMotherName" />
+          </label>
+          <label>
             Mother's Phone
             <input type="text" [(ngModel)]="editMotherPhone" />
+          </label>
+          <label>
+            Spouse Name
+            <input type="text" [(ngModel)]="editSpouseName" />
           </label>
           <label>
             Spouse Phone
@@ -721,7 +728,11 @@
           </label>
           <label>
             Salary Rule
-            <input type="text" [(ngModel)]="editSalaryRule" />
+            <select [(ngModel)]="editSalaryRule" (ngModelChange)="onEditSalaryRuleChange($event)">
+              <option value="">Select Salary Rule</option>
+              <option *ngFor="let item of salaryRules" [value]="item.ruleName">{{ item.ruleName }}</option>
+              <option [value]="addSalaryRuleValue" class="add-option">+ Add New Salary Rule</option>
+            </select>
           </label>
           <label>
             Gross Salary
@@ -973,6 +984,53 @@
     <div class="modal-actions">
       <button type="button" class="btn primary" (click)="createShift()">Save</button>
       <button type="button" class="btn secondary" (click)="closeShiftModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="showSalaryRuleModal">
+  <div class="modal salary-rule-modal">
+    <h3>Add New Salary Rule</h3>
+    <div class="form-grid salary-rule-modal-grid">
+      <label class="span-2">
+        Rule Name
+        <input type="text" [(ngModel)]="newSalaryRuleName" placeholder="e.g. Monthly Rule A" />
+      </label>
+      <label>
+        Basic Salary
+        <input type="number" min="0" step="0.01" [(ngModel)]="newSalaryRuleBasicSalary" placeholder="0" />
+      </label>
+      <label>
+        House Rent
+        <input type="number" min="0" step="0.01" [(ngModel)]="newSalaryRuleHouseRent" placeholder="0" />
+      </label>
+      <label>
+        Medical Bill
+        <input type="number" min="0" step="0.01" [(ngModel)]="newSalaryRuleMedicalBill" placeholder="0" />
+      </label>
+      <label>
+        Transport Bill
+        <input type="number" min="0" step="0.01" [(ngModel)]="newSalaryRuleTransportBill" placeholder="0" />
+      </label>
+      <label class="span-2">
+        Food Allowance
+        <input type="number" min="0" step="0.01" [(ngModel)]="newSalaryRuleFoodAllowance" placeholder="0" />
+      </label>
+    </div>
+    <div class="salary-rule-modal-dynamic">
+      <div class="dynamic-header">
+        <h4>Dynamic Fields</h4>
+        <button type="button" class="btn tiny secondary" (click)="addNewSalaryRuleDynamicAttributeRow()">+ Add Field</button>
+      </div>
+      <div class="dynamic-row" *ngFor="let entry of newSalaryRuleDynamicEntries; let i = index">
+        <input type="text" [(ngModel)]="entry.key" placeholder="Field name" />
+        <input type="text" [(ngModel)]="entry.value" placeholder="Value" />
+        <button type="button" class="btn tiny danger" (click)="removeNewSalaryRuleDynamicAttributeRow(i)">Remove</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn primary" (click)="createSalaryRule()">Save</button>
+      <button type="button" class="btn secondary" (click)="closeSalaryRuleModal()">Cancel</button>
     </div>
   </div>
 </div>

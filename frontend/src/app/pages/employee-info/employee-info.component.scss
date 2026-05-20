@@ -680,6 +680,50 @@ input[type=number] {
   gap: 0.4rem;
 }
 
+.salary-rule-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 0.9rem;
+  row-gap: 0.9rem;
+  align-items: start;
+}
+
+.salary-rule-modal {
+  width: min(720px, 94vw);
+}
+
+.salary-rule-modal-grid label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.salary-rule-modal-grid input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.salary-rule-modal-grid .span-2 {
+  grid-column: span 2;
+}
+
+.salary-rule-modal .modal-actions {
+  margin-top: 0.45rem;
+}
+
+.salary-rule-modal-dynamic {
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 700px) {
+  .salary-rule-modal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .salary-rule-modal-grid .span-2 {
+    grid-column: span 1;
+  }
+}
+
 /* ── Cropper Modal ────────────────────────────────────── */
 
 .cropper-modal {
