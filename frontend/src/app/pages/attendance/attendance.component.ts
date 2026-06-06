@@ -7,10 +7,12 @@ import { AttendanceDailyDetail, AttendanceRecord } from '../../models/attendance
 import { LookupItem } from '../../models/lookup.model';
 import { AttendanceService } from '../../services/attendance.service';
 import { LookupService } from '../../services/lookup.service';
+import { GlassSelectComponent } from '../../shared/glass-select/glass-select.component';
+import { nullableLookupOptions, numberOptions } from '../../shared/glass-select/glass-select-options';
 
 @Component({
   selector: 'app-attendance',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, GlassSelectComponent],
   templateUrl: './attendance.component.html',
   styleUrl: './attendance.component.scss'
 })
@@ -51,6 +53,8 @@ export class AttendanceComponent implements OnInit {
   editRemarks = '';
 
   readonly pageSizeOptions = [20, 50, 100];
+  readonly nullableLookupOptions = nullableLookupOptions;
+  readonly numberOptions = numberOptions;
 
   constructor(
     private readonly attendanceService: AttendanceService,

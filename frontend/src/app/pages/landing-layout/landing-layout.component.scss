@@ -325,6 +325,8 @@
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
+  display: block;
+  padding-top: 4.25rem;
 }
 
 /* ── Responsive ────────────────────────────────────────── */
@@ -382,6 +384,10 @@
 
   .sidebar-footer {
     display: none;
+  }
+
+  .content {
+    padding-top: 4rem;
   }
 
   .orb { display: none; }

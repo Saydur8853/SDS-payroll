@@ -4,10 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { LookupItem } from '../../models/lookup.model';
 import { DepartmentUsageEmployee, LookupService } from '../../services/lookup.service';
+import { GlassSelectComponent } from '../../shared/glass-select/glass-select.component';
+import { lookupIdOptions } from '../../shared/glass-select/glass-select-options';
 
 @Component({
   selector: 'app-departments',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, GlassSelectComponent],
   templateUrl: './departments.component.html',
   styleUrl: './departments.component.scss'
 })
@@ -30,6 +32,7 @@ export class DepartmentsComponent implements OnInit {
   moveCandidateEmployeeCount = 0;
   selectedMoveEmployeeIds: string[] = [];
   isMoving = false;
+  readonly lookupIdOptions = lookupIdOptions;
 
   constructor(private readonly lookupService: LookupService) {}
 

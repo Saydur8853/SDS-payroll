@@ -1,0 +1,19 @@
+<div class="glass-select" [class.open]="isOpen" [class.disabled]="disabled">
+  <button type="button" class="glass-select-trigger" [disabled]="disabled" (click)="toggle($event)">
+    <span class="glass-select-value">{{ selectedLabel }}</span>
+    <span class="material-symbols-rounded glass-select-caret">expand_more</span>
+  </button>
+
+  <div class="glass-select-menu" *ngIf="isOpen">
+    <button
+      type="button"
+      class="glass-select-option"
+      *ngFor="let option of options"
+      [class.selected]="option.value === value"
+      [class.add-option]="option.variant === 'add'"
+      (click)="select(option)">
+      <span class="material-symbols-rounded glass-select-check">check</span>
+      <span>{{ option.label }}</span>
+    </button>
+  </div>
+</div>

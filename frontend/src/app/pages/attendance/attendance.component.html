@@ -19,18 +19,12 @@
 
         <label>
           Department
-          <select [(ngModel)]="commonDepartment">
-            <option [ngValue]="null">All Departments</option>
-            <option *ngFor="let item of departments" [value]="item.name">{{ item.name }}</option>
-          </select>
+          <app-glass-select [(ngModel)]="commonDepartment" [options]="nullableLookupOptions(departments, 'All Departments')"></app-glass-select>
         </label>
 
         <label>
           Designation
-          <select [(ngModel)]="commonDesignation">
-            <option [ngValue]="null">All Designations</option>
-            <option *ngFor="let item of designations" [value]="item.name">{{ item.name }}</option>
-          </select>
+          <app-glass-select [(ngModel)]="commonDesignation" [options]="nullableLookupOptions(designations, 'All Designations')"></app-glass-select>
         </label>
       </div>
       <div class="common-actions">
@@ -78,9 +72,7 @@
       <p class="list-meta">Showing {{ pageStartIndex }}-{{ pageEndIndex }} of {{ totalCount }} records</p>
       <label class="view-page-size">
         Per Page
-        <select [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
-          <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
-        </select>
+        <app-glass-select [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)" [options]="numberOptions(pageSizeOptions)"></app-glass-select>
       </label>
     </div>
 

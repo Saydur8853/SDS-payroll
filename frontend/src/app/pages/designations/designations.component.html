@@ -86,12 +86,7 @@
     </p>
 
     <label class="field-label">Target Designation</label>
-    <select [(ngModel)]="moveTargetDesignationId">
-      <option value="">Select designation</option>
-      <option *ngFor="let option of getMoveTargetOptions()" [value]="option.id">
-        {{ option.name }}
-      </option>
-    </select>
+    <app-glass-select [(ngModel)]="moveTargetDesignationId" [options]="lookupIdOptions(getMoveTargetOptions(), 'Select designation')"></app-glass-select>
 
     <div class="emp-preview" *ngIf="moveCandidateEmployees.length > 0">
       <div class="emp-preview-row emp-preview-header">

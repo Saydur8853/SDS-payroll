@@ -57,6 +57,11 @@
   flex: 1;
 }
 
+.form-fields app-glass-select {
+  width: 100%;
+  min-width: 0;
+}
+
 .media-column {
   flex: 0 0 auto;
   padding: 1rem;

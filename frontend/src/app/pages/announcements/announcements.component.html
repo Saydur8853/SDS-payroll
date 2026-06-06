@@ -1,0 +1,99 @@
+<main class="page announcements-page">
+  <section class="panel compose-panel">
+    <div class="page-heading">
+      <div class="heading-icon">
+        <span class="material-symbols-rounded">campaign</span>
+      </div>
+      <div>
+        <h1>Announcements</h1>
+        <p>Post announcements for the header announcement menu.</p>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <label>
+        Title
+        <input type="text" [(ngModel)]="title" placeholder="Announcement title" maxlength="200" />
+      </label>
+
+      <label>
+        Message
+        <textarea [(ngModel)]="message" placeholder="Write announcement message" rows="6" maxlength="2000"></textarea>
+      </label>
+
+      <label class="toggle-row">
+        <input type="checkbox" [(ngModel)]="isActive" />
+        <span>Visible in announcement menu</span>
+      </label>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn primary" (click)="create()" [disabled]="isSaving">
+        <span class="material-symbols-rounded">send</span>
+        {{ isSaving ? 'Posting...' : 'Post Announcement' }}
+      </button>
+    </div>
+
+    <p class="message">{{ feedback }}</p>
+  </section>
+
+  <section class="panel list-panel">
+    <div class="list-toolbar">
+      <h2>Posted Announcements</h2>
+      <span class="list-meta">{{ announcements.length }} total</span>
+    </div>
+
+    <p class="list-state" *ngIf="announcements.length === 0">No announcements posted yet.</p>
+
+    <article class="announcement-card" *ngFor="let announcement of announcements; trackBy: trackById">
+      <ng-container *ngIf="editingId !== announcement.id; else editAnnouncement">
+        <div class="announcement-header">
+          <div>
+            <h3>{{ announcement.title }}</h3>
+            <p>{{ formatDate(announcement.createdAtUtc) }}</p>
+          </div>
+          <span class="status-chip" [class.inactive]="!announcement.isActive">
+            {{ announcement.isActive ? 'Visible' : 'Hidden' }}
+          </span>
+        </div>
+
+        <p class="announcement-message">{{ announcement.message }}</p>
+
+        <div class="announcement-actions">
+          <button type="button" class="btn tiny secondary" (click)="startEdit(announcement)">Edit</button>
+          <button
+            type="button"
+            class="btn tiny danger"
+            (click)="delete(announcement)"
+            [disabled]="deletingId === announcement.id">
+            {{ deletingId === announcement.id ? 'Deleting...' : 'Delete' }}
+          </button>
+        </div>
+      </ng-container>
+
+      <ng-template #editAnnouncement>
+        <div class="edit-panel">
+          <label>
+            Title
+            <input type="text" [(ngModel)]="editTitle" maxlength="200" />
+          </label>
+
+          <label>
+            Message
+            <textarea [(ngModel)]="editMessage" rows="5" maxlength="2000"></textarea>
+          </label>
+
+          <label class="toggle-row">
+            <input type="checkbox" [(ngModel)]="editIsActive" />
+            <span>Visible in announcement menu</span>
+          </label>
+
+          <div class="edit-actions">
+            <button type="button" class="btn tiny primary" (click)="saveEdit(announcement)" [disabled]="isSaving">Save</button>
+            <button type="button" class="btn tiny secondary" (click)="cancelEdit()" [disabled]="isSaving">Cancel</button>
+          </div>
+        </div>
+      </ng-template>
+    </article>
+  </section>
+</main>

@@ -6,10 +6,11 @@ import { NavigationEnd, Router } from '@angular/router';
 import { CompanyService } from '../../services/company.service';
 import { Company } from '../../models/company.model';
 import { Inject } from '@angular/core';
+import { CommonHeaderComponent } from '../../shared/common-header/common-header.component';
 
 @Component({
   selector: 'app-landing-layout',
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, CommonHeaderComponent],
   templateUrl: './landing-layout.component.html',
   styleUrl: './landing-layout.component.scss'
 })

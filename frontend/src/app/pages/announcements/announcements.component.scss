@@ -1,0 +1,104 @@
+@use '../_shared-glass-page';
+
+.announcements-page {
+  grid-template-columns: minmax(320px, 430px) minmax(420px, 1fr);
+}
+
+.page-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 1.15rem;
+}
+
+.heading-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(135deg, #7c3aed, #06b6d4);
+  box-shadow: 0 12px 30px rgba(124, 58, 237, 0.28);
+}
+
+.heading-icon .material-symbols-rounded {
+  font-size: 28px;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 132px;
+}
+
+.toggle-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: max-content;
+}
+
+.toggle-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-primary);
+}
+
+.list-panel {
+  min-width: 0;
+}
+
+.list-toolbar h2 {
+  margin: 0;
+}
+
+.announcement-card {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 1rem;
+  margin-top: 0.75rem;
+}
+
+.announcement-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.announcement-message {
+  margin-top: 0.8rem;
+  color: #e2e8f0;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.status-chip {
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  color: #bbf7d0;
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.status-chip.inactive {
+  color: #cbd5e1;
+  background: rgba(148, 163, 184, 0.12);
+  border-color: rgba(148, 163, 184, 0.18);
+}
+
+.announcement-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+@media (max-width: 1100px) {
+  .announcements-page {
+    grid-template-columns: 1fr;
+  }
+}

@@ -14,34 +14,18 @@
             <label>
               In Time
               <div class="time-select">
-                <select [ngModel]="getHourPart(newInTime)" (ngModelChange)="newInTime = updateHourPart(newInTime, $event)">
-                  <option value="">HH</option>
-                  <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
-                </select>
-                <select [ngModel]="getMinutePart(newInTime)" (ngModelChange)="newInTime = updateMinutePart(newInTime, $event)">
-                  <option value="">MM</option>
-                  <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
-                </select>
-                <select [ngModel]="getMeridiemPart(newInTime)" (ngModelChange)="newInTime = updateMeridiemPart(newInTime, $event)">
-                  <option *ngFor="let meridiem of meridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                </select>
+                <app-glass-select [ngModel]="getHourPart(newInTime)" (ngModelChange)="newInTime = updateHourPart(newInTime, $event)" [options]="stringOptions(hourOptions, 'HH')"></app-glass-select>
+                <app-glass-select [ngModel]="getMinutePart(newInTime)" (ngModelChange)="newInTime = updateMinutePart(newInTime, $event)" [options]="stringOptions(minuteOptions, 'MM')"></app-glass-select>
+                <app-glass-select [ngModel]="getMeridiemPart(newInTime)" (ngModelChange)="newInTime = updateMeridiemPart(newInTime, $event)" [options]="stringOptions(meridiemOptions, 'AM')"></app-glass-select>
               </div>
               <small>{{ formatTimeForDisplay(newInTime) }}</small>
             </label>
             <label>
               In Time Grace
               <div class="time-select">
-                <select [ngModel]="getHourPart(newInTimeGrace)" (ngModelChange)="newInTimeGrace = updateHourPart(newInTimeGrace, $event)">
-                  <option value="">HH</option>
-                  <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
-                </select>
-                <select [ngModel]="getMinutePart(newInTimeGrace)" (ngModelChange)="newInTimeGrace = updateMinutePart(newInTimeGrace, $event)">
-                  <option value="">MM</option>
-                  <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
-                </select>
-                <select [ngModel]="getMeridiemPart(newInTimeGrace)" (ngModelChange)="newInTimeGrace = updateMeridiemPart(newInTimeGrace, $event)">
-                  <option *ngFor="let meridiem of meridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                </select>
+                <app-glass-select [ngModel]="getHourPart(newInTimeGrace)" (ngModelChange)="newInTimeGrace = updateHourPart(newInTimeGrace, $event)" [options]="stringOptions(hourOptions, 'HH')"></app-glass-select>
+                <app-glass-select [ngModel]="getMinutePart(newInTimeGrace)" (ngModelChange)="newInTimeGrace = updateMinutePart(newInTimeGrace, $event)" [options]="stringOptions(minuteOptions, 'MM')"></app-glass-select>
+                <app-glass-select [ngModel]="getMeridiemPart(newInTimeGrace)" (ngModelChange)="newInTimeGrace = updateMeridiemPart(newInTimeGrace, $event)" [options]="stringOptions(meridiemOptions, 'AM')"></app-glass-select>
               </div>
               <small>{{ formatTimeForDisplay(newInTimeGrace) }}</small>
             </label>
@@ -54,34 +38,18 @@
             <label>
               Out Time
               <div class="time-select">
-                <select [ngModel]="getHourPart(newOutTime)" (ngModelChange)="newOutTime = updateHourPart(newOutTime, $event)">
-                  <option value="">HH</option>
-                  <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
-                </select>
-                <select [ngModel]="getMinutePart(newOutTime)" (ngModelChange)="newOutTime = updateMinutePart(newOutTime, $event)">
-                  <option value="">MM</option>
-                  <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
-                </select>
-                <select [ngModel]="getMeridiemPart(newOutTime)" (ngModelChange)="newOutTime = updateMeridiemPart(newOutTime, $event)">
-                  <option *ngFor="let meridiem of meridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                </select>
+                <app-glass-select [ngModel]="getHourPart(newOutTime)" (ngModelChange)="newOutTime = updateHourPart(newOutTime, $event)" [options]="stringOptions(hourOptions, 'HH')"></app-glass-select>
+                <app-glass-select [ngModel]="getMinutePart(newOutTime)" (ngModelChange)="newOutTime = updateMinutePart(newOutTime, $event)" [options]="stringOptions(minuteOptions, 'MM')"></app-glass-select>
+                <app-glass-select [ngModel]="getMeridiemPart(newOutTime)" (ngModelChange)="newOutTime = updateMeridiemPart(newOutTime, $event)" [options]="stringOptions(meridiemOptions, 'AM')"></app-glass-select>
               </div>
               <small>{{ formatTimeForDisplay(newOutTime) }}</small>
             </label>
             <label>
               Out Time Grace
               <div class="time-select">
-                <select [ngModel]="getHourPart(newOutTimeGrace)" (ngModelChange)="newOutTimeGrace = updateHourPart(newOutTimeGrace, $event)">
-                  <option value="">HH</option>
-                  <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
-                </select>
-                <select [ngModel]="getMinutePart(newOutTimeGrace)" (ngModelChange)="newOutTimeGrace = updateMinutePart(newOutTimeGrace, $event)">
-                  <option value="">MM</option>
-                  <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
-                </select>
-                <select [ngModel]="getMeridiemPart(newOutTimeGrace)" (ngModelChange)="newOutTimeGrace = updateMeridiemPart(newOutTimeGrace, $event)">
-                  <option *ngFor="let meridiem of meridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                </select>
+                <app-glass-select [ngModel]="getHourPart(newOutTimeGrace)" (ngModelChange)="newOutTimeGrace = updateHourPart(newOutTimeGrace, $event)" [options]="stringOptions(hourOptions, 'HH')"></app-glass-select>
+                <app-glass-select [ngModel]="getMinutePart(newOutTimeGrace)" (ngModelChange)="newOutTimeGrace = updateMinutePart(newOutTimeGrace, $event)" [options]="stringOptions(minuteOptions, 'MM')"></app-glass-select>
+                <app-glass-select [ngModel]="getMeridiemPart(newOutTimeGrace)" (ngModelChange)="newOutTimeGrace = updateMeridiemPart(newOutTimeGrace, $event)" [options]="stringOptions(meridiemOptions, 'AM')"></app-glass-select>
               </div>
               <small>{{ formatTimeForDisplay(newOutTimeGrace) }}</small>
             </label>
@@ -94,34 +62,18 @@
             <label>
               Break Start Time
               <div class="time-select">
-                <select [ngModel]="getHourPart(newBreakStartTime)" (ngModelChange)="newBreakStartTime = updateHourPart(newBreakStartTime, $event)">
-                  <option value="">HH</option>
-                  <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
-                </select>
-                <select [ngModel]="getMinutePart(newBreakStartTime)" (ngModelChange)="newBreakStartTime = updateMinutePart(newBreakStartTime, $event)">
-                  <option value="">MM</option>
-                  <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
-                </select>
-                <select [ngModel]="getMeridiemPart(newBreakStartTime)" (ngModelChange)="newBreakStartTime = updateMeridiemPart(newBreakStartTime, $event)">
-                  <option *ngFor="let meridiem of meridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                </select>
+                <app-glass-select [ngModel]="getHourPart(newBreakStartTime)" (ngModelChange)="newBreakStartTime = updateHourPart(newBreakStartTime, $event)" [options]="stringOptions(hourOptions, 'HH')"></app-glass-select>
+                <app-glass-select [ngModel]="getMinutePart(newBreakStartTime)" (ngModelChange)="newBreakStartTime = updateMinutePart(newBreakStartTime, $event)" [options]="stringOptions(minuteOptions, 'MM')"></app-glass-select>
+                <app-glass-select [ngModel]="getMeridiemPart(newBreakStartTime)" (ngModelChange)="newBreakStartTime = updateMeridiemPart(newBreakStartTime, $event)" [options]="stringOptions(meridiemOptions, 'AM')"></app-glass-select>
               </div>
               <small>{{ formatTimeForDisplay(newBreakStartTime) }}</small>
             </label>
             <label>
               Break End Time
               <div class="time-select">
-                <select [ngModel]="getHourPart(newBreakEndTime)" (ngModelChange)="newBreakEndTime = updateHourPart(newBreakEndTime, $event)">
-                  <option value="">HH</option>
-                  <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
-                </select>
-                <select [ngModel]="getMinutePart(newBreakEndTime)" (ngModelChange)="newBreakEndTime = updateMinutePart(newBreakEndTime, $event)">
-                  <option value="">MM</option>
-                  <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
-                </select>
-                <select [ngModel]="getMeridiemPart(newBreakEndTime)" (ngModelChange)="newBreakEndTime = updateMeridiemPart(newBreakEndTime, $event)">
-                  <option *ngFor="let meridiem of meridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                </select>
+                <app-glass-select [ngModel]="getHourPart(newBreakEndTime)" (ngModelChange)="newBreakEndTime = updateHourPart(newBreakEndTime, $event)" [options]="stringOptions(hourOptions, 'HH')"></app-glass-select>
+                <app-glass-select [ngModel]="getMinutePart(newBreakEndTime)" (ngModelChange)="newBreakEndTime = updateMinutePart(newBreakEndTime, $event)" [options]="stringOptions(minuteOptions, 'MM')"></app-glass-select>
+                <app-glass-select [ngModel]="getMeridiemPart(newBreakEndTime)" (ngModelChange)="newBreakEndTime = updateMeridiemPart(newBreakEndTime, $event)" [options]="stringOptions(meridiemOptions, 'AM')"></app-glass-select>
               </div>
               <small>{{ formatTimeForDisplay(newBreakEndTime) }}</small>
             </label>
@@ -205,33 +157,17 @@
                   <label>
                     Override In Time
                     <div class="time-select">
-                      <select [ngModel]="getHourPart(editOverrideInTime)" (ngModelChange)="editOverrideInTime = updateHourPart(editOverrideInTime, $event)">
-                        <option value="">HH</option>
-                        <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
-                      </select>
-                      <select [ngModel]="getMinutePart(editOverrideInTime)" (ngModelChange)="editOverrideInTime = updateMinutePart(editOverrideInTime, $event)">
-                        <option value="">MM</option>
-                        <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
-                      </select>
-                      <select [ngModel]="getMeridiemPart(editOverrideInTime)" (ngModelChange)="editOverrideInTime = updateMeridiemPart(editOverrideInTime, $event)">
-                        <option *ngFor="let meridiem of meridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                      </select>
+                      <app-glass-select [ngModel]="getHourPart(editOverrideInTime)" (ngModelChange)="editOverrideInTime = updateHourPart(editOverrideInTime, $event)" [options]="stringOptions(hourOptions, 'HH')"></app-glass-select>
+                      <app-glass-select [ngModel]="getMinutePart(editOverrideInTime)" (ngModelChange)="editOverrideInTime = updateMinutePart(editOverrideInTime, $event)" [options]="stringOptions(minuteOptions, 'MM')"></app-glass-select>
+                      <app-glass-select [ngModel]="getMeridiemPart(editOverrideInTime)" (ngModelChange)="editOverrideInTime = updateMeridiemPart(editOverrideInTime, $event)" [options]="stringOptions(meridiemOptions, 'AM')"></app-glass-select>
                     </div>
                   </label>
                   <label>
                     Override Out Time
                     <div class="time-select">
-                      <select [ngModel]="getHourPart(editOverrideOutTime)" (ngModelChange)="editOverrideOutTime = updateHourPart(editOverrideOutTime, $event)">
-                        <option value="">HH</option>
-                        <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
-                      </select>
-                      <select [ngModel]="getMinutePart(editOverrideOutTime)" (ngModelChange)="editOverrideOutTime = updateMinutePart(editOverrideOutTime, $event)">
-                        <option value="">MM</option>
-                        <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
-                      </select>
-                      <select [ngModel]="getMeridiemPart(editOverrideOutTime)" (ngModelChange)="editOverrideOutTime = updateMeridiemPart(editOverrideOutTime, $event)">
-                        <option *ngFor="let meridiem of meridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                      </select>
+                      <app-glass-select [ngModel]="getHourPart(editOverrideOutTime)" (ngModelChange)="editOverrideOutTime = updateHourPart(editOverrideOutTime, $event)" [options]="stringOptions(hourOptions, 'HH')"></app-glass-select>
+                      <app-glass-select [ngModel]="getMinutePart(editOverrideOutTime)" (ngModelChange)="editOverrideOutTime = updateMinutePart(editOverrideOutTime, $event)" [options]="stringOptions(minuteOptions, 'MM')"></app-glass-select>
+                      <app-glass-select [ngModel]="getMeridiemPart(editOverrideOutTime)" (ngModelChange)="editOverrideOutTime = updateMeridiemPart(editOverrideOutTime, $event)" [options]="stringOptions(meridiemOptions, 'AM')"></app-glass-select>
                     </div>
                   </label>
                   <label class="span-2">
@@ -240,10 +176,7 @@
                   </label>
                   <label>
                     Active
-                    <select [(ngModel)]="editOverrideIsActive">
-                      <option [ngValue]="true">Yes</option>
-                      <option [ngValue]="false">No</option>
-                    </select>
+                    <app-glass-select [(ngModel)]="editOverrideIsActive" [options]="booleanOptions"></app-glass-select>
                   </label>
                 </div>
                 <div class="actions">
@@ -272,33 +205,17 @@
               <label>
                 Override In Time
                 <div class="time-select">
-                  <select [ngModel]="getHourPart(getOverrideForm(item.id).inTime)" (ngModelChange)="getOverrideForm(item.id).inTime = updateHourPart(getOverrideForm(item.id).inTime, $event)">
-                    <option value="">HH</option>
-                    <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
-                  </select>
-                  <select [ngModel]="getMinutePart(getOverrideForm(item.id).inTime)" (ngModelChange)="getOverrideForm(item.id).inTime = updateMinutePart(getOverrideForm(item.id).inTime, $event)">
-                    <option value="">MM</option>
-                    <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
-                  </select>
-                  <select [ngModel]="getMeridiemPart(getOverrideForm(item.id).inTime)" (ngModelChange)="getOverrideForm(item.id).inTime = updateMeridiemPart(getOverrideForm(item.id).inTime, $event)">
-                    <option *ngFor="let meridiem of meridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                  </select>
+                  <app-glass-select [ngModel]="getHourPart(getOverrideForm(item.id).inTime)" (ngModelChange)="getOverrideForm(item.id).inTime = updateHourPart(getOverrideForm(item.id).inTime, $event)" [options]="stringOptions(hourOptions, 'HH')"></app-glass-select>
+                  <app-glass-select [ngModel]="getMinutePart(getOverrideForm(item.id).inTime)" (ngModelChange)="getOverrideForm(item.id).inTime = updateMinutePart(getOverrideForm(item.id).inTime, $event)" [options]="stringOptions(minuteOptions, 'MM')"></app-glass-select>
+                  <app-glass-select [ngModel]="getMeridiemPart(getOverrideForm(item.id).inTime)" (ngModelChange)="getOverrideForm(item.id).inTime = updateMeridiemPart(getOverrideForm(item.id).inTime, $event)" [options]="stringOptions(meridiemOptions, 'AM')"></app-glass-select>
                 </div>
               </label>
               <label>
                 Override Out Time
                 <div class="time-select">
-                  <select [ngModel]="getHourPart(getOverrideForm(item.id).outTime)" (ngModelChange)="getOverrideForm(item.id).outTime = updateHourPart(getOverrideForm(item.id).outTime, $event)">
-                    <option value="">HH</option>
-                    <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
-                  </select>
-                  <select [ngModel]="getMinutePart(getOverrideForm(item.id).outTime)" (ngModelChange)="getOverrideForm(item.id).outTime = updateMinutePart(getOverrideForm(item.id).outTime, $event)">
-                    <option value="">MM</option>
-                    <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
-                  </select>
-                  <select [ngModel]="getMeridiemPart(getOverrideForm(item.id).outTime)" (ngModelChange)="getOverrideForm(item.id).outTime = updateMeridiemPart(getOverrideForm(item.id).outTime, $event)">
-                    <option *ngFor="let meridiem of meridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                  </select>
+                  <app-glass-select [ngModel]="getHourPart(getOverrideForm(item.id).outTime)" (ngModelChange)="getOverrideForm(item.id).outTime = updateHourPart(getOverrideForm(item.id).outTime, $event)" [options]="stringOptions(hourOptions, 'HH')"></app-glass-select>
+                  <app-glass-select [ngModel]="getMinutePart(getOverrideForm(item.id).outTime)" (ngModelChange)="getOverrideForm(item.id).outTime = updateMinutePart(getOverrideForm(item.id).outTime, $event)" [options]="stringOptions(minuteOptions, 'MM')"></app-glass-select>
+                  <app-glass-select [ngModel]="getMeridiemPart(getOverrideForm(item.id).outTime)" (ngModelChange)="getOverrideForm(item.id).outTime = updateMeridiemPart(getOverrideForm(item.id).outTime, $event)" [options]="stringOptions(meridiemOptions, 'AM')"></app-glass-select>
                 </div>
               </label>
               <label class="span-2">
@@ -307,10 +224,7 @@
               </label>
               <label>
                 Active
-                <select [(ngModel)]="getOverrideForm(item.id).isActive">
-                  <option [ngValue]="true">Yes</option>
-                  <option [ngValue]="false">No</option>
-                </select>
+                <app-glass-select [(ngModel)]="getOverrideForm(item.id).isActive" [options]="booleanOptions"></app-glass-select>
               </label>
             </div>
             <div class="actions">
@@ -334,34 +248,18 @@
               <label>
                 In Time
                 <div class="time-select">
-                  <select [ngModel]="getHourPart(editInTime)" (ngModelChange)="editInTime = updateHourPart(editInTime, $event)">
-                    <option value="">HH</option>
-                    <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
-                  </select>
-                  <select [ngModel]="getMinutePart(editInTime)" (ngModelChange)="editInTime = updateMinutePart(editInTime, $event)">
-                    <option value="">MM</option>
-                    <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
-                  </select>
-                  <select [ngModel]="getMeridiemPart(editInTime)" (ngModelChange)="editInTime = updateMeridiemPart(editInTime, $event)">
-                    <option *ngFor="let meridiem of meridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                  </select>
+                  <app-glass-select [ngModel]="getHourPart(editInTime)" (ngModelChange)="editInTime = updateHourPart(editInTime, $event)" [options]="stringOptions(hourOptions, 'HH')"></app-glass-select>
+                  <app-glass-select [ngModel]="getMinutePart(editInTime)" (ngModelChange)="editInTime = updateMinutePart(editInTime, $event)" [options]="stringOptions(minuteOptions, 'MM')"></app-glass-select>
+                  <app-glass-select [ngModel]="getMeridiemPart(editInTime)" (ngModelChange)="editInTime = updateMeridiemPart(editInTime, $event)" [options]="stringOptions(meridiemOptions, 'AM')"></app-glass-select>
                 </div>
                 <small>{{ formatTimeForDisplay(editInTime) }}</small>
               </label>
               <label>
                 In Time Grace
                 <div class="time-select">
-                  <select [ngModel]="getHourPart(editInTimeGrace)" (ngModelChange)="editInTimeGrace = updateHourPart(editInTimeGrace, $event)">
-                    <option value="">HH</option>
-                    <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
-                  </select>
-                  <select [ngModel]="getMinutePart(editInTimeGrace)" (ngModelChange)="editInTimeGrace = updateMinutePart(editInTimeGrace, $event)">
-                    <option value="">MM</option>
-                    <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
-                  </select>
-                  <select [ngModel]="getMeridiemPart(editInTimeGrace)" (ngModelChange)="editInTimeGrace = updateMeridiemPart(editInTimeGrace, $event)">
-                    <option *ngFor="let meridiem of meridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                  </select>
+                  <app-glass-select [ngModel]="getHourPart(editInTimeGrace)" (ngModelChange)="editInTimeGrace = updateHourPart(editInTimeGrace, $event)" [options]="stringOptions(hourOptions, 'HH')"></app-glass-select>
+                  <app-glass-select [ngModel]="getMinutePart(editInTimeGrace)" (ngModelChange)="editInTimeGrace = updateMinutePart(editInTimeGrace, $event)" [options]="stringOptions(minuteOptions, 'MM')"></app-glass-select>
+                  <app-glass-select [ngModel]="getMeridiemPart(editInTimeGrace)" (ngModelChange)="editInTimeGrace = updateMeridiemPart(editInTimeGrace, $event)" [options]="stringOptions(meridiemOptions, 'AM')"></app-glass-select>
                 </div>
                 <small>{{ formatTimeForDisplay(editInTimeGrace) }}</small>
               </label>
@@ -374,34 +272,18 @@
               <label>
                 Out Time
                 <div class="time-select">
-                  <select [ngModel]="getHourPart(editOutTime)" (ngModelChange)="editOutTime = updateHourPart(editOutTime, $event)">
-                    <option value="">HH</option>
-                    <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
-                  </select>
-                  <select [ngModel]="getMinutePart(editOutTime)" (ngModelChange)="editOutTime = updateMinutePart(editOutTime, $event)">
-                    <option value="">MM</option>
-                    <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
-                  </select>
-                  <select [ngModel]="getMeridiemPart(editOutTime)" (ngModelChange)="editOutTime = updateMeridiemPart(editOutTime, $event)">
-                    <option *ngFor="let meridiem of meridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                  </select>
+                  <app-glass-select [ngModel]="getHourPart(editOutTime)" (ngModelChange)="editOutTime = updateHourPart(editOutTime, $event)" [options]="stringOptions(hourOptions, 'HH')"></app-glass-select>
+                  <app-glass-select [ngModel]="getMinutePart(editOutTime)" (ngModelChange)="editOutTime = updateMinutePart(editOutTime, $event)" [options]="stringOptions(minuteOptions, 'MM')"></app-glass-select>
+                  <app-glass-select [ngModel]="getMeridiemPart(editOutTime)" (ngModelChange)="editOutTime = updateMeridiemPart(editOutTime, $event)" [options]="stringOptions(meridiemOptions, 'AM')"></app-glass-select>
                 </div>
                 <small>{{ formatTimeForDisplay(editOutTime) }}</small>
               </label>
               <label>
                 Out Time Grace
                 <div class="time-select">
-                  <select [ngModel]="getHourPart(editOutTimeGrace)" (ngModelChange)="editOutTimeGrace = updateHourPart(editOutTimeGrace, $event)">
-                    <option value="">HH</option>
-                    <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
-                  </select>
-                  <select [ngModel]="getMinutePart(editOutTimeGrace)" (ngModelChange)="editOutTimeGrace = updateMinutePart(editOutTimeGrace, $event)">
-                    <option value="">MM</option>
-                    <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
-                  </select>
-                  <select [ngModel]="getMeridiemPart(editOutTimeGrace)" (ngModelChange)="editOutTimeGrace = updateMeridiemPart(editOutTimeGrace, $event)">
-                    <option *ngFor="let meridiem of meridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                  </select>
+                  <app-glass-select [ngModel]="getHourPart(editOutTimeGrace)" (ngModelChange)="editOutTimeGrace = updateHourPart(editOutTimeGrace, $event)" [options]="stringOptions(hourOptions, 'HH')"></app-glass-select>
+                  <app-glass-select [ngModel]="getMinutePart(editOutTimeGrace)" (ngModelChange)="editOutTimeGrace = updateMinutePart(editOutTimeGrace, $event)" [options]="stringOptions(minuteOptions, 'MM')"></app-glass-select>
+                  <app-glass-select [ngModel]="getMeridiemPart(editOutTimeGrace)" (ngModelChange)="editOutTimeGrace = updateMeridiemPart(editOutTimeGrace, $event)" [options]="stringOptions(meridiemOptions, 'AM')"></app-glass-select>
                 </div>
                 <small>{{ formatTimeForDisplay(editOutTimeGrace) }}</small>
               </label>
@@ -414,34 +296,18 @@
               <label>
                 Break Start Time
                 <div class="time-select">
-                  <select [ngModel]="getHourPart(editBreakStartTime)" (ngModelChange)="editBreakStartTime = updateHourPart(editBreakStartTime, $event)">
-                    <option value="">HH</option>
-                    <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
-                  </select>
-                  <select [ngModel]="getMinutePart(editBreakStartTime)" (ngModelChange)="editBreakStartTime = updateMinutePart(editBreakStartTime, $event)">
-                    <option value="">MM</option>
-                    <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
-                  </select>
-                  <select [ngModel]="getMeridiemPart(editBreakStartTime)" (ngModelChange)="editBreakStartTime = updateMeridiemPart(editBreakStartTime, $event)">
-                    <option *ngFor="let meridiem of meridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                  </select>
+                  <app-glass-select [ngModel]="getHourPart(editBreakStartTime)" (ngModelChange)="editBreakStartTime = updateHourPart(editBreakStartTime, $event)" [options]="stringOptions(hourOptions, 'HH')"></app-glass-select>
+                  <app-glass-select [ngModel]="getMinutePart(editBreakStartTime)" (ngModelChange)="editBreakStartTime = updateMinutePart(editBreakStartTime, $event)" [options]="stringOptions(minuteOptions, 'MM')"></app-glass-select>
+                  <app-glass-select [ngModel]="getMeridiemPart(editBreakStartTime)" (ngModelChange)="editBreakStartTime = updateMeridiemPart(editBreakStartTime, $event)" [options]="stringOptions(meridiemOptions, 'AM')"></app-glass-select>
                 </div>
                 <small>{{ formatTimeForDisplay(editBreakStartTime) }}</small>
               </label>
               <label>
                 Break End Time
                 <div class="time-select">
-                  <select [ngModel]="getHourPart(editBreakEndTime)" (ngModelChange)="editBreakEndTime = updateHourPart(editBreakEndTime, $event)">
-                    <option value="">HH</option>
-                    <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
-                  </select>
-                  <select [ngModel]="getMinutePart(editBreakEndTime)" (ngModelChange)="editBreakEndTime = updateMinutePart(editBreakEndTime, $event)">
-                    <option value="">MM</option>
-                    <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
-                  </select>
-                  <select [ngModel]="getMeridiemPart(editBreakEndTime)" (ngModelChange)="editBreakEndTime = updateMeridiemPart(editBreakEndTime, $event)">
-                    <option *ngFor="let meridiem of meridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                  </select>
+                  <app-glass-select [ngModel]="getHourPart(editBreakEndTime)" (ngModelChange)="editBreakEndTime = updateHourPart(editBreakEndTime, $event)" [options]="stringOptions(hourOptions, 'HH')"></app-glass-select>
+                  <app-glass-select [ngModel]="getMinutePart(editBreakEndTime)" (ngModelChange)="editBreakEndTime = updateMinutePart(editBreakEndTime, $event)" [options]="stringOptions(minuteOptions, 'MM')"></app-glass-select>
+                  <app-glass-select [ngModel]="getMeridiemPart(editBreakEndTime)" (ngModelChange)="editBreakEndTime = updateMeridiemPart(editBreakEndTime, $event)" [options]="stringOptions(meridiemOptions, 'AM')"></app-glass-select>
                 </div>
                 <small>{{ formatTimeForDisplay(editBreakEndTime) }}</small>
               </label>
@@ -483,12 +349,7 @@
     </p>
 
     <label class="field-label">Target Shift</label>
-    <select [(ngModel)]="moveTargetShiftId">
-      <option value="">Select shift</option>
-      <option *ngFor="let option of getMoveTargetOptions()" [value]="option.id">
-        {{ option.displayName }}
-      </option>
-    </select>
+    <app-glass-select [(ngModel)]="moveTargetShiftId" [options]="shiftIdOptions(getMoveTargetOptions(), 'Select shift')"></app-glass-select>
 
     <div class="emp-preview" *ngIf="moveCandidateEmployees.length > 0">
       <div class="emp-preview-row emp-preview-header">

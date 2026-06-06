@@ -14,6 +14,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<SalaryRule> SalaryRules => Set<SalaryRule>();
     public DbSet<Shift> Shifts => Set<Shift>();
     public DbSet<ShiftTemporaryOverride> ShiftTemporaryOverrides => Set<ShiftTemporaryOverride>();
+    public DbSet<Announcement> Announcements => Set<Announcement>();
 
     public override int SaveChanges()
     {
@@ -190,6 +191,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(e => e.CreatedAtUtc).IsRequired();
             entity.Property(e => e.UpdatedAtUtc).IsRequired();
             entity.HasIndex(e => e.RuleName).IsUnique();
+        });
+
+        modelBuilder.Entity<Announcement>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Message).IsRequired().HasMaxLength(2000);
+            entity.Property(e => e.IsActive).IsRequired();
+            entity.Property(e => e.CreatedAtUtc).IsRequired();
+            entity.Property(e => e.UpdatedAtUtc).IsRequired();
+            entity.HasIndex(e => e.CreatedAtUtc);
+            entity.HasIndex(e => e.IsActive);
         });
 
         modelBuilder.Entity<Shift>(entity =>

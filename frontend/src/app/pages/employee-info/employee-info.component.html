@@ -103,31 +103,19 @@
       <div class="field-grid cols-4">
         <label>
           <span class="label-text">Gender <span class="required-star">*</span></span>
-          <select [(ngModel)]="gender">
-            <option value="">Select Gender</option>
-            <option *ngFor="let item of genderOptions" [value]="item">{{ item }}</option>
-          </select>
+          <app-glass-select [(ngModel)]="gender" [options]="stringSelectOptions(genderOptions, 'Select Gender')"></app-glass-select>
         </label>
         <label>
           Religion
-          <select [(ngModel)]="religion">
-            <option value="">Select Religion</option>
-            <option *ngFor="let item of religionOptions" [value]="item">{{ item }}</option>
-          </select>
+          <app-glass-select [(ngModel)]="religion" [options]="stringSelectOptions(religionOptions, 'Select Religion')"></app-glass-select>
         </label>
         <label>
           Marital Status
-          <select [(ngModel)]="maritalStatus">
-            <option value="">Select Status</option>
-            <option *ngFor="let item of maritalStatusOptions" [value]="item">{{ item }}</option>
-          </select>
+          <app-glass-select [(ngModel)]="maritalStatus" [options]="stringSelectOptions(maritalStatusOptions, 'Select Status')"></app-glass-select>
         </label>
         <label>
           Blood Group
-          <select [(ngModel)]="bloodGroup">
-            <option value="">Select Group</option>
-            <option *ngFor="let item of bloodGroupOptions" [value]="item">{{ item }}</option>
-          </select>
+          <app-glass-select [(ngModel)]="bloodGroup" [options]="stringSelectOptions(bloodGroupOptions, 'Select Group')"></app-glass-select>
         </label>
         <label>
           <span class="label-text">Date of Birth <span class="required-star">*</span></span>
@@ -189,34 +177,19 @@
       <div class="field-grid cols-3">
         <label>
           <span class="label-text">Company <span class="required-star">*</span></span>
-          <select [(ngModel)]="company">
-            <option value="">Select Company</option>
-            <option *ngFor="let item of companies" [value]="item.name">{{ item.name }}</option>
-          </select>
+          <app-glass-select [(ngModel)]="company" [options]="lookupSelectOptions(companies, 'Select Company')"></app-glass-select>
         </label>
         <label>
           <span class="label-text">Department <span class="required-star">*</span></span>
-          <select [(ngModel)]="department" (ngModelChange)="onDepartmentChange($event)">
-            <option value="">Select Department</option>
-            <option *ngFor="let item of departments" [value]="item.name">{{ item.name }}</option>
-            <option [value]="addDepartmentValue" class="add-option">+ Add New Department</option>
-          </select>
+          <app-glass-select [(ngModel)]="department" (ngModelChange)="onDepartmentChange($event)" [options]="lookupSelectOptions(departments, 'Select Department', '+ Add New Department', addDepartmentValue)"></app-glass-select>
         </label>
         <label>
           <span class="label-text">Designation <span class="required-star">*</span></span>
-          <select [(ngModel)]="designation" (ngModelChange)="onDesignationChange($event)">
-            <option value="">Select Designation</option>
-            <option *ngFor="let item of designations" [value]="item.name">{{ item.name }}</option>
-            <option [value]="addDesignationValue" class="add-option">+ Add New Designation</option>
-          </select>
+          <app-glass-select [(ngModel)]="designation" (ngModelChange)="onDesignationChange($event)" [options]="lookupSelectOptions(designations, 'Select Designation', '+ Add New Designation', addDesignationValue)"></app-glass-select>
         </label>
         <label>
           <span class="label-text">Status <span class="required-star">*</span></span>
-          <select [(ngModel)]="employmentStatus" (ngModelChange)="onStatusChange($event)">
-            <option value="">Select Status</option>
-            <option *ngFor="let item of statusOptions" [value]="item">{{ item }}</option>
-            <option [value]="addStatusValue" class="add-option">+ Add New Status</option>
-          </select>
+          <app-glass-select [(ngModel)]="employmentStatus" (ngModelChange)="onStatusChange($event)" [options]="stringSelectOptions(statusOptions, 'Select Status', '+ Add New Status', addStatusValue)"></app-glass-select>
         </label>
       </div>
     </div>
@@ -230,19 +203,11 @@
       <div class="field-grid cols-3">
         <label>
           Working Time
-          <select [(ngModel)]="workingTime" (ngModelChange)="onWorkingTimeChange($event)">
-            <option value="">Select Working Time</option>
-            <option *ngFor="let item of shifts" [value]="item.name">{{ item.name }}</option>
-            <option [value]="addShiftValue" class="add-option">+ Add New Shift</option>
-          </select>
+          <app-glass-select [(ngModel)]="workingTime" (ngModelChange)="onWorkingTimeChange($event)" [options]="lookupSelectOptions(shifts, 'Select Working Time', '+ Add New Shift', addShiftValue)"></app-glass-select>
         </label>
         <label>
           Salary Rule
-          <select [(ngModel)]="salaryRule" (ngModelChange)="onSalaryRuleChange($event)">
-            <option value="">Select Salary Rule</option>
-            <option *ngFor="let item of salaryRules" [value]="item.ruleName">{{ item.ruleName }}</option>
-            <option [value]="addSalaryRuleValue" class="add-option">+ Add New Salary Rule</option>
-          </select>
+          <app-glass-select [(ngModel)]="salaryRule" (ngModelChange)="onSalaryRuleChange($event)" [options]="salaryRuleSelectOptions('Select Salary Rule', '+ Add New Salary Rule', addSalaryRuleValue)"></app-glass-select>
         </label>
         <label>
           Gross Salary
@@ -338,16 +303,50 @@
     </div>
 
     <!-- ── Filters ─────────────────────────────────────── -->
-    <div class="filter-bar">
-      <div class="filters-grid">
-        <label>
-          Search
+    <div class="filter-bar employee-filter-shell">
+      <div class="employee-filter-toolbar">
+        <div class="employee-status-filter">
+          <button type="button" class="employee-status-trigger" [class.open]="isEmployeeStatusMenuOpen" (click)="toggleEmployeeStatusMenu($event)">
+            <span>{{ getEmployeeStatusFilterLabel() }}</span>
+            <span class="material-symbols-rounded">expand_more</span>
+          </button>
+          <div class="employee-status-menu" *ngIf="isEmployeeStatusMenuOpen">
+            <button type="button" class="employee-status-option" [class.selected]="filterEmploymentStatus === null" (click)="selectEmployeeStatusFilter(null)">
+              <span class="material-symbols-rounded">check</span>
+              <span>All</span>
+            </button>
+            <button type="button" class="employee-status-option" *ngFor="let item of statusOptions" [class.selected]="filterEmploymentStatus === item" (click)="selectEmployeeStatusFilter(item)">
+              <span class="material-symbols-rounded">check</span>
+              <span>{{ item }}</span>
+            </button>
+          </div>
+        </div>
+
+        <button type="button" class="filter-builder-toggle" title="Open filters (Ctrl+F / Cmd+F)" aria-label="Open filters (Ctrl+F / Cmd+F)" [class.active]="isEmployeeFilterPanelOpen" (click)="toggleEmployeeFilterPanel($event)">
+          <span class="material-symbols-rounded">tune</span>
+        </button>
+
+        <span class="employee-toolbar-search">
+          <span class="material-symbols-rounded">search</span>
           <input
             type="text"
             [(ngModel)]="searchText"
-            placeholder="Code / name / phone"
+            placeholder="Search and filter"
             (keyup.enter)="applyFilters()" />
-        </label>
+        </span>
+
+        <div class="employee-filter-actions">
+          <button type="button" class="btn tiny primary" (click)="applyFilters()">
+            <span class="material-symbols-rounded" style="font-size:16px">search</span> Apply
+          </button>
+          <button type="button" class="btn tiny secondary" (click)="resetFilters()">
+            <span class="material-symbols-rounded" style="font-size:16px">restart_alt</span> Reset
+          </button>
+        </div>
+      </div>
+
+      <div class="employee-filter-popover" *ngIf="isEmployeeFilterPanelOpen">
+      <div class="filters-grid">
         <label>
           Employee Code
           <input type="number" [(ngModel)]="filterEmployeeCode" placeholder="Exact code" />
@@ -362,73 +361,39 @@
         </label>
         <label>
           Company
-          <select [(ngModel)]="filterCompany">
-            <option [ngValue]="null">All Companies</option>
-            <option *ngFor="let item of companies" [value]="item.name">{{ item.name }}</option>
-          </select>
+          <app-glass-select [(ngModel)]="filterCompany" [options]="nullableLookupSelectOptions(companies, 'All Companies')"></app-glass-select>
         </label>
         <label>
           Department
-          <select [(ngModel)]="filterDepartment">
-            <option [ngValue]="null">All Departments</option>
-            <option *ngFor="let item of departments" [value]="item.name">{{ item.name }}</option>
-          </select>
+          <app-glass-select [(ngModel)]="filterDepartment" [options]="nullableLookupSelectOptions(departments, 'All Departments')"></app-glass-select>
         </label>
         <label>
           Designation
-          <select [(ngModel)]="filterDesignation">
-            <option [ngValue]="null">All Designations</option>
-            <option *ngFor="let item of designations" [value]="item.name">{{ item.name }}</option>
-          </select>
-        </label>
-        <label>
-          Status
-          <select [(ngModel)]="filterEmploymentStatus">
-            <option [ngValue]="null">All Statuses</option>
-            <option *ngFor="let item of statusOptions" [value]="item">{{ item }}</option>
-          </select>
+          <app-glass-select [(ngModel)]="filterDesignation" [options]="nullableLookupSelectOptions(designations, 'All Designations')"></app-glass-select>
         </label>
         <label>
           Gender
-          <select [(ngModel)]="filterGender">
-            <option [ngValue]="null">All Genders</option>
-            <option *ngFor="let item of genderOptions" [value]="item">{{ item }}</option>
-          </select>
+          <app-glass-select [(ngModel)]="filterGender" [options]="nullableStringSelectOptions(genderOptions, 'All Genders')"></app-glass-select>
         </label>
         <label>
           Religion
-          <select [(ngModel)]="filterReligion">
-            <option [ngValue]="null">All Religions</option>
-            <option *ngFor="let item of religionOptions" [value]="item">{{ item }}</option>
-          </select>
+          <app-glass-select [(ngModel)]="filterReligion" [options]="nullableStringSelectOptions(religionOptions, 'All Religions')"></app-glass-select>
         </label>
         <label>
           Marital Status
-          <select [(ngModel)]="filterMaritalStatus">
-            <option [ngValue]="null">All Marital Statuses</option>
-            <option *ngFor="let item of maritalStatusOptions" [value]="item">{{ item }}</option>
-          </select>
+          <app-glass-select [(ngModel)]="filterMaritalStatus" [options]="nullableStringSelectOptions(maritalStatusOptions, 'All Marital Statuses')"></app-glass-select>
         </label>
         <label>
           Blood Group
-          <select [(ngModel)]="filterBloodGroup">
-            <option [ngValue]="null">All Blood Groups</option>
-            <option *ngFor="let item of bloodGroupOptions" [value]="item">{{ item }}</option>
-          </select>
+          <app-glass-select [(ngModel)]="filterBloodGroup" [options]="nullableStringSelectOptions(bloodGroupOptions, 'All Blood Groups')"></app-glass-select>
         </label>
         <label>
           Working Time
-          <select [(ngModel)]="filterWorkingTime">
-            <option [ngValue]="null">All Working Times</option>
-            <option *ngFor="let item of shifts" [value]="item.name">{{ item.name }}</option>
-          </select>
+          <app-glass-select [(ngModel)]="filterWorkingTime" [options]="nullableLookupSelectOptions(shifts, 'All Working Times')"></app-glass-select>
         </label>
         <label>
           Salary Rule
-          <select [(ngModel)]="filterSalaryRule">
-            <option value="">All Salary Rules</option>
-            <option *ngFor="let item of salaryRules" [value]="item.ruleName">{{ item.ruleName }}</option>
-          </select>
+          <app-glass-select [(ngModel)]="filterSalaryRule" [options]="salaryRuleSelectOptions('All Salary Rules')"></app-glass-select>
         </label>
         <label>
           Weekend
@@ -454,20 +419,7 @@
           Joining To
           <input type="date" [(ngModel)]="filterJoiningDateTo" />
         </label>
-        <label>
-          Per Page
-          <select [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
-            <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
-          </select>
-        </label>
       </div>
-      <div class="filters-actions">
-        <button type="button" class="btn tiny primary" (click)="applyFilters()">
-          <span class="material-symbols-rounded" style="font-size:16px">search</span> Apply
-        </button>
-        <button type="button" class="btn tiny secondary" (click)="resetFilters()">
-          <span class="material-symbols-rounded" style="font-size:16px">restart_alt</span> Reset
-        </button>
       </div>
     </div>
 
@@ -640,27 +592,15 @@
         <div class="field-grid cols-3 mt-4">
           <label>
             Department
-            <select [(ngModel)]="editDepartment" (ngModelChange)="onEditDepartmentChange($event)">
-              <option value="">Select Department</option>
-              <option *ngFor="let item of departments" [value]="item.name">{{ item.name }}</option>
-              <option [value]="addDepartmentValue" class="add-option">+ Add New</option>
-            </select>
+            <app-glass-select [(ngModel)]="editDepartment" (ngModelChange)="onEditDepartmentChange($event)" [options]="lookupSelectOptions(departments, 'Select Department', '+ Add New', addDepartmentValue)"></app-glass-select>
           </label>
           <label>
             Designation
-            <select [(ngModel)]="editDesignation" (ngModelChange)="onEditDesignationChange($event)">
-              <option value="">Select Designation</option>
-              <option *ngFor="let item of designations" [value]="item.name">{{ item.name }}</option>
-              <option [value]="addDesignationValue" class="add-option">+ Add New</option>
-            </select>
+            <app-glass-select [(ngModel)]="editDesignation" (ngModelChange)="onEditDesignationChange($event)" [options]="lookupSelectOptions(designations, 'Select Designation', '+ Add New', addDesignationValue)"></app-glass-select>
           </label>
           <label>
             <span class="label-text">Status <span class="required-star">*</span></span>
-            <select [(ngModel)]="editEmploymentStatus" (ngModelChange)="onEditStatusChange($event)">
-              <option value="">Select Status</option>
-              <option *ngFor="let item of statusOptions" [value]="item">{{ item }}</option>
-              <option [value]="addStatusValue" class="add-option">+ Add New</option>
-            </select>
+            <app-glass-select [(ngModel)]="editEmploymentStatus" (ngModelChange)="onEditStatusChange($event)" [options]="stringSelectOptions(statusOptions, 'Select Status', '+ Add New', addStatusValue)"></app-glass-select>
           </label>
           <label>
             Address
@@ -692,47 +632,27 @@
           </label>
           <label>
             Gender
-            <select [(ngModel)]="editGender">
-              <option value="">Select Gender</option>
-              <option *ngFor="let item of genderOptions" [value]="item">{{ item }}</option>
-            </select>
+            <app-glass-select [(ngModel)]="editGender" [options]="stringSelectOptions(genderOptions, 'Select Gender')"></app-glass-select>
           </label>
           <label>
             Religion
-            <select [(ngModel)]="editReligion">
-              <option value="">Select Religion</option>
-              <option *ngFor="let item of religionOptions" [value]="item">{{ item }}</option>
-            </select>
+            <app-glass-select [(ngModel)]="editReligion" [options]="stringSelectOptions(religionOptions, 'Select Religion')"></app-glass-select>
           </label>
           <label>
             Marital Status
-            <select [(ngModel)]="editMaritalStatus">
-              <option value="">Select Status</option>
-              <option *ngFor="let item of maritalStatusOptions" [value]="item">{{ item }}</option>
-            </select>
+            <app-glass-select [(ngModel)]="editMaritalStatus" [options]="stringSelectOptions(maritalStatusOptions, 'Select Status')"></app-glass-select>
           </label>
           <label>
             Blood Group
-            <select [(ngModel)]="editBloodGroup">
-              <option value="">Select Group</option>
-              <option *ngFor="let item of bloodGroupOptions" [value]="item">{{ item }}</option>
-            </select>
+            <app-glass-select [(ngModel)]="editBloodGroup" [options]="stringSelectOptions(bloodGroupOptions, 'Select Group')"></app-glass-select>
           </label>
           <label>
             Working Time
-            <select [(ngModel)]="editWorkingTime" (ngModelChange)="onEditWorkingTimeChange($event)">
-              <option value="">Select Working Time</option>
-              <option *ngFor="let item of shifts" [value]="item.name">{{ item.name }}</option>
-              <option [value]="addShiftValue" class="add-option">+ Add New</option>
-            </select>
+            <app-glass-select [(ngModel)]="editWorkingTime" (ngModelChange)="onEditWorkingTimeChange($event)" [options]="lookupSelectOptions(shifts, 'Select Working Time', '+ Add New', addShiftValue)"></app-glass-select>
           </label>
           <label>
             Salary Rule
-            <select [(ngModel)]="editSalaryRule" (ngModelChange)="onEditSalaryRuleChange($event)">
-              <option value="">Select Salary Rule</option>
-              <option *ngFor="let item of salaryRules" [value]="item.ruleName">{{ item.ruleName }}</option>
-              <option [value]="addSalaryRuleValue" class="add-option">+ Add New Salary Rule</option>
-            </select>
+            <app-glass-select [(ngModel)]="editSalaryRule" (ngModelChange)="onEditSalaryRuleChange($event)" [options]="salaryRuleSelectOptions('Select Salary Rule', '+ Add New Salary Rule', addSalaryRuleValue)"></app-glass-select>
           </label>
           <label>
             Gross Salary
@@ -790,6 +710,10 @@
 
     <!-- ── Pagination ──────────────────────────────────── -->
     <div class="pagination" *ngIf="totalCount > 0">
+      <label class="employee-page-size">
+        Per Page
+        <app-glass-select [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)" [options]="numberSelectOptions(pageSizeOptions)"></app-glass-select>
+      </label>
       <button type="button" class="btn tiny secondary" [disabled]="!hasPreviousPage || loadingEmployees" (click)="goToPage(page - 1)">
         <span class="material-symbols-rounded" style="font-size:16px">chevron_left</span> Previous
       </button>
@@ -874,33 +798,17 @@
             <label>
               In Time
               <div class="time-select">
-                <select [ngModel]="getShiftHourPart(newShiftInTime)" (ngModelChange)="newShiftInTime = updateShiftHourPart(newShiftInTime, $event)">
-                  <option value="">HH</option>
-                  <option *ngFor="let hour of shiftHourOptions" [value]="hour">{{ hour }}</option>
-                </select>
-                <select [ngModel]="getShiftMinutePart(newShiftInTime)" (ngModelChange)="newShiftInTime = updateShiftMinutePart(newShiftInTime, $event)">
-                  <option value="">MM</option>
-                  <option *ngFor="let minute of shiftMinuteOptions" [value]="minute">{{ minute }}</option>
-                </select>
-                <select [ngModel]="getShiftMeridiemPart(newShiftInTime)" (ngModelChange)="newShiftInTime = updateShiftMeridiemPart(newShiftInTime, $event)">
-                  <option *ngFor="let meridiem of shiftMeridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                </select>
+                <app-glass-select [ngModel]="getShiftHourPart(newShiftInTime)" (ngModelChange)="newShiftInTime = updateShiftHourPart(newShiftInTime, $event)" [options]="shiftTimeSelectOptions('HH', shiftHourOptions)"></app-glass-select>
+                <app-glass-select [ngModel]="getShiftMinutePart(newShiftInTime)" (ngModelChange)="newShiftInTime = updateShiftMinutePart(newShiftInTime, $event)" [options]="shiftTimeSelectOptions('MM', shiftMinuteOptions)"></app-glass-select>
+                <app-glass-select [ngModel]="getShiftMeridiemPart(newShiftInTime)" (ngModelChange)="newShiftInTime = updateShiftMeridiemPart(newShiftInTime, $event)" [options]="shiftTimeSelectOptions('AM', shiftMeridiemOptions)"></app-glass-select>
               </div>
             </label>
             <label>
               In Time Grace
               <div class="time-select">
-                <select [ngModel]="getShiftHourPart(newShiftInTimeGrace)" (ngModelChange)="newShiftInTimeGrace = updateShiftHourPart(newShiftInTimeGrace, $event)">
-                  <option value="">HH</option>
-                  <option *ngFor="let hour of shiftHourOptions" [value]="hour">{{ hour }}</option>
-                </select>
-                <select [ngModel]="getShiftMinutePart(newShiftInTimeGrace)" (ngModelChange)="newShiftInTimeGrace = updateShiftMinutePart(newShiftInTimeGrace, $event)">
-                  <option value="">MM</option>
-                  <option *ngFor="let minute of shiftMinuteOptions" [value]="minute">{{ minute }}</option>
-                </select>
-                <select [ngModel]="getShiftMeridiemPart(newShiftInTimeGrace)" (ngModelChange)="newShiftInTimeGrace = updateShiftMeridiemPart(newShiftInTimeGrace, $event)">
-                  <option *ngFor="let meridiem of shiftMeridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                </select>
+                <app-glass-select [ngModel]="getShiftHourPart(newShiftInTimeGrace)" (ngModelChange)="newShiftInTimeGrace = updateShiftHourPart(newShiftInTimeGrace, $event)" [options]="shiftTimeSelectOptions('HH', shiftHourOptions)"></app-glass-select>
+                <app-glass-select [ngModel]="getShiftMinutePart(newShiftInTimeGrace)" (ngModelChange)="newShiftInTimeGrace = updateShiftMinutePart(newShiftInTimeGrace, $event)" [options]="shiftTimeSelectOptions('MM', shiftMinuteOptions)"></app-glass-select>
+                <app-glass-select [ngModel]="getShiftMeridiemPart(newShiftInTimeGrace)" (ngModelChange)="newShiftInTimeGrace = updateShiftMeridiemPart(newShiftInTimeGrace, $event)" [options]="shiftTimeSelectOptions('AM', shiftMeridiemOptions)"></app-glass-select>
               </div>
             </label>
           </div>
@@ -911,33 +819,17 @@
             <label>
               Out Time
               <div class="time-select">
-                <select [ngModel]="getShiftHourPart(newShiftOutTime)" (ngModelChange)="newShiftOutTime = updateShiftHourPart(newShiftOutTime, $event)">
-                  <option value="">HH</option>
-                  <option *ngFor="let hour of shiftHourOptions" [value]="hour">{{ hour }}</option>
-                </select>
-                <select [ngModel]="getShiftMinutePart(newShiftOutTime)" (ngModelChange)="newShiftOutTime = updateShiftMinutePart(newShiftOutTime, $event)">
-                  <option value="">MM</option>
-                  <option *ngFor="let minute of shiftMinuteOptions" [value]="minute">{{ minute }}</option>
-                </select>
-                <select [ngModel]="getShiftMeridiemPart(newShiftOutTime)" (ngModelChange)="newShiftOutTime = updateShiftMeridiemPart(newShiftOutTime, $event)">
-                  <option *ngFor="let meridiem of shiftMeridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                </select>
+                <app-glass-select [ngModel]="getShiftHourPart(newShiftOutTime)" (ngModelChange)="newShiftOutTime = updateShiftHourPart(newShiftOutTime, $event)" [options]="shiftTimeSelectOptions('HH', shiftHourOptions)"></app-glass-select>
+                <app-glass-select [ngModel]="getShiftMinutePart(newShiftOutTime)" (ngModelChange)="newShiftOutTime = updateShiftMinutePart(newShiftOutTime, $event)" [options]="shiftTimeSelectOptions('MM', shiftMinuteOptions)"></app-glass-select>
+                <app-glass-select [ngModel]="getShiftMeridiemPart(newShiftOutTime)" (ngModelChange)="newShiftOutTime = updateShiftMeridiemPart(newShiftOutTime, $event)" [options]="shiftTimeSelectOptions('AM', shiftMeridiemOptions)"></app-glass-select>
               </div>
             </label>
             <label>
               Out Time Grace
               <div class="time-select">
-                <select [ngModel]="getShiftHourPart(newShiftOutTimeGrace)" (ngModelChange)="newShiftOutTimeGrace = updateShiftHourPart(newShiftOutTimeGrace, $event)">
-                  <option value="">HH</option>
-                  <option *ngFor="let hour of shiftHourOptions" [value]="hour">{{ hour }}</option>
-                </select>
-                <select [ngModel]="getShiftMinutePart(newShiftOutTimeGrace)" (ngModelChange)="newShiftOutTimeGrace = updateShiftMinutePart(newShiftOutTimeGrace, $event)">
-                  <option value="">MM</option>
-                  <option *ngFor="let minute of shiftMinuteOptions" [value]="minute">{{ minute }}</option>
-                </select>
-                <select [ngModel]="getShiftMeridiemPart(newShiftOutTimeGrace)" (ngModelChange)="newShiftOutTimeGrace = updateShiftMeridiemPart(newShiftOutTimeGrace, $event)">
-                  <option *ngFor="let meridiem of shiftMeridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                </select>
+                <app-glass-select [ngModel]="getShiftHourPart(newShiftOutTimeGrace)" (ngModelChange)="newShiftOutTimeGrace = updateShiftHourPart(newShiftOutTimeGrace, $event)" [options]="shiftTimeSelectOptions('HH', shiftHourOptions)"></app-glass-select>
+                <app-glass-select [ngModel]="getShiftMinutePart(newShiftOutTimeGrace)" (ngModelChange)="newShiftOutTimeGrace = updateShiftMinutePart(newShiftOutTimeGrace, $event)" [options]="shiftTimeSelectOptions('MM', shiftMinuteOptions)"></app-glass-select>
+                <app-glass-select [ngModel]="getShiftMeridiemPart(newShiftOutTimeGrace)" (ngModelChange)="newShiftOutTimeGrace = updateShiftMeridiemPart(newShiftOutTimeGrace, $event)" [options]="shiftTimeSelectOptions('AM', shiftMeridiemOptions)"></app-glass-select>
               </div>
             </label>
           </div>
@@ -948,33 +840,17 @@
             <label>
               Break Start
               <div class="time-select">
-                <select [ngModel]="getShiftHourPart(newShiftBreakStartTime)" (ngModelChange)="newShiftBreakStartTime = updateShiftHourPart(newShiftBreakStartTime, $event)">
-                  <option value="">HH</option>
-                  <option *ngFor="let hour of shiftHourOptions" [value]="hour">{{ hour }}</option>
-                </select>
-                <select [ngModel]="getShiftMinutePart(newShiftBreakStartTime)" (ngModelChange)="newShiftBreakStartTime = updateShiftMinutePart(newShiftBreakStartTime, $event)">
-                  <option value="">MM</option>
-                  <option *ngFor="let minute of shiftMinuteOptions" [value]="minute">{{ minute }}</option>
-                </select>
-                <select [ngModel]="getShiftMeridiemPart(newShiftBreakStartTime)" (ngModelChange)="newShiftBreakStartTime = updateShiftMeridiemPart(newShiftBreakStartTime, $event)">
-                  <option *ngFor="let meridiem of shiftMeridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                </select>
+                <app-glass-select [ngModel]="getShiftHourPart(newShiftBreakStartTime)" (ngModelChange)="newShiftBreakStartTime = updateShiftHourPart(newShiftBreakStartTime, $event)" [options]="shiftTimeSelectOptions('HH', shiftHourOptions)"></app-glass-select>
+                <app-glass-select [ngModel]="getShiftMinutePart(newShiftBreakStartTime)" (ngModelChange)="newShiftBreakStartTime = updateShiftMinutePart(newShiftBreakStartTime, $event)" [options]="shiftTimeSelectOptions('MM', shiftMinuteOptions)"></app-glass-select>
+                <app-glass-select [ngModel]="getShiftMeridiemPart(newShiftBreakStartTime)" (ngModelChange)="newShiftBreakStartTime = updateShiftMeridiemPart(newShiftBreakStartTime, $event)" [options]="shiftTimeSelectOptions('AM', shiftMeridiemOptions)"></app-glass-select>
               </div>
             </label>
             <label>
               Break End
               <div class="time-select">
-                <select [ngModel]="getShiftHourPart(newShiftBreakEndTime)" (ngModelChange)="newShiftBreakEndTime = updateShiftHourPart(newShiftBreakEndTime, $event)">
-                  <option value="">HH</option>
-                  <option *ngFor="let hour of shiftHourOptions" [value]="hour">{{ hour }}</option>
-                </select>
-                <select [ngModel]="getShiftMinutePart(newShiftBreakEndTime)" (ngModelChange)="newShiftBreakEndTime = updateShiftMinutePart(newShiftBreakEndTime, $event)">
-                  <option value="">MM</option>
-                  <option *ngFor="let minute of shiftMinuteOptions" [value]="minute">{{ minute }}</option>
-                </select>
-                <select [ngModel]="getShiftMeridiemPart(newShiftBreakEndTime)" (ngModelChange)="newShiftBreakEndTime = updateShiftMeridiemPart(newShiftBreakEndTime, $event)">
-                  <option *ngFor="let meridiem of shiftMeridiemOptions" [value]="meridiem">{{ meridiem }}</option>
-                </select>
+                <app-glass-select [ngModel]="getShiftHourPart(newShiftBreakEndTime)" (ngModelChange)="newShiftBreakEndTime = updateShiftHourPart(newShiftBreakEndTime, $event)" [options]="shiftTimeSelectOptions('HH', shiftHourOptions)"></app-glass-select>
+                <app-glass-select [ngModel]="getShiftMinutePart(newShiftBreakEndTime)" (ngModelChange)="newShiftBreakEndTime = updateShiftMinutePart(newShiftBreakEndTime, $event)" [options]="shiftTimeSelectOptions('MM', shiftMinuteOptions)"></app-glass-select>
+                <app-glass-select [ngModel]="getShiftMeridiemPart(newShiftBreakEndTime)" (ngModelChange)="newShiftBreakEndTime = updateShiftMeridiemPart(newShiftBreakEndTime, $event)" [options]="shiftTimeSelectOptions('AM', shiftMeridiemOptions)"></app-glass-select>
               </div>
             </label>
           </div>

@@ -213,6 +213,32 @@ using (var scope = app.Services.CreateScope())
         CREATE UNIQUE INDEX IF NOT EXISTS "IX_SalaryRules_RuleName" ON "SalaryRules" ("RuleName");
         """);
     dbContext.Database.ExecuteSqlRaw("""
+        CREATE TABLE IF NOT EXISTS "Announcements" (
+            "Id" uuid NOT NULL,
+            "Title" character varying(200) NOT NULL,
+            "Message" character varying(2000) NOT NULL,
+            "IsActive" boolean NOT NULL,
+            "CreatedAtUtc" timestamp with time zone NOT NULL,
+            "UpdatedAtUtc" timestamp with time zone NOT NULL,
+            CONSTRAINT "PK_Announcements" PRIMARY KEY ("Id")
+        );
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        ALTER TABLE "Announcements" ADD COLUMN IF NOT EXISTS "Title" character varying(200) NULL;
+        ALTER TABLE "Announcements" ADD COLUMN IF NOT EXISTS "Message" character varying(2000) NULL;
+        ALTER TABLE "Announcements" ADD COLUMN IF NOT EXISTS "IsActive" boolean NOT NULL DEFAULT TRUE;
+        ALTER TABLE "Announcements" ADD COLUMN IF NOT EXISTS "CreatedAtUtc" timestamp with time zone NOT NULL DEFAULT NOW();
+        ALTER TABLE "Announcements" ADD COLUMN IF NOT EXISTS "UpdatedAtUtc" timestamp with time zone NOT NULL DEFAULT NOW();
+        UPDATE "Announcements" SET "Title" = 'Announcement' WHERE "Title" IS NULL OR BTRIM("Title") = '';
+        UPDATE "Announcements" SET "Message" = '' WHERE "Message" IS NULL;
+        ALTER TABLE "Announcements" ALTER COLUMN "Title" SET NOT NULL;
+        ALTER TABLE "Announcements" ALTER COLUMN "Message" SET NOT NULL;
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
+        CREATE INDEX IF NOT EXISTS "IX_Announcements_CreatedAtUtc" ON "Announcements" ("CreatedAtUtc");
+        CREATE INDEX IF NOT EXISTS "IX_Announcements_IsActive" ON "Announcements" ("IsActive");
+        """);
+    dbContext.Database.ExecuteSqlRaw("""
         CREATE TABLE IF NOT EXISTS "Shifts" (
             "Id" uuid NOT NULL,
             "Name" character varying(150) NOT NULL,

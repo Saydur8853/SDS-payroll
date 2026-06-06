@@ -43,6 +43,12 @@
         <span class="active-indicator"></span>
       </a>
 
+      <a routerLink="/announcements" routerLinkActive="active" id="nav-announcements">
+        <span class="material-symbols-rounded">campaign</span>
+        <span class="nav-text">Announcements</span>
+        <span class="active-indicator"></span>
+      </a>
+
       <span class="menu-label">SETTINGS</span>
       <button type="button" class="menu-group-trigger" (click)="toggleSettingsMenu()">
         <span class="material-symbols-rounded">settings</span>
@@ -100,6 +106,7 @@
   </aside>
 
   <section class="content" id="main-content">
+    <app-common-header />
     <router-outlet />
   </section>
 </main>

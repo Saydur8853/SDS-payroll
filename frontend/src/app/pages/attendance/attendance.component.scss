@@ -22,6 +22,12 @@
   margin-top: 0;
 }
 
+.common-grid app-glass-select,
+.view-page-size app-glass-select {
+  width: 100%;
+  min-width: 0;
+}
+
 .common-actions {
   display: flex;
   justify-content: flex-end;
@@ -200,6 +206,10 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .view-page-size select {
   min-width: 90px;
+}
+
+.view-page-size app-glass-select {
+  width: 92px;
 }
 
 .attendance-page .list-toolbar {

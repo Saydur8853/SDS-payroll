@@ -11,12 +11,20 @@ import { LookupService } from '../../services/lookup.service';
 import { ShiftService } from '../../services/shift.service';
 import { CompanyService } from '../../services/company.service';
 import { SalaryRuleService } from '../../services/salary-rule.service';
+import { GlassSelectComponent, GlassSelectOption } from '../../shared/glass-select/glass-select.component';
+import {
+  lookupOptions,
+  nullableLookupOptions,
+  nullableStringOptions,
+  numberOptions,
+  stringOptions
+} from '../../shared/glass-select/glass-select-options';
 
 type Meridiem = 'AM' | 'PM';
 
 @Component({
   selector: 'app-employee-info',
-  imports: [CommonModule, FormsModule, ImageCropperComponent],
+  imports: [CommonModule, FormsModule, ImageCropperComponent, GlassSelectComponent],
   templateUrl: './employee-info.component.html',
   styleUrl: './employee-info.component.scss'
 })
@@ -60,6 +68,8 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
   statusOptions: string[] = [];
   loadingEmployees = false;
   hasRequestedEmployees = false;
+  isEmployeeFilterPanelOpen = false;
+  isEmployeeStatusMenuOpen = false;
 
   employeeCode: number | null = null;
   fullName = '';
@@ -190,6 +200,11 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
   readonly maritalStatusOptions = ['Single', 'Married', 'Divorced', 'Widowed'];
   readonly bloodGroupOptions = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   readonly religionOptions = ['Islam', 'Hinduism', 'Christianity', 'Buddhism', 'Other'];
+  readonly lookupSelectOptions = lookupOptions;
+  readonly nullableLookupSelectOptions = nullableLookupOptions;
+  readonly nullableStringSelectOptions = nullableStringOptions;
+  readonly numberSelectOptions = numberOptions;
+  readonly stringSelectOptions = stringOptions;
   exporting = false;
   importingCsv = false;
   showCsvUploadModal = false;
@@ -377,6 +392,70 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
     if (!target?.closest('.weekend-multi-select')) {
       this.isWeekendDropdownOpen = false;
     }
+    if (!target?.closest('.employee-filter-shell')) {
+      this.isEmployeeFilterPanelOpen = false;
+    }
+    if (!target?.closest('.employee-status-filter')) {
+      this.isEmployeeStatusMenuOpen = false;
+    }
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event: KeyboardEvent): void {
+    event.preventDefault();
+    this.resetFilters();
+  }
+
+  @HostListener('document:keydown.control.f', ['$event'])
+  onFilterShortcut(event: KeyboardEvent): void {
+    event.preventDefault();
+    this.isEmployeeFilterPanelOpen = true;
+  }
+
+  @HostListener('document:keydown.meta.f', ['$event'])
+  onMacFilterShortcut(event: KeyboardEvent): void {
+    event.preventDefault();
+    this.isEmployeeFilterPanelOpen = true;
+  }
+
+  toggleEmployeeFilterPanel(event: Event): void {
+    event.stopPropagation();
+    this.isEmployeeFilterPanelOpen = !this.isEmployeeFilterPanelOpen;
+  }
+
+  toggleEmployeeStatusMenu(event: Event): void {
+    event.stopPropagation();
+    this.isEmployeeStatusMenuOpen = !this.isEmployeeStatusMenuOpen;
+  }
+
+  selectEmployeeStatusFilter(status: string | null): void {
+    this.filterEmploymentStatus = status;
+    this.isEmployeeStatusMenuOpen = false;
+    this.applyFilters();
+  }
+
+  getEmployeeStatusFilterLabel(): string {
+    return this.filterEmploymentStatus || 'All';
+  }
+
+  salaryRuleSelectOptions(placeholder: string, addLabel?: string, addValue?: string): GlassSelectOption[] {
+    const options: GlassSelectOption[] = [
+      { label: placeholder, value: '' },
+      ...this.salaryRules.map(item => ({ label: item.ruleName, value: item.ruleName }))
+    ];
+
+    if (addLabel && addValue) {
+      options.push({ label: addLabel, value: addValue, variant: 'add' });
+    }
+
+    return options;
+  }
+
+  shiftTimeSelectOptions(placeholder: string, items: string[]): GlassSelectOption[] {
+    return [
+      { label: placeholder, value: '' },
+      ...items.map(item => ({ label: item, value: item }))
+    ];
   }
 
   private updateTransform(): void {
@@ -1029,6 +1108,7 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
 
     this.page = 1;
     this.hasRequestedEmployees = true;
+    this.isEmployeeFilterPanelOpen = false;
     this.loadEmployees();
   }
 
@@ -1060,6 +1140,8 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
     this.totalCount = 0;
     this.totalPages = 0;
     this.loadingEmployees = false;
+    this.isEmployeeFilterPanelOpen = false;
+    this.isEmployeeStatusMenuOpen = false;
   }
 
   onPageSizeChange(pageSize: string | number): void {

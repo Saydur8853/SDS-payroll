@@ -9,6 +9,7 @@ import { ShiftsComponent } from './pages/shifts/shifts.component';
 import { AuthorizersComponent } from './pages/authorizers/authorizers.component';
 import { AttendanceComponent } from './pages/attendance/attendance.component';
 import { SalaryRulesComponent } from './pages/salary-rules/salary-rules.component';
+import { AnnouncementsComponent } from './pages/announcements/announcements.component';
 
 export const routes: Routes = [
   {
@@ -20,6 +21,7 @@ export const routes: Routes = [
       { path: 'company-info', component: CompanyInfoComponent },
       { path: 'employee-info', component: EmployeeInfoComponent },
       { path: 'attendance', component: AttendanceComponent },
+      { path: 'announcements', component: AnnouncementsComponent },
       { path: 'authorizers', component: AuthorizersComponent },
       { path: 'departments', component: DepartmentsComponent },
       { path: 'designations', component: DesignationsComponent },

@@ -7,10 +7,12 @@ import { Authorizer, CreateAuthorizerRequest } from '../../models/authorizer.mod
 import { LookupItem } from '../../models/lookup.model';
 import { AuthorizerService } from '../../services/authorizer.service';
 import { LookupService } from '../../services/lookup.service';
+import { GlassSelectComponent } from '../../shared/glass-select/glass-select.component';
+import { lookupOptions } from '../../shared/glass-select/glass-select-options';
 
 @Component({
   selector: 'app-authorizers',
-  imports: [CommonModule, FormsModule, ImageCropperComponent],
+  imports: [CommonModule, FormsModule, ImageCropperComponent, GlassSelectComponent],
   templateUrl: './authorizers.component.html',
   styleUrl: './authorizers.component.scss'
 })
@@ -32,6 +34,7 @@ export class AuthorizersComponent implements OnInit, OnDestroy {
   message = '';
   showPinPasswordTemporarily = false;
   private hidePinTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  readonly lookupOptions = lookupOptions;
 
   showCropper = false;
   imageChangedEvent: any = '';

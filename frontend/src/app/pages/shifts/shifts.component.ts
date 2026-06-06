@@ -8,6 +8,8 @@ import {
   ShiftTemporaryOverrideUpsertRequest
 } from '../../models/shift.model';
 import { ShiftService, ShiftUsageEmployee } from '../../services/shift.service';
+import { GlassSelectComponent, GlassSelectOption } from '../../shared/glass-select/glass-select.component';
+import { stringOptions } from '../../shared/glass-select/glass-select-options';
 
 type OverrideFormState = {
   dateFrom: string;
@@ -22,7 +24,7 @@ type Meridiem = 'AM' | 'PM';
 
 @Component({
   selector: 'app-shifts',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, GlassSelectComponent],
   templateUrl: './shifts.component.html',
   styleUrl: './shifts.component.scss'
 })
@@ -32,6 +34,11 @@ export class ShiftsComponent implements OnInit {
   readonly hourOptions = Array.from({ length: 12 }, (_, index) => (index + 1).toString().padStart(2, '0'));
   readonly minuteOptions = Array.from({ length: 60 }, (_, index) => index.toString().padStart(2, '0'));
   readonly meridiemOptions: Meridiem[] = ['AM', 'PM'];
+  readonly stringOptions = stringOptions;
+  readonly booleanOptions: GlassSelectOption[] = [
+    { label: 'Active', value: true },
+    { label: 'Inactive', value: false }
+  ];
 
   newName = '';
   newInTime = '';
@@ -73,6 +80,13 @@ export class ShiftsComponent implements OnInit {
   isMoving = false;
 
   constructor(private readonly shiftService: ShiftService) {}
+
+  shiftIdOptions(items: Shift[], placeholder: string): GlassSelectOption[] {
+    return [
+      { label: placeholder, value: '' },
+      ...items.map(item => ({ label: item.displayName, value: item.id }))
+    ];
+  }
 
   ngOnInit(): void {
     this.load();

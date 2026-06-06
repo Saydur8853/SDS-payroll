@@ -1,0 +1,76 @@
+<header class="common-header" aria-label="Common actions">
+  <div class="common-header-spacer"></div>
+
+  <div class="common-header-actions">
+    <div class="announcement-bulletin" *ngIf="visibleAnnouncements.length > 0" aria-label="Visible announcements">
+      <span class="bulletin-label">
+        <span class="material-symbols-rounded">campaign</span>
+        {{ bulletinTitle }}
+      </span>
+      <div class="bulletin-track">
+        <div class="bulletin-text">
+          <span>{{ bulletinText }}</span>
+          <span aria-hidden="true">{{ bulletinText }}</span>
+        </div>
+      </div>
+    </div>
+
+    <button
+      type="button"
+      class="common-header-icon-button"
+      aria-label="Notifications"
+      title="Notifications">
+      <span class="material-symbols-rounded">notifications</span>
+    </button>
+
+    <button
+      type="button"
+      class="common-header-icon-button announcement-button"
+      [class.has-unseen]="hasUnseenAnnouncements"
+      aria-label="Announcements"
+      title="Announcements"
+      [attr.aria-expanded]="isAnnouncementMenuOpen"
+      (click)="toggleAnnouncementMenu($event)">
+      <span class="material-symbols-rounded">campaign</span>
+      <span class="unseen-dot" *ngIf="hasUnseenAnnouncements" aria-hidden="true"></span>
+    </button>
+
+    <button
+      type="button"
+      class="common-header-icon-button"
+      *ngFor="let action of secondaryActions"
+      [attr.aria-label]="action.label"
+      [title]="action.label">
+      <span class="material-symbols-rounded">{{ action.icon }}</span>
+    </button>
+  </div>
+
+  <section class="announcement-menu" *ngIf="isAnnouncementMenuOpen" aria-label="Announcements menu">
+    <div class="announcement-menu-header">
+      <div>
+        <h2>Announcements</h2>
+        <p>Showing {{ menuAnnouncements.length }} of {{ announcements.length }} latest post{{ announcements.length === 1 ? '' : 's' }}</p>
+      </div>
+    </div>
+
+    <div class="announcement-menu-list" *ngIf="menuAnnouncements.length > 0; else emptyAnnouncements">
+      <article class="announcement-menu-item" *ngFor="let announcement of menuAnnouncements">
+        <div class="announcement-item-title">
+          <div>
+            <h3>{{ announcement.title }}</h3>
+            <time>{{ formatAnnouncementDate(announcement.createdAtUtc) }}</time>
+          </div>
+        </div>
+        <p>{{ announcement.message }}</p>
+      </article>
+
+      <button type="button" class="announcement-more-button" *ngIf="hasMoreAnnouncements" (click)="showMoreAnnouncements()">
+        More
+      </button>
+    </div>
+
+    <ng-template #emptyAnnouncements>
+      <p class="announcement-empty">No visible announcements yet.</p>
+    </ng-template>
+  </section>
+</header>
