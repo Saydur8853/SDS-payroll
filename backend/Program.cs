@@ -309,40 +309,6 @@ using (var scope = app.Services.CreateScope())
         CREATE INDEX IF NOT EXISTS "IX_AttendanceRecords_SourceType" ON "AttendanceRecords" ("SourceType");
         """);
     dbContext.Database.ExecuteSqlRaw("""
-        CREATE TABLE IF NOT EXISTS "AttendanceRawDataItems" (
-            "Id" uuid NOT NULL,
-            "UploadBatchId" uuid NOT NULL,
-            "SourceType" character varying(30) NOT NULL,
-            "SourceFileName" character varying(260) NOT NULL,
-            "EmployeeCode" bigint NULL,
-            "DeviceEmployeeCode" character varying(100) NULL,
-            "PunchTime" timestamp with time zone NULL,
-            "RawPayload" jsonb NOT NULL,
-            "CreatedAtUtc" timestamp with time zone NOT NULL,
-            CONSTRAINT "PK_AttendanceRawDataItems" PRIMARY KEY ("Id")
-        );
-        """);
-    dbContext.Database.ExecuteSqlRaw("""
-        ALTER TABLE "AttendanceRawDataItems" ADD COLUMN IF NOT EXISTS "UploadBatchId" uuid NULL;
-        ALTER TABLE "AttendanceRawDataItems" ADD COLUMN IF NOT EXISTS "SourceType" character varying(30) NULL;
-        ALTER TABLE "AttendanceRawDataItems" ADD COLUMN IF NOT EXISTS "SourceFileName" character varying(260) NULL;
-        ALTER TABLE "AttendanceRawDataItems" ADD COLUMN IF NOT EXISTS "EmployeeCode" bigint NULL;
-        ALTER TABLE "AttendanceRawDataItems" ADD COLUMN IF NOT EXISTS "DeviceEmployeeCode" character varying(100) NULL;
-        ALTER TABLE "AttendanceRawDataItems" ADD COLUMN IF NOT EXISTS "PunchTime" timestamp with time zone NULL;
-        ALTER TABLE "AttendanceRawDataItems" ADD COLUMN IF NOT EXISTS "RawPayload" jsonb NOT NULL DEFAULT '{{}}'::jsonb;
-        ALTER TABLE "AttendanceRawDataItems" ADD COLUMN IF NOT EXISTS "CreatedAtUtc" timestamp with time zone NOT NULL DEFAULT NOW();
-        UPDATE "AttendanceRawDataItems" SET "SourceType" = 'unknown' WHERE "SourceType" IS NULL OR BTRIM("SourceType") = '';
-        UPDATE "AttendanceRawDataItems" SET "SourceFileName" = '' WHERE "SourceFileName" IS NULL;
-        UPDATE "AttendanceRawDataItems" SET "RawPayload" = '{{}}'::jsonb WHERE "RawPayload" IS NULL;
-        ALTER TABLE "AttendanceRawDataItems" ALTER COLUMN "SourceType" SET NOT NULL;
-        ALTER TABLE "AttendanceRawDataItems" ALTER COLUMN "SourceFileName" SET NOT NULL;
-        """);
-    dbContext.Database.ExecuteSqlRaw("""
-        CREATE INDEX IF NOT EXISTS "IX_AttendanceRawDataItems_UploadBatchId" ON "AttendanceRawDataItems" ("UploadBatchId");
-        CREATE INDEX IF NOT EXISTS "IX_AttendanceRawDataItems_PunchTime" ON "AttendanceRawDataItems" ("PunchTime");
-        CREATE INDEX IF NOT EXISTS "IX_AttendanceRawDataItems_SourceType" ON "AttendanceRawDataItems" ("SourceType");
-        """);
-    dbContext.Database.ExecuteSqlRaw("""
         DO $$
         BEGIN
             IF NOT EXISTS (

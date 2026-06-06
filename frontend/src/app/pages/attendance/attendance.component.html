@@ -1,71 +1,73 @@
 <main class="page attendance-page">
-  <section class="panel common-params-panel">
-    <div class="common-grid">
-      <label>
-        Employee Code
-        <input type="number" [(ngModel)]="filterEmployeeCode" />
-      </label>
+  <div class="attendance-top-panels">
+    <section class="panel common-params-panel">
+      <div class="common-grid">
+        <label>
+          Employee Code
+          <input type="number" [(ngModel)]="filterEmployeeCode" />
+        </label>
 
-      <label>
-        From Date
-        <input type="date" [(ngModel)]="commonFromDate" />
-      </label>
+        <label>
+          From Date
+          <input type="date" [(ngModel)]="commonFromDate" />
+        </label>
 
-      <label>
-        To Date
-        <input type="date" [(ngModel)]="commonToDate" />
-      </label>
+        <label>
+          To Date
+          <input type="date" [(ngModel)]="commonToDate" />
+        </label>
 
-      <label>
-        Department
-        <select [(ngModel)]="commonDepartment">
-          <option [ngValue]="null">All Departments</option>
-          <option *ngFor="let item of departments" [value]="item.name">{{ item.name }}</option>
-        </select>
-      </label>
+        <label>
+          Department
+          <select [(ngModel)]="commonDepartment">
+            <option [ngValue]="null">All Departments</option>
+            <option *ngFor="let item of departments" [value]="item.name">{{ item.name }}</option>
+          </select>
+        </label>
 
-      <label>
-        Designation
-        <select [(ngModel)]="commonDesignation">
-          <option [ngValue]="null">All Designations</option>
-          <option *ngFor="let item of designations" [value]="item.name">{{ item.name }}</option>
-        </select>
-      </label>
-    </div>
-    <div class="common-actions">
-      <button type="button" class="btn tiny primary" (click)="applyFilters()">Apply</button>
-      <button type="button" class="btn tiny secondary" (click)="resetFilters()">Reset</button>
-    </div>
-  </section>
-
-  <section class="panel upload-panel">
-    <h2>Upload Attendance</h2>
-
-    <div class="upload-grid">
-      <label class="mdb-file-field">
-        Source MDB File
-        <input type="file" accept=".mdb" (change)="onFileSelected($event)" />
-      </label>
-    </div>
-
-    <label class="checkbox-row">
-      <input type="checkbox" [(ngModel)]="uploadReplaceExisting" />
-      <span>Replace existing attendance rows in selected date range for matched employees</span>
-    </label>
-
-    <div class="actions">
-      <button type="button" class="btn primary" [disabled]="uploading" (click)="uploadAttendance()">
-        {{ uploading ? 'Uploading...' : 'Upload MDB' }}
-      </button>
-    </div>
-
-    <div class="upload-progress-wrap" *ngIf="uploading">
-      <div class="upload-progress-track" role="progressbar" [attr.aria-valuenow]="uploadProgressPercent" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuetext]="uploadProgressLabel">
-        <div class="upload-progress-fill" [style.width.%]="uploadProgressPercent"></div>
+        <label>
+          Designation
+          <select [(ngModel)]="commonDesignation">
+            <option [ngValue]="null">All Designations</option>
+            <option *ngFor="let item of designations" [value]="item.name">{{ item.name }}</option>
+          </select>
+        </label>
       </div>
-      <p class="upload-progress-text">{{ uploadProgressLabel || ('Uploading... ' + uploadProgressPercent + '%') }}</p>
-    </div>
-  </section>
+      <div class="common-actions">
+        <button type="button" class="btn tiny primary" (click)="applyFilters()">Apply</button>
+        <button type="button" class="btn tiny secondary" (click)="resetFilters()">Reset</button>
+      </div>
+    </section>
+
+    <section class="panel upload-panel">
+      <h2>Upload Attendance</h2>
+
+      <div class="upload-grid">
+        <label class="mdb-file-field">
+          Source MDB File
+          <input type="file" accept=".mdb" (change)="onFileSelected($event)" />
+        </label>
+      </div>
+
+      <label class="checkbox-row">
+        <input type="checkbox" [(ngModel)]="uploadReplaceExisting" />
+        <span>Replace existing attendance rows in selected date range for matched employees</span>
+      </label>
+
+      <div class="actions">
+        <button type="button" class="btn primary" [disabled]="uploading" (click)="uploadAttendance()">
+          {{ uploading ? 'Uploading...' : 'Upload MDB' }}
+        </button>
+      </div>
+
+      <div class="upload-progress-wrap" *ngIf="uploading">
+        <div class="upload-progress-track" role="progressbar" [attr.aria-valuenow]="uploadProgressPercent" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuetext]="uploadProgressLabel">
+          <div class="upload-progress-fill" [style.width.%]="uploadProgressPercent"></div>
+        </div>
+        <p class="upload-progress-text">{{ uploadProgressLabel || ('Uploading... ' + uploadProgressPercent + '%') }}</p>
+      </div>
+    </section>
+  </div>
 
   <p class="message" *ngIf="message">{{ message }}</p>
 

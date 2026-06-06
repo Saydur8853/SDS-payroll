@@ -9,7 +9,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<Authorizer> Authorizers => Set<Authorizer>();
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
-    public DbSet<AttendanceRawData> AttendanceRawDataItems => Set<AttendanceRawData>();
     public DbSet<Department> Departments => Set<Department>();
     public DbSet<Designation> Designations => Set<Designation>();
     public DbSet<SalaryRule> SalaryRules => Set<SalaryRule>();
@@ -157,21 +156,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(e => e.UpdatedAtUtc).IsRequired();
             entity.HasIndex(e => new { e.EmployeeCode, e.PunchTime }).IsUnique();
             entity.HasIndex(e => e.AttendanceDate);
-            entity.HasIndex(e => e.SourceType);
-        });
-
-        modelBuilder.Entity<AttendanceRawData>(entity =>
-        {
-            entity.ToTable("AttendanceRawDataItems");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.UploadBatchId).IsRequired();
-            entity.Property(e => e.SourceType).IsRequired().HasMaxLength(30);
-            entity.Property(e => e.SourceFileName).IsRequired().HasMaxLength(260);
-            entity.Property(e => e.DeviceEmployeeCode).HasMaxLength(100);
-            entity.Property(e => e.RawPayload).HasColumnType("jsonb");
-            entity.Property(e => e.CreatedAtUtc).IsRequired();
-            entity.HasIndex(e => e.UploadBatchId);
-            entity.HasIndex(e => e.PunchTime);
             entity.HasIndex(e => e.SourceType);
         });
 

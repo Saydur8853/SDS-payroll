@@ -4,6 +4,13 @@
   grid-template-columns: 1fr;
 }
 
+.attendance-top-panels {
+  display: grid;
+  grid-template-columns: 7fr 3fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
 .common-params-panel {
   margin-bottom: 0;
 }
@@ -24,7 +31,7 @@
 
 .upload-panel .upload-grid {
   margin-top: 0.4rem;
-  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .upload-grid {
@@ -209,6 +216,10 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 @media (max-width: 760px) {
+  .attendance-top-panels {
+    grid-template-columns: 1fr;
+  }
+
   .upload-grid {
     grid-template-columns: 1fr;
   }
