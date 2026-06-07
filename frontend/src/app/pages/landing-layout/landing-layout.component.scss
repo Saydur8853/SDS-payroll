@@ -332,6 +332,92 @@
   padding-top: 4.25rem;
 }
 
+:host-context([data-theme='light']) {
+  .sidebar {
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(241, 245, 249, 0.82)),
+      rgba(255, 255, 255, 0.84);
+    border-right: 1px solid rgba(15, 23, 42, 0.12);
+    box-shadow: 14px 0 34px rgba(15, 23, 42, 0.08);
+  }
+
+  .sidebar::before {
+    background:
+      radial-gradient(circle at 20% 0%, rgba(124, 58, 237, 0.14), transparent 34%),
+      linear-gradient(180deg, rgba(6, 182, 212, 0.08), transparent 55%);
+  }
+
+  .brand-text h1 {
+    background: none;
+    color: #0f172a;
+    -webkit-text-fill-color: currentColor;
+  }
+
+  .brand-tagline,
+  .menu-label,
+  .footer-info {
+    color: #64748b;
+  }
+
+  .sidebar-divider {
+    background: linear-gradient(90deg, transparent, rgba(15, 23, 42, 0.12), transparent);
+  }
+
+  .menu a,
+  .menu-group-trigger {
+    color: #475569;
+    background: transparent;
+    border: 1px solid transparent;
+    font-weight: 700;
+  }
+
+  .menu a .material-symbols-rounded,
+  .menu-group-trigger .material-symbols-rounded {
+    color: #64748b;
+  }
+
+  .menu a:hover,
+  .menu-group-trigger:hover {
+    color: #1e293b;
+    background: rgba(255, 255, 255, 0.72);
+    border-color: rgba(15, 23, 42, 0.08);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  }
+
+  .menu a:hover .material-symbols-rounded,
+  .menu-group-trigger:hover .material-symbols-rounded {
+    color: #6d28d9;
+  }
+
+  .menu a.active {
+    color: #4c1d95;
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.18), rgba(6, 182, 212, 0.08));
+    border-color: rgba(124, 58, 237, 0.22);
+    box-shadow: 0 12px 28px rgba(109, 40, 217, 0.13);
+  }
+
+  .menu a.active .material-symbols-rounded {
+    color: #7c3aed;
+  }
+
+  .menu-subgroup {
+    border-left-color: rgba(15, 23, 42, 0.1);
+  }
+
+  .menu-group-trigger {
+    background: rgba(255, 255, 255, 0.44);
+    border-color: rgba(15, 23, 42, 0.08);
+  }
+
+  .active-indicator {
+    background: #7c3aed;
+    box-shadow: 0 0 10px rgba(124, 58, 237, 0.65);
+  }
+}
+
 /* ── Responsive ────────────────────────────────────────── */
 
 @media (max-width: 900px) {

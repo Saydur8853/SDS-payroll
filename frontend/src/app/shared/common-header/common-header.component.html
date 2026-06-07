@@ -48,8 +48,11 @@
     <button
       type="button"
       class="common-header-icon-button"
+      [class.menu-open]="isInfoMenuOpen"
       aria-label="Info"
-      title="Info">
+      title="Page user manual"
+      [attr.aria-expanded]="isInfoMenuOpen"
+      (click)="toggleInfoMenu($event)">
       <span class="material-symbols-rounded">info</span>
     </button>
   </div>
@@ -201,6 +204,25 @@
           </button>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section class="info-menu" *ngIf="isInfoMenuOpen" aria-label="Page user manual">
+    <div class="info-menu-header">
+      <span class="info-menu-icon" aria-hidden="true">
+        <span class="material-symbols-rounded">{{ currentManual.icon }}</span>
+      </span>
+      <div>
+        <h2>{{ currentManual.title }}</h2>
+        <p>{{ currentManual.subtitle }}</p>
+      </div>
+    </div>
+
+    <div class="manual-section" *ngFor="let section of currentManual.sections">
+      <h3>{{ section.heading }}</h3>
+      <ul>
+        <li *ngFor="let item of section.items">{{ item }}</li>
+      </ul>
     </div>
   </section>
 </header>

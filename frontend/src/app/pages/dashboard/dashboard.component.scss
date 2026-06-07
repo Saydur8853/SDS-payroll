@@ -277,6 +277,87 @@
   color: var(--accent-primary);
 }
 
+:host-context([data-theme='light']) {
+  .dash-header h1 {
+    background: none;
+    color: #0f172a;
+    -webkit-text-fill-color: currentColor;
+  }
+
+  .header-subtitle,
+  .section-title {
+    color: #475569;
+  }
+
+  .date-badge {
+    color: #334155;
+    background: rgba(255, 255, 255, 0.82);
+    border-color: rgba(15, 23, 42, 0.12);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.74);
+    border-color: rgba(15, 23, 42, 0.08);
+    box-shadow: 0 16px 38px rgba(15, 23, 42, 0.08);
+  }
+
+  .glass-card::before {
+    background: linear-gradient(90deg, transparent, rgba(15, 23, 42, 0.1), transparent);
+  }
+
+  .glass-card:hover {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(109, 40, 217, 0.18);
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.11);
+  }
+
+  .stat-card {
+    align-items: center;
+  }
+
+  .stat-value {
+    color: #0f172a;
+  }
+
+  .stat-label {
+    color: #475569;
+    font-weight: 700;
+  }
+
+  .card-glow {
+    opacity: 0.1;
+  }
+
+  .stat-card:hover .card-glow {
+    opacity: 0.16;
+  }
+
+  .action-card {
+    color: #334155;
+    background: rgba(255, 255, 255, 0.7);
+    font-weight: 800;
+  }
+
+  .action-card .material-symbols-rounded {
+    color: #0891b2;
+  }
+
+  .action-card:hover {
+    color: #4c1d95;
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  .loader-card p {
+    color: #334155;
+  }
+
+  .spinner {
+    border-color: rgba(15, 23, 42, 0.12);
+    border-top-color: #7c3aed;
+  }
+}
+
 /* ── Responsive ────────────────────────────────────────── */
 
 @media (max-width: 768px) {
