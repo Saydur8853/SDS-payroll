@@ -37,10 +37,20 @@
     <button
       type="button"
       class="common-header-icon-button"
-      *ngFor="let action of secondaryActions"
-      [attr.aria-label]="action.label"
-      [title]="action.label">
-      <span class="material-symbols-rounded">{{ action.icon }}</span>
+      [class.menu-open]="isAccessibilityMenuOpen"
+      aria-label="Accessibility"
+      title="Accessibility"
+      [attr.aria-expanded]="isAccessibilityMenuOpen"
+      (click)="toggleAccessibilityMenu($event)">
+      <span class="material-symbols-rounded">accessibility_new</span>
+    </button>
+
+    <button
+      type="button"
+      class="common-header-icon-button"
+      aria-label="Info"
+      title="Info">
+      <span class="material-symbols-rounded">info</span>
     </button>
   </div>
 
@@ -71,5 +81,126 @@
     <ng-template #emptyAnnouncements>
       <p class="announcement-empty">No visible announcements yet.</p>
     </ng-template>
+  </section>
+
+  <section class="accessibility-menu" *ngIf="isAccessibilityMenuOpen" aria-label="Accessibility options">
+    <div class="accessibility-menu-header">
+      <div>
+        <h2>Accessibility</h2>
+        <p>Manage reading, translation, and theme preferences.</p>
+      </div>
+      <span class="material-symbols-rounded" aria-hidden="true">accessibility_new</span>
+    </div>
+
+    <div class="accessibility-panel" *ngIf="accessibilityView === 'main'">
+      <button type="button" class="accessibility-section-card" (click)="openAccessibilityView('font')">
+        <span class="accessibility-section-icon font" aria-hidden="true">
+          <span class="material-symbols-rounded">format_size</span>
+        </span>
+        <span class="accessibility-section-text">
+          <strong>Font</strong>
+          <small>English and Bangla font selection</small>
+        </span>
+        <span class="material-symbols-rounded section-arrow" aria-hidden="true">chevron_right</span>
+      </button>
+
+      <button type="button" class="accessibility-section-card muted" disabled>
+        <span class="accessibility-section-icon translate" aria-hidden="true">
+          <span class="material-symbols-rounded">translate</span>
+        </span>
+        <span class="accessibility-section-text">
+          <strong>Translate</strong>
+          <small>Coming soon</small>
+        </span>
+        <span class="material-symbols-rounded section-arrow" aria-hidden="true">lock</span>
+      </button>
+
+      <button type="button" class="accessibility-section-card" (click)="openAccessibilityView('theme')">
+        <span class="accessibility-section-icon theme" aria-hidden="true">
+          <span class="material-symbols-rounded">palette</span>
+        </span>
+        <span class="accessibility-section-text">
+          <strong>Theme</strong>
+          <small>Dark, light, or system mode</small>
+        </span>
+        <span class="material-symbols-rounded section-arrow" aria-hidden="true">chevron_right</span>
+      </button>
+    </div>
+
+    <div class="accessibility-panel" *ngIf="accessibilityView === 'font'">
+      <button type="button" class="drawer-back-button" (click)="openAccessibilityView('main')">
+        <span class="material-symbols-rounded">chevron_left</span>
+        Font
+      </button>
+
+      <div class="font-choice-group">
+        <h3>English Font</h3>
+        <div class="font-choice-list">
+          <button
+            type="button"
+            class="font-choice"
+            *ngFor="let option of englishFontOptions"
+            [class.active]="selectedEnglishFont === option.value"
+            (click)="selectEnglishFont(option.value)">
+            <span class="font-choice-left">
+              <span class="font-option-icon" aria-hidden="true">
+                <span class="material-symbols-rounded">text_fields</span>
+              </span>
+              <span>{{ option.label }}</span>
+            </span>
+            <span class="material-symbols-rounded" *ngIf="selectedEnglishFont === option.value">check</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="font-choice-group">
+        <h3>Bangla Font</h3>
+        <div class="font-choice-list">
+          <button
+            type="button"
+            class="font-choice"
+            *ngFor="let option of banglaFontOptions"
+            [class.active]="selectedBanglaFont === option.value"
+            (click)="selectBanglaFont(option.value)">
+            <span class="font-choice-left">
+              <span class="font-option-icon bangla" aria-hidden="true">
+                <span>অ</span>
+              </span>
+              <span>{{ option.label }}</span>
+            </span>
+            <span class="material-symbols-rounded" *ngIf="selectedBanglaFont === option.value">check</span>
+          </button>
+        </div>
+      </div>
+
+      <button type="button" class="font-reset-button" (click)="resetFonts()">Reset Fonts</button>
+    </div>
+
+    <div class="accessibility-panel" *ngIf="accessibilityView === 'theme'">
+      <button type="button" class="drawer-back-button" (click)="openAccessibilityView('main')">
+        <span class="material-symbols-rounded">chevron_left</span>
+        Theme
+      </button>
+
+      <div class="font-choice-group">
+        <h3>Color Mode</h3>
+        <div class="font-choice-list">
+          <button
+            type="button"
+            class="font-choice"
+            *ngFor="let option of themeOptions"
+            [class.active]="selectedTheme === option.value"
+            (click)="selectTheme(option.value)">
+            <span class="font-choice-left">
+              <span class="font-option-icon theme" aria-hidden="true">
+                <span class="material-symbols-rounded">{{ option.icon }}</span>
+              </span>
+              <span>{{ option.label }}</span>
+            </span>
+            <span class="material-symbols-rounded" *ngIf="selectedTheme === option.value">check</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </section>
 </header>
