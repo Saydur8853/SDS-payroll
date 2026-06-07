@@ -56,20 +56,20 @@
 }
 
 .bulletin-label {
-  flex: 0 0 auto;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.35rem;
-  color: #fff;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  border-radius: 50%;
+  background: rgba(251, 191, 36, 0.12);
 }
 
 .bulletin-label .material-symbols-rounded {
   color: #fbbf24;
-  font-size: 18px;
+  font-size: 19px;
 }
 
 .bulletin-track {
@@ -153,8 +153,14 @@
 .common-header-icon-button {
   position: relative;
   z-index: 1;
+  flex: 0 0 40px;
   width: 40px;
+  min-width: 40px;
+  max-width: 40px;
   height: 40px;
+  min-height: 40px;
+  max-height: 40px;
+  aspect-ratio: 1;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.08);
@@ -353,8 +359,6 @@
   }
 
   .bulletin-label {
-    width: 28px;
-    overflow: hidden;
-    gap: 0;
+    flex-basis: 26px;
   }
 }

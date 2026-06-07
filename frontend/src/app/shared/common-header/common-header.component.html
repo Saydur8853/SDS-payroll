@@ -3,9 +3,8 @@
 
   <div class="common-header-actions">
     <div class="announcement-bulletin" *ngIf="visibleAnnouncements.length > 0" aria-label="Visible announcements">
-      <span class="bulletin-label">
+      <span class="bulletin-label" aria-hidden="true">
         <span class="material-symbols-rounded">campaign</span>
-        {{ bulletinTitle }}
       </span>
       <div class="bulletin-track">
         <div class="bulletin-text">

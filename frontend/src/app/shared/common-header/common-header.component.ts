@@ -32,12 +32,8 @@ export class CommonHeaderComponent implements OnInit, OnDestroy {
 
   get bulletinText(): string {
     return this.visibleAnnouncements
-      .map((announcement) => announcement.message)
+      .map((announcement) => `${announcement.title} : ${announcement.message}`)
       .join('   |   ');
-  }
-
-  get bulletinTitle(): string {
-    return this.visibleAnnouncements[0]?.title ?? 'Announcement';
   }
 
   get menuAnnouncements(): Announcement[] {
