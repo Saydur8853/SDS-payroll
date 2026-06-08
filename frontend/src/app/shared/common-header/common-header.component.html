@@ -215,14 +215,34 @@
       <div>
         <h2>{{ currentManual.title }}</h2>
         <p>{{ currentManual.subtitle }}</p>
+        <p class="bangla-manual-subtitle">{{ currentBanglaManual.subtitle }}</p>
       </div>
     </div>
 
-    <div class="manual-section" *ngFor="let section of currentManual.sections">
-      <h3>{{ section.heading }}</h3>
-      <ul>
-        <li *ngFor="let item of section.items">{{ item }}</li>
-      </ul>
+    <div class="manual-language-block">
+      <div class="manual-language-title">
+        <span class="material-symbols-rounded" aria-hidden="true">language</span>
+        English
+      </div>
+      <div class="manual-section" *ngFor="let section of currentManual.sections">
+        <h3>{{ section.heading }}</h3>
+        <ul>
+          <li *ngFor="let item of section.items">{{ item }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="manual-language-block bangla-manual">
+      <div class="manual-language-title">
+        <span class="material-symbols-rounded" aria-hidden="true">translate</span>
+        বাংলা
+      </div>
+      <div class="manual-section" *ngFor="let section of currentBanglaManual.sections">
+        <h3>{{ section.heading }}</h3>
+        <ul>
+          <li *ngFor="let item of section.items">{{ item }}</li>
+        </ul>
+      </div>
     </div>
   </section>
 </header>

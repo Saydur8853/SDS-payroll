@@ -55,6 +55,7 @@ export class CommonHeaderComponent implements OnInit, OnDestroy {
   selectedBanglaFont = 'noto-bengali';
   selectedTheme: ThemeOption['value'] = 'system';
   currentManual: PageManual;
+  currentBanglaManual: PageManual;
 
   private readonly defaultManual: PageManual = {
     title: 'Page User Manual',
@@ -67,6 +68,22 @@ export class CommonHeaderComponent implements OnInit, OnDestroy {
           'Use the left menu to open a module.',
           'Use page buttons to add, update, export, or filter records.',
           'Press Esc to close open header menus.'
+        ]
+      }
+    ]
+  };
+
+  private readonly defaultBanglaManual: PageManual = {
+    title: 'পেজ ব্যবহার নির্দেশিকা',
+    subtitle: 'বর্তমান পেজ ব্যবহারের দ্রুত নির্দেশনা।',
+    icon: 'help',
+    sections: [
+      {
+        heading: 'কীভাবে ব্যবহার করবেন',
+        items: [
+          'মডিউল খুলতে বাম পাশের মেনু ব্যবহার করুন।',
+          'রেকর্ড যোগ, আপডেট, এক্সপোর্ট বা ফিল্টার করতে পেজের বাটন ব্যবহার করুন।',
+          'খোলা হেডার মেনু বন্ধ করতে Esc চাপুন।'
         ]
       }
     ]
@@ -310,6 +327,244 @@ export class CommonHeaderComponent implements OnInit, OnDestroy {
     }
   };
 
+  private readonly banglaManualByPath: Record<string, PageManual> = {
+    dashboard: {
+      title: 'ড্যাশবোর্ড ম্যানুয়াল',
+      subtitle: 'কোম্পানি, কর্মচারী, উপস্থিতি এবং সেটআপের সারসংক্ষেপ দেখুন।',
+      icon: 'dashboard',
+      sections: [
+        {
+          heading: 'ওভারভিউ কার্ড',
+          items: [
+            'মোট কোম্পানি, কর্মচারী, ডিপার্টমেন্ট, শিফট, অথরাইজার এবং উপস্থিতি পাঞ্চ দেখুন।',
+            'ড্যাশবোর্ডের তথ্য কোন তারিখের তা নিশ্চিত করতে ডেট ব্যাজ দেখুন।'
+          ]
+        },
+        {
+          heading: 'দ্রুত কাজ',
+          items: [
+            'কুইক অ্যাকশন শর্টকাট থেকে সরাসরি প্রয়োজনীয় ম্যানেজমেন্ট পেজ খুলুন।',
+            'অন্য মডিউলে কাজ করার আগে সিস্টেমের সারসংক্ষেপ দেখতে ড্যাশবোর্ড ব্যবহার করুন।'
+          ]
+        }
+      ]
+    },
+    'employee-info': {
+      title: 'কর্মচারী তথ্য ম্যানুয়াল',
+      subtitle: 'কর্মচারী যোগ, সার্চ, ফিল্টার, ইমপোর্ট এবং এক্সপোর্ট পরিচালনা করুন।',
+      icon: 'groups',
+      sections: [
+        {
+          heading: 'কর্মচারী যোগ করুন',
+          items: [
+            'সেভ করার আগে লাল তারকা চিহ্ন দেওয়া বাধ্যতামূলক ফিল্ড পূরণ করুন।',
+            'Basic Information অংশের পাশের আপলোড বাটন থেকে ছবি এবং স্বাক্ষর আপলোড করুন।',
+            'Company, Department, Designation, Status, Gender, Religion এবং অন্যান্য অ্যাট্রিবিউট ড্রপডাউন থেকে নির্বাচন করুন।'
+          ]
+        },
+        {
+          heading: 'সার্চ এবং ফিল্টার',
+          items: [
+            'সার্চ টাইপ নির্বাচন করে Search and filter ফিল্ডে লিখুন, তারপর Apply চাপুন।',
+            'অ্যাডভান্সড ফিল্টারের জন্য ফিল্টার বাটন খুলুন।',
+            'সার্চের পর Esc চাপলে সার্চ এবং ফিল্টার রিসেট হবে।'
+          ]
+        },
+        {
+          heading: 'CSV এবং পেজিং',
+          items: [
+            'বর্তমান কর্মচারী তালিকা এক্সপোর্ট করতে Save as CSV ব্যবহার করুন।',
+            'বাল্ক আপডেটের জন্য Update by CSV ব্যবহার করুন।',
+            'Per Page ফিল্টার ড্রয়ারে নয়, পেজ নেভিগেশন এরিয়া থেকে পরিবর্তন করুন।'
+          ]
+        }
+      ]
+    },
+    attendance: {
+      title: 'উপস্থিতি ম্যানুয়াল',
+      subtitle: 'কর্মচারীদের উপস্থিতি ডাটা লোড, আপলোড এবং যাচাই করুন।',
+      icon: 'fact_check',
+      sections: [
+        {
+          heading: 'কমন প্যারামিটার',
+          items: [
+            'ডাটা লোড করার আগে প্রয়োজনীয় কোম্পানি, তারিখ বা উপস্থিতি প্যারামিটার নির্বাচন করুন।',
+            'প্যারামিটার পরিবর্তনের পর Apply চাপুন যাতে উপস্থিতি তালিকা সঠিকভাবে রিফ্রেশ হয়।'
+          ]
+        },
+        {
+          heading: 'উপস্থিতি আপলোড',
+          items: [
+            'Attendance ফাইল ইমপোর্ট করতে upload panel ব্যবহার করুন।',
+            'আপলোড প্রসেস করার আগে নির্বাচিত ফাইল এবং প্যারামিটার যাচাই করুন।'
+          ]
+        },
+        {
+          heading: 'ডাটা যাচাই',
+          items: [
+            'উপস্থিতি রেকর্ড ছোট করতে সার্চ এবং ফিল্টার ব্যবহার করুন।',
+            'পে-রোল প্রসেসিংয়ের আগে ইমপোর্ট করা রেকর্ড যাচাই করুন।'
+          ]
+        }
+      ]
+    },
+    announcements: {
+      title: 'ঘোষণা ম্যানুয়াল',
+      subtitle: 'ঘোষণা পোস্ট তৈরি করুন এবং হেডার বুলেটিনে কী দেখাবে তা নিয়ন্ত্রণ করুন।',
+      icon: 'campaign',
+      sections: [
+        {
+          heading: 'ঘোষণা পোস্ট',
+          items: [
+            'Title এবং Message লিখে Post Announcement চাপুন।',
+            'পোস্টটি হেডার বুলেটিনে দেখাতে Visible in announcement menu চালু করুন।'
+          ]
+        },
+        {
+          heading: 'হেডার ঘোষণা বাটন',
+          items: [
+            'ঘোষণা বাটনে সর্বশেষ ঘোষণা আগে দেখায়।',
+            'লাল ব্লিংকিং ডট মানে নতুন অদেখা ঘোষণা আছে।',
+            'আরও পুরোনো পোস্ট দেখতে dropdown এর More ব্যবহার করুন।'
+          ]
+        },
+        {
+          heading: 'পোস্ট ম্যানেজ',
+          items: [
+            'ঘোষণা আপডেট করতে Edit ব্যবহার করুন।',
+            'সিস্টেম থেকে ঘোষণা সরাতে Delete ব্যবহার করুন।'
+          ]
+        }
+      ]
+    },
+    'company-info': {
+      title: 'কোম্পানি তথ্য ম্যানুয়াল',
+      subtitle: 'কোম্পানি প্রোফাইল এবং সংশ্লিষ্ট কনফিগারেশন পরিচালনা করুন।',
+      icon: 'business',
+      sections: [
+        {
+          heading: 'কোম্পানি রেকর্ড',
+          items: [
+            'কোম্পানি তথ্য সতর্কভাবে যোগ করুন, কারণ অন্য মডিউল কোম্পানি নির্বাচনের উপর নির্ভর করে।',
+            'প্রতিষ্ঠানের তথ্য পরিবর্তন হলে কোম্পানি তথ্য আপডেট করুন।'
+          ]
+        },
+        {
+          heading: 'ব্যবহার নোট',
+          items: [
+            'Departments, Designations, Employees, Salary Rules এবং Attendance কোম্পানি ডাটার সাথে যুক্ত।',
+            'ডিপেন্ডেন্ট রেকর্ড থাকলে নিরাপদভাবে অনুমতি না পাওয়া পর্যন্ত কোম্পানি ডিলিট করবেন না।'
+          ]
+        }
+      ]
+    },
+    departments: {
+      title: 'ডিপার্টমেন্ট ম্যানুয়াল',
+      subtitle: 'ডিপার্টমেন্ট রেকর্ড তৈরি এবং পরিচালনা করুন।',
+      icon: 'account_tree',
+      sections: [
+        {
+          heading: 'ডিপার্টমেন্ট সেটআপ',
+          items: [
+            'সঠিক কোম্পানির অধীনে ডিপার্টমেন্ট তৈরি করুন।',
+            'ফিল্টার এবং রিপোর্টিং পরিষ্কার রাখতে অর্থপূর্ণ ডিপার্টমেন্ট নাম ব্যবহার করুন।'
+          ]
+        },
+        {
+          heading: 'রক্ষণাবেক্ষণ',
+          items: [
+            'নাম বা কনফিগারেশন পরিবর্তনের প্রয়োজন হলে ডিপার্টমেন্ট Edit করুন।',
+            'ডিপার্টমেন্ট ডিলিট করার আগে লিঙ্কড কর্মচারী যাচাই করুন।'
+          ]
+        }
+      ]
+    },
+    designations: {
+      title: 'ডেজিগনেশন ম্যানুয়াল',
+      subtitle: 'কর্মচারীদের পদবী রেকর্ড পরিচালনা করুন।',
+      icon: 'workspace_premium',
+      sections: [
+        {
+          heading: 'ডেজিগনেশন সেটআপ',
+          items: [
+            'HR এবং Payroll-এ ব্যবহৃত চাকরির ভূমিকার সাথে মিল রেখে ডেজিগনেশন তৈরি করুন।',
+            'কর্মচারী তৈরি বা আপডেট করার সময় সঠিক ডেজিগনেশন নির্বাচন করুন।'
+          ]
+        },
+        {
+          heading: 'রক্ষণাবেক্ষণ',
+          items: [
+            'প্রতিষ্ঠানের ভূমিকা পরিবর্তন হলে ডেজিগনেশন নাম আপডেট করুন।',
+            'ডেজিগনেশন ডিলিট করার আগে লিঙ্কড কর্মচারী যাচাই করুন।'
+          ]
+        }
+      ]
+    },
+    'salary-rules': {
+      title: 'স্যালারি রুলস ম্যানুয়াল',
+      subtitle: 'পে-রোল স্যালারি রুল কনফিগার করুন।',
+      icon: 'payments',
+      sections: [
+        {
+          heading: 'রুল সেটআপ',
+          items: [
+            'কোম্পানির পে-রোল নীতির সাথে মিল রেখে স্যালারি রুল তৈরি করুন।',
+            'Employee Info থেকে কর্মচারীর জন্য সঠিক স্যালারি রুল নির্বাচন করুন।'
+          ]
+        },
+        {
+          heading: 'রক্ষণাবেক্ষণ',
+          items: [
+            'পে-রোল প্রভাব নিশ্চিত করার পরেই রুল আপডেট করুন।',
+            'অ্যাকটিভ কর্মচারীর সাথে যুক্ত রুল ডিলিট করা এড়িয়ে চলুন।'
+          ]
+        }
+      ]
+    },
+    shifts: {
+      title: 'শিফট তথ্য ম্যানুয়াল',
+      subtitle: 'কাজের শিফট ডেফিনিশন তৈরি এবং রক্ষণাবেক্ষণ করুন।',
+      icon: 'schedule',
+      sections: [
+        {
+          heading: 'শিফট সেটআপ',
+          items: [
+            'বাস্তব কাজের সময়সূচির ভিত্তিতে শিফট টাইম নির্ধারণ করুন।',
+            'কর্মচারী অ্যাসাইন করার সময় অ্যাকটিভ শিফট ব্যবহার করুন।'
+          ]
+        },
+        {
+          heading: 'উপস্থিতির প্রভাব',
+          items: [
+            'শিফট টাইম উপস্থিতি বিশ্লেষণ এবং পে-রোল ক্যালকুলেশনে প্রভাব ফেলে।',
+            'অনেক কর্মচারীর উপর প্রয়োগ করার আগে শিফট পরিবর্তন যাচাই করুন।'
+          ]
+        }
+      ]
+    },
+    authorizers: {
+      title: 'অথরাইজার ম্যানুয়াল',
+      subtitle: 'HR বা Payroll অ্যাকশন অনুমোদনকারী ব্যক্তিদের পরিচালনা করুন।',
+      icon: 'verified_user',
+      sections: [
+        {
+          heading: 'অথরাইজার সেটআপ',
+          items: [
+            'সঠিক ব্যক্তিগত এবং কর্মসংস্থান তথ্য দিয়ে অথরাইজার তৈরি করুন।',
+            'অফিসিয়াল ডকুমেন্টের জন্য প্রয়োজন হলে ছবি এবং স্বাক্ষর আপলোড করুন।'
+          ]
+        },
+        {
+          heading: 'অ্যাক্সেস ব্যবহার',
+          items: [
+            'ইনঅ্যাকটিভ ব্যক্তির অনুমোদন ব্যবহার ঠেকাতে অথরাইজার স্ট্যাটাস সঠিক রাখুন।',
+            'সেভ করার আগে Department এবং Designation লিংক যাচাই করুন।'
+          ]
+        }
+      ]
+    }
+  };
+
   readonly englishFontOptions: FontOption[] = [
     {
       label: 'Inter',
@@ -429,6 +684,7 @@ export class CommonHeaderComponent implements OnInit, OnDestroy {
     @Inject(DOCUMENT) private readonly documentRef: Document
   ) {
     this.currentManual = this.defaultManual;
+    this.currentBanglaManual = this.defaultBanglaManual;
   }
 
   ngOnInit(): void {
@@ -600,6 +856,7 @@ export class CommonHeaderComponent implements OnInit, OnDestroy {
   private syncManual(url: string): void {
     const path = url.split('?')[0].split('#')[0].replace(/^\/+/, '') || 'dashboard';
     this.currentManual = this.manualByPath[path] ?? this.defaultManual;
+    this.currentBanglaManual = this.banglaManualByPath[path] ?? this.defaultBanglaManual;
   }
 
   private loadFontPreferences(): void {
