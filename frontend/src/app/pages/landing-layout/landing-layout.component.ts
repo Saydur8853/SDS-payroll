@@ -135,6 +135,7 @@ export class LandingLayoutComponent implements OnInit, OnDestroy {
       url.startsWith('/company-info') ||
       url.startsWith('/departments') ||
       url.startsWith('/designations') ||
+      url.startsWith('/report-templates') ||
       url.startsWith('/shifts')
     );
   }

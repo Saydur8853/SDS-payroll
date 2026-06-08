@@ -1,0 +1,226 @@
+<main class="page report-template-page">
+  <section class="panel designer-panel">
+    <div class="panel-header">
+      <div class="panel-icon icon-purple">
+        <span class="material-symbols-rounded">dashboard_customize</span>
+      </div>
+      <div>
+        <h1>Report Templates</h1>
+        <p class="panel-subtitle">Configure report fields, layout, and print/PDF settings without developer changes.</p>
+      </div>
+    </div>
+
+    <div class="template-shell">
+      <aside class="template-list">
+        <button type="button" class="template-card active">
+          <span class="material-symbols-rounded">badge</span>
+          <span>
+            <strong>Employee Info</strong>
+          </span>
+        </button>
+        <div class="future-card">
+          <span class="material-symbols-rounded">add_circle</span>
+          More report templates can be added here later.
+        </div>
+      </aside>
+
+      <div class="template-editor">
+        <div class="editor-section visual-designer-section">
+          <div class="section-title-row">
+            <h2>Visual Designer</h2>
+            <span>Drag fields into the A4 page</span>
+          </div>
+
+          <div class="visual-designer">
+            <aside class="visual-palette">
+              <div class="insert-tabs" role="tablist" aria-label="Visual designer insert menu">
+                <button
+                  type="button"
+                  class="insert-tab"
+                  [class.active]="activeInsertTab === 'attributes'"
+                  (click)="activeInsertTab = 'attributes'">
+                  <span class="material-symbols-rounded">dataset</span>
+                  Attributes
+                </button>
+                <button
+                  type="button"
+                  class="insert-tab"
+                  [class.active]="activeInsertTab === 'tools'"
+                  (click)="activeInsertTab = 'tools'">
+                  <span class="material-symbols-rounded">construction</span>
+                  Tools
+                </button>
+              </div>
+
+              <div class="insert-panel" *ngIf="activeInsertTab === 'attributes'">
+                <div class="insert-panel-header">
+                  <div>
+                    <h3>Employee Attributes</h3>
+                    <p>Drag any employee attribute into the A4 page.</p>
+                  </div>
+                </div>
+                <div class="palette-scroll attributes-menu">
+                  <button
+                    type="button"
+                    class="palette-item"
+                    draggable="true"
+                    *ngFor="let field of employeeTemplate.fields"
+                    (dragstart)="onPaletteDragStart($event, { type: 'field', key: field.key, label: field.label })">
+                    <span class="material-symbols-rounded">drag_indicator</span>
+                    {{ field.label }}
+                  </button>
+                </div>
+              </div>
+
+              <div class="insert-panel" *ngIf="activeInsertTab === 'tools'">
+                <div class="insert-panel-header">
+                  <div>
+                    <h3>Document Tools</h3>
+                    <p>Use these blocks to build the report document.</p>
+                  </div>
+                </div>
+                <div class="tool-grid">
+                  <button type="button" class="palette-item" draggable="true" (dragstart)="onPaletteDragStart($event, { type: 'text', label: 'Custom Text' })">
+                    <span class="material-symbols-rounded">title</span>
+                    Custom Text
+                  </button>
+                  <button type="button" class="palette-item" draggable="true" (dragstart)="onPaletteDragStart($event, { type: 'image', imageKind: 'photo', label: 'Photo' })">
+                    <span class="material-symbols-rounded">image</span>
+                    Photo
+                  </button>
+                  <button type="button" class="palette-item" draggable="true" (dragstart)="onPaletteDragStart($event, { type: 'image', imageKind: 'signature', label: 'Signature' })">
+                    <span class="material-symbols-rounded">draw</span>
+                    Signature
+                  </button>
+                </div>
+              </div>
+            </aside>
+
+            <div class="visual-canvas-wrap">
+              <div
+                class="visual-canvas"
+                [class.portrait]="employeeTemplate.orientation === 'portrait'"
+                [style.aspect-ratio]="pageWidth + ' / ' + pageHeight"
+                (dragover)="onCanvasDragOver($event)"
+                (drop)="onCanvasDrop($event)"
+                (mousemove)="onCanvasMouseMove($event)"
+                (mouseup)="stopBlockMove()"
+                (click)="clearBlockSelection()">
+                <div class="canvas-ruler">A4 {{ employeeTemplate.orientation }}</div>
+                <div
+                  class="visual-block"
+                  *ngFor="let block of employeeTemplate.visualBlocks"
+                  [class.selected]="selectedBlockId === block.id"
+                  [class.image-block]="block.type === 'image'"
+                  [ngStyle]="getBlockStyle(block)"
+                  (mousedown)="startBlockMove(block, $event)"
+                  (click)="selectBlock(block, $event)">
+                  {{ getBlockPreviewText(block) }}
+                </div>
+              </div>
+            </div>
+
+            <aside class="block-properties">
+              <h3>Properties</h3>
+              <ng-container *ngIf="selectedBlock as block; else noBlockSelected">
+                <label>
+                  Label
+                  <input type="text" [(ngModel)]="block.label" />
+                </label>
+                <label *ngIf="block.type === 'text'">
+                  Text
+                  <textarea rows="3" [(ngModel)]="block.text"></textarea>
+                </label>
+                <div class="property-grid">
+                  <label>
+                    X
+                    <input type="number" [(ngModel)]="block.x" />
+                  </label>
+                  <label>
+                    Y
+                    <input type="number" [(ngModel)]="block.y" />
+                  </label>
+                  <label>
+                    Width
+                    <input type="number" [(ngModel)]="block.width" />
+                  </label>
+                  <label>
+                    Height
+                    <input type="number" [(ngModel)]="block.height" />
+                  </label>
+                </div>
+                <div class="property-grid">
+                  <label>
+                    Font
+                    <input type="number" [(ngModel)]="block.fontSize" />
+                  </label>
+                  <label>
+                    Align
+                    <select [(ngModel)]="block.align">
+                      <option value="left">Left</option>
+                      <option value="center">Center</option>
+                      <option value="right">Right</option>
+                    </select>
+                  </label>
+                </div>
+                <label class="check-option block-check">
+                  <input type="checkbox" [(ngModel)]="block.bold" />
+                  <span>Bold</span>
+                </label>
+                <label class="check-option block-check">
+                  <input type="checkbox" [(ngModel)]="block.border" />
+                  <span>Border</span>
+                </label>
+                <button type="button" class="btn tiny danger" (click)="deleteSelectedBlock()">
+                  <span class="material-symbols-rounded">delete</span>
+                  Delete Block
+                </button>
+              </ng-container>
+              <ng-template #noBlockSelected>
+                <p class="empty-note">Select a block on the page to edit position, size, font, and border.</p>
+              </ng-template>
+            </aside>
+          </div>
+        </div>
+
+        <div class="editor-actions">
+          <button type="button" class="btn primary" (click)="saveTemplate()">
+            <span class="material-symbols-rounded">save</span>
+            Save Template
+          </button>
+          <button type="button" class="btn secondary" (click)="resetTemplate()">
+            <span class="material-symbols-rounded">restart_alt</span>
+            Reset Default
+          </button>
+          <p class="message" *ngIf="message">{{ message }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel preview-panel">
+    <div class="panel-header compact">
+      <div>
+        <h2>Live Preview</h2>
+        <p class="panel-subtitle">Employee Info PDF/print will follow this saved structure.</p>
+      </div>
+    </div>
+
+    <div class="report-preview visual-live-preview">
+      <div class="visual-preview-frame">
+        <div
+          class="visual-preview-page"
+          [class.portrait]="employeeTemplate.orientation === 'portrait'"
+          [style.aspect-ratio]="pageWidth + ' / ' + pageHeight">
+          <div
+            class="visual-preview-block"
+            *ngFor="let block of employeeTemplate.visualBlocks"
+            [class.image-block]="block.type === 'image'"
+            [ngStyle]="getBlockStyle(block)">
+            {{ getBlockPreviewText(block) }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>

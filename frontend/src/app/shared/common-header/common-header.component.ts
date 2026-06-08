@@ -283,6 +283,29 @@ export class CommonHeaderComponent implements OnInit, OnDestroy {
         }
       ]
     },
+    'report-templates': {
+      title: 'Report Templates Manual',
+      subtitle: 'Design printable report templates without code changes.',
+      icon: 'dashboard_customize',
+      sections: [
+        {
+          heading: 'Employee Info Template',
+          items: [
+            'Choose the report title, subtitle, page orientation, and layout.',
+            'Enable photo or signature when the PDF should include employee media.',
+            'Select fields and reorder them to control the print/PDF output.'
+          ]
+        },
+        {
+          heading: 'Apply Template',
+          items: [
+            'Click Save Template after changing the design.',
+            'Go to Employee Info and click Print / Save PDF to use the saved template.',
+            'Use Reset Default when you want to return to the standard employee report.'
+          ]
+        }
+      ]
+    },
     shifts: {
       title: 'Shift Info Manual',
       subtitle: 'Create and maintain working shift definitions.',
@@ -517,6 +540,29 @@ export class CommonHeaderComponent implements OnInit, OnDestroy {
           items: [
             'পে-রোল প্রভাব নিশ্চিত করার পরেই রুল আপডেট করুন।',
             'অ্যাকটিভ কর্মচারীর সাথে যুক্ত রুল ডিলিট করা এড়িয়ে চলুন।'
+          ]
+        }
+      ]
+    },
+    'report-templates': {
+      title: 'রিপোর্ট টেমপ্লেট ম্যানুয়াল',
+      subtitle: 'কোড পরিবর্তন ছাড়াই প্রিন্টযোগ্য রিপোর্ট টেমপ্লেট ডিজাইন করুন।',
+      icon: 'dashboard_customize',
+      sections: [
+        {
+          heading: 'কর্মচারী তথ্য টেমপ্লেট',
+          items: [
+            'রিপোর্টের title, subtitle, page orientation এবং layout নির্বাচন করুন।',
+            'PDF-এ কর্মচারীর ছবি বা স্বাক্ষর দেখাতে photo/signature অপশন চালু করুন।',
+            'প্রিন্ট/PDF আউটপুট নিয়ন্ত্রণ করতে field নির্বাচন এবং reorder করুন।'
+          ]
+        },
+        {
+          heading: 'টেমপ্লেট প্রয়োগ',
+          items: [
+            'ডিজাইন পরিবর্তনের পর Save Template চাপুন।',
+            'Employee Info পেজে গিয়ে Print / Save PDF চাপলে সেভ করা টেমপ্লেট ব্যবহার হবে।',
+            'স্ট্যান্ডার্ড রিপোর্টে ফিরতে Reset Default ব্যবহার করুন।'
           ]
         }
       ]

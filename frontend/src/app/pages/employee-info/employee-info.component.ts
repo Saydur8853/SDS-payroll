@@ -12,6 +12,7 @@ import { ShiftService } from '../../services/shift.service';
 import { CompanyService } from '../../services/company.service';
 import { SalaryRuleService } from '../../services/salary-rule.service';
 import { GlassSelectComponent, GlassSelectOption } from '../../shared/glass-select/glass-select.component';
+import { ReportTemplate, ReportTemplateField, ReportTemplateService, VisualReportBlock } from '../../services/report-template.service';
 import {
   lookupOptions,
   nullableLookupOptions,
@@ -206,6 +207,8 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
   readonly numberSelectOptions = numberOptions;
   readonly stringSelectOptions = stringOptions;
   exporting = false;
+  printGeneratedAt = new Date();
+  employeePrintTemplate!: ReportTemplate;
   importingCsv = false;
   showCsvUploadModal = false;
   csvDragOver = false;
@@ -234,6 +237,7 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
   };
 
   ngOnInit(): void {
+    this.employeePrintTemplate = this.reportTemplateService.getEmployeeTemplate();
     this.resetFilters();
     this.loadLookups();
     this.onAttributeKeyInput(0);
@@ -241,6 +245,7 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stopCsvJobPolling();
+    this.cleanupPrintState();
   }
 
   checkCode(): void {
@@ -416,6 +421,11 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
   onMacFilterShortcut(event: KeyboardEvent): void {
     event.preventDefault();
     this.isEmployeeFilterPanelOpen = true;
+  }
+
+  @HostListener('window:afterprint')
+  onAfterPrint(): void {
+    this.cleanupPrintState();
   }
 
   toggleEmployeeFilterPanel(event: Event): void {
@@ -1203,6 +1213,102 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
     });
   }
 
+  printEmployees(): void {
+    if (this.loadingEmployees || this.employees.length === 0) {
+      return;
+    }
+
+    this.employeePrintTemplate = this.reportTemplateService.getEmployeeTemplate();
+    this.printGeneratedAt = new Date();
+    this.isEmployeeFilterPanelOpen = false;
+    document.body.classList.add('print-employee-list');
+    this.applyPrintPageStyle();
+
+    window.setTimeout(() => {
+      window.print();
+    }, 0);
+  }
+
+  getEmployeePrintFieldValue(employee: Employee, field: ReportTemplateField): string {
+    if (field.key.startsWith('dynamic:')) {
+      const dynamicKey = field.key.replace(/^dynamic:/, '').trim().toLowerCase();
+      const entry = Object.entries(employee.dynamicAttributes ?? {})
+        .find(([key]) => key.trim().toLowerCase() === dynamicKey);
+      return entry?.[1]?.toString().trim() || '-';
+    }
+
+    if (field.key === 'joiningDate' || field.key === 'dateOfBirth') {
+      const value = employee[field.key as keyof Employee];
+      return typeof value === 'string' && value ? this.formatDisplayDate(value) : '-';
+    }
+
+    const value = employee[field.key as keyof Employee];
+    if (value === null || value === undefined || typeof value === 'object') {
+      return '-';
+    }
+
+    return String(value).trim() || '-';
+  }
+
+  getVisualBlockStyle(block: VisualReportBlock): Record<string, string> {
+    const pageWidth = this.employeePrintTemplate.orientation === 'portrait' ? 794 : 1123;
+    const pageHeight = this.employeePrintTemplate.orientation === 'portrait' ? 1123 : 794;
+
+    return {
+      left: `${(block.x / pageWidth) * 100}%`,
+      top: `${(block.y / pageHeight) * 100}%`,
+      width: `${(block.width / pageWidth) * 100}%`,
+      height: `${(block.height / pageHeight) * 100}%`,
+      fontSize: `${block.fontSize}pt`,
+      fontWeight: block.bold ? '800' : '500',
+      textAlign: block.align,
+      borderStyle: block.border ? 'solid' : 'none'
+    };
+  }
+
+  getVisualBlockText(employee: Employee, block: VisualReportBlock): string {
+    if (block.type === 'text') {
+      return block.text || '';
+    }
+
+    if (block.type === 'field' && block.fieldKey) {
+      return this.getEmployeePrintFieldValue(employee, {
+        key: block.fieldKey,
+        label: block.label,
+        enabled: true,
+        order: 0,
+        isCustom: block.fieldKey.startsWith('dynamic:')
+      });
+    }
+
+    return '';
+  }
+
+  getVisualBlockImageSrc(employee: Employee, block: VisualReportBlock): string | null {
+    if (block.type !== 'image') {
+      return null;
+    }
+
+    return block.imageKind === 'signature'
+      ? this.getEmployeeSignatureSrc(employee)
+      : this.getEmployeePhotoSrc(employee);
+  }
+
+  private applyPrintPageStyle(): void {
+    const existingStyle = document.getElementById('employee-print-page-style');
+    existingStyle?.remove();
+
+    const style = document.createElement('style');
+    style.id = 'employee-print-page-style';
+    style.textContent = `@media print { @page { size: A4 ${this.employeePrintTemplate.orientation}; margin: 10mm; } }`;
+    document.head.appendChild(style);
+  }
+
+  private cleanupPrintState(): void {
+    document.body.classList.remove('print-employee-list');
+    document.getElementById('employee-print-page-style')?.remove();
+  }
+
   openCsvUpdateModal(): void {
     if (!this.importingCsv && !this.isCsvBackgroundJobActive) {
       this.csvImportStatusMessage = '';
@@ -1613,8 +1719,11 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
     private readonly lookupService: LookupService,
     private readonly shiftService: ShiftService,
     private readonly companyService: CompanyService,
-    private readonly salaryRuleService: SalaryRuleService
-  ) {}
+    private readonly salaryRuleService: SalaryRuleService,
+    private readonly reportTemplateService: ReportTemplateService
+  ) {
+    this.employeePrintTemplate = this.reportTemplateService.getEmployeeTemplate();
+  }
 
   getEmployeePhotoSrc(employee: Employee): string | null {
     return this.resolveEmployeeImageSource(employee.photoBase64);

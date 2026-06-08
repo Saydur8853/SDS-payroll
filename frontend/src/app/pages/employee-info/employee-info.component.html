@@ -433,6 +433,10 @@
           <span class="material-symbols-rounded" style="font-size:16px">download</span>
           {{ exporting ? 'Exporting...' : 'Save as CSV' }}
         </button>
+        <button type="button" class="btn tiny secondary export-button" [disabled]="loadingEmployees || employees.length === 0" (click)="printEmployees()">
+          <span class="material-symbols-rounded" style="font-size:16px">print</span>
+          Print / Save PDF
+        </button>
         <button type="button" class="btn tiny secondary export-button" [disabled]="exporting || importingCsv || loadingEmployees || isCsvBackgroundJobActive" (click)="openCsvUpdateModal()">
           <span class="material-symbols-rounded" style="font-size:16px">upload_file</span>
           {{ importingCsv ? 'Uploading...' : (isCsvBackgroundJobActive ? 'Processing...' : 'Update by CSV') }}
@@ -444,6 +448,28 @@
     </div>
 
     <!-- ── Loading / Empty ─────────────────────────────── -->
+    <div class="employee-print-sheet print-only">
+      <div class="employee-visual-print-pages">
+        <section
+          class="employee-visual-print-page"
+          [class.portrait]="employeePrintTemplate.orientation === 'portrait'"
+          *ngFor="let employee of employees">
+          <div
+            class="employee-visual-print-block"
+            *ngFor="let block of employeePrintTemplate.visualBlocks"
+            [class.image-block]="block.type === 'image'"
+            [ngStyle]="getVisualBlockStyle(block)">
+            <ng-container *ngIf="block.type !== 'image'; else visualImageBlock">
+              {{ getVisualBlockText(employee, block) }}
+            </ng-container>
+            <ng-template #visualImageBlock>
+              <img *ngIf="getVisualBlockImageSrc(employee, block) as imageSrc" [src]="imageSrc" [alt]="block.label" />
+            </ng-template>
+          </div>
+        </section>
+      </div>
+    </div>
+
     <p *ngIf="loadingEmployees" class="list-state">Loading employees...</p>
     <p *ngIf="!loadingEmployees && !hasRequestedEmployees" class="list-state">Apply search or filter to load employees.</p>
     <p *ngIf="!loadingEmployees && hasRequestedEmployees && totalCount === 0" class="list-state">No employees found for current search/filter.</p>
