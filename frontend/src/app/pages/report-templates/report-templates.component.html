@@ -137,35 +137,17 @@
 
             <div class="visual-canvas-wrap">
               <div
-                class="visual-canvas"
+                #editorCanvas
+                class="visual-canvas google-doc-canvas"
+                contenteditable="true"
                 [class.portrait]="employeeTemplate.orientation === 'portrait'"
                 [style.aspect-ratio]="pageWidth + ' / ' + pageHeight"
                 (dragover)="onCanvasDragOver($event)"
                 (drop)="onCanvasDrop($event)"
-                (mousemove)="onCanvasMouseMove($event)"
-                (mouseup)="stopBlockMove()"
-                (click)="clearBlockSelection()">
-                <div class="canvas-ruler">A4 {{ employeeTemplate.orientation }}</div>
-                <div
-                  class="visual-block"
-                  *ngFor="let block of employeeTemplate.visualBlocks"
-                  [class.selected]="selectedBlockId === block.id"
-                  [class.image-block]="block.type === 'image'"
-                  [ngStyle]="getBlockStyle(block)"
-                  (mousedown)="startBlockMove(block, $event)"
-                  (click)="selectBlock(block, $event)">
-                  <ng-container *ngIf="block.type !== 'table'; else designerTableBlock">
-                    {{ getBlockPreviewText(block) }}
-                  </ng-container>
-                  <ng-template #designerTableBlock>
-                    <span class="designer-table-grid" [style.grid-template-columns]="'repeat(' + (block.tableColumns ?? 3) + ', 1fr)'">
-                      <span *ngFor="let cell of getTableCells(block)"></span>
-                    </span>
-                  </ng-template>
-                </div>
+                (input)="onCanvasInput()">
               </div>
             </div>
-
+            
             <aside class="block-properties">
               <h3>Properties</h3>
               <ng-container *ngIf="selectedBlock as block; else noBlockSelected">
@@ -277,23 +259,10 @@
     <div class="report-preview visual-live-preview">
       <div class="visual-preview-frame">
         <div
-          class="visual-preview-page"
+          class="visual-preview-page google-doc-canvas"
           [class.portrait]="employeeTemplate.orientation === 'portrait'"
-          [style.aspect-ratio]="pageWidth + ' / ' + pageHeight">
-          <div
-            class="visual-preview-block"
-            *ngFor="let block of employeeTemplate.visualBlocks"
-            [class.image-block]="block.type === 'image'"
-            [ngStyle]="getBlockStyle(block)">
-            <ng-container *ngIf="block.type !== 'table'; else previewTableBlock">
-              {{ getBlockPreviewText(block) }}
-            </ng-container>
-            <ng-template #previewTableBlock>
-              <span class="designer-table-grid" [style.grid-template-columns]="'repeat(' + (block.tableColumns ?? 3) + ', 1fr)'">
-                <span *ngFor="let cell of getTableCells(block)"></span>
-              </span>
-            </ng-template>
-          </div>
+          [style.aspect-ratio]="pageWidth + ' / ' + pageHeight"
+          [innerHTML]="employeeTemplate.htmlContent">
         </div>
       </div>
     </div>

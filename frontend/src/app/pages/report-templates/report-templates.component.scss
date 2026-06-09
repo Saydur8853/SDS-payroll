@@ -412,6 +412,15 @@
   padding: 0.45rem 0.55rem;
   color: #cbd5e1;
   background: rgba(255, 255, 255, 0.055);
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0.45rem 0.55rem;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.055);
   font-family: inherit;
   font-size: 0.76rem;
   font-weight: 750;
@@ -462,6 +471,24 @@
   width: 794px;
   min-width: 794px;
   max-width: 794px;
+}
+
+.google-doc-canvas {
+  padding: 40px;
+  text-align: left;
+  outline: none;
+  overflow-y: auto;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.google-doc-canvas p {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.google-doc-canvas table {
+  table-layout: fixed;
 }
 
 .canvas-ruler {

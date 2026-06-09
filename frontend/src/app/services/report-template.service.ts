@@ -29,6 +29,7 @@ export interface ReportTemplate {
   orientation: ReportOrientation;
   fields: ReportTemplateField[];
   visualBlocks: VisualReportBlock[];
+  htmlContent?: string;
   updatedAtUtc: string;
 }
 
@@ -159,80 +160,21 @@ export class ReportTemplateService {
         enabled: defaultEnabledFields.has(field.key),
         order: index
       })),
-      visualBlocks: [
-        {
-          id: 'title',
-          type: 'text',
-          label: 'Report Title',
-          text: 'Employee Information',
-          x: 40,
-          y: 32,
-          width: 420,
-          height: 42,
-          fontSize: 22,
-          fontFamily: 'Arial',
-          bold: true,
-          italic: false,
-          underline: false,
-          align: 'left',
-          border: false,
-          textColor: '#0f172a'
-        },
-        {
-          id: 'employee-name',
-          type: 'field',
-          fieldKey: 'fullName',
-          label: 'Full Name',
-          x: 40,
-          y: 105,
-          width: 310,
-          height: 34,
-          fontSize: 14,
-          fontFamily: 'Arial',
-          bold: true,
-          italic: false,
-          underline: false,
-          align: 'left',
-          border: false,
-          textColor: '#0f172a'
-        },
-        {
-          id: 'employee-code',
-          type: 'field',
-          fieldKey: 'employeeCode',
-          label: 'Employee Code',
-          x: 40,
-          y: 150,
-          width: 190,
-          height: 28,
-          fontSize: 11,
-          fontFamily: 'Arial',
-          bold: false,
-          italic: false,
-          underline: false,
-          align: 'left',
-          border: false,
-          textColor: '#0f172a'
-        },
-        {
-          id: 'employee-photo',
-          type: 'image',
-          imageKind: 'photo',
-          label: 'Photo',
-          x: 610,
-          y: 52,
-          width: 105,
-          height: 130,
-          fontSize: 10,
-          fontFamily: 'Arial',
-          bold: false,
-          italic: false,
-          underline: false,
-          align: 'center',
-          border: true,
-          textColor: '#64748b'
-        }
-      ],
+      visualBlocks: [],
+      htmlContent: `
+        <div style="font-family: Arial; color: #0f172a;">
+          <h1 style="font-size: 22px; margin-bottom: 20px;">Employee Information</h1>
+          <p style="font-size: 14px; margin-bottom: 10px; font-weight: bold;">
+            <span contenteditable="false" class="attribute-pill" data-key="fullName" data-type="field">[Full Name]</span>
+          </p>
+          <p style="font-size: 11px;">
+            <span contenteditable="false" class="attribute-pill" data-key="employeeCode" data-type="field">[Employee Code]</span>
+          </p>
+          <div style="text-align: right; margin-top: -60px;">
+            <div contenteditable="false" class="attribute-pill image-pill" data-kind="photo" data-type="image" style="display: inline-block; width: 105px; height: 130px; border: 1px dashed #cbd5e1; background: #f8fafc; text-align: center; line-height: 130px; font-size: 12px; color: #64748b;">[Photo]</div>
+          </div>
+        </div>
+      `,
       updatedAtUtc: new Date().toISOString()
     };
   }
@@ -275,6 +217,7 @@ export class ReportTemplateService {
       orientation: template.orientation === 'portrait' ? 'portrait' : 'landscape',
       fields,
       visualBlocks: this.normalizeVisualBlocks(template.visualBlocks ?? []),
+      htmlContent: template.htmlContent || '',
       updatedAtUtc: template.updatedAtUtc || new Date().toISOString()
     };
   }

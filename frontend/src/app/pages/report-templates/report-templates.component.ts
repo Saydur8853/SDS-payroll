@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   ReportFieldDefinition,
@@ -10,21 +10,22 @@ import {
   VisualReportImageKind
 } from '../../services/report-template.service';
 
+
 @Component({
   selector: 'app-report-templates',
   imports: [CommonModule, FormsModule],
   templateUrl: './report-templates.component.html',
   styleUrl: './report-templates.component.scss'
 })
-export class ReportTemplatesComponent implements OnInit {
+export class ReportTemplatesComponent implements OnInit, AfterViewInit {
+  @ViewChild('editorCanvas') editorCanvas!: ElementRef<HTMLDivElement>;
+
   employeeTemplate!: ReportTemplate;
   message = '';
-  selectedBlockId: string | null = null;
   activeInsertTab: 'attributes' | 'tools' = 'attributes';
   selectedTextStyle = 'Normal text';
   selectedFontFamily = 'Arial';
   private draggedPaletteItem: { type: VisualReportBlockType; key?: string; label: string; imageKind?: VisualReportImageKind } | null = null;
-  private activeDrag: { blockId: string; offsetX: number; offsetY: number } | null = null;
 
   readonly fieldDefinitions: ReportFieldDefinition[];
   readonly textStyleOptions = ['Normal text', 'Title', 'Heading', 'Subtitle'];
@@ -48,32 +49,15 @@ export class ReportTemplatesComponent implements OnInit {
     this.employeeTemplate = this.reportTemplateService.getEmployeeTemplate();
   }
 
-  get pageWidth(): number {
-    return this.employeeTemplate.orientation === 'portrait' ? 794 : 1123;
-  }
-
-  get pageHeight(): number {
-    return this.employeeTemplate.orientation === 'portrait' ? 1123 : 794;
-  }
-
-  get selectedBlock(): VisualReportBlock | null {
-    return this.employeeTemplate.visualBlocks.find((block) => block.id === this.selectedBlockId) ?? null;
-  }
-
-  get currentTextStyle(): string {
-    const block = this.selectedBlock;
-    if (!block || block.type === 'image') {
-      return this.selectedTextStyle;
+  ngAfterViewInit(): void {
+    if (this.editorCanvas && this.employeeTemplate.htmlContent) {
+      this.editorCanvas.nativeElement.innerHTML = this.employeeTemplate.htmlContent;
     }
+  }
 
-    if (block.fontSize === 24 && block.bold) {
-      return 'Title';
-    } else if (block.fontSize === 18 && block.bold) {
-      return 'Heading';
-    } else if (block.fontSize === 14 && !block.bold) {
-      return 'Subtitle';
-    } else {
-      return 'Normal text';
+  onCanvasInput(): void {
+    if (this.editorCanvas) {
+      this.employeeTemplate.htmlContent = this.editorCanvas.nativeElement.innerHTML;
     }
   }
 
@@ -106,240 +90,88 @@ export class ReportTemplatesComponent implements OnInit {
       return;
     }
 
-    const position = this.getCanvasPosition(event);
-    this.addVisualBlock(this.draggedPaletteItem, position.x, position.y);
+    let range: Range | null = null;
+    if (document.caretRangeFromPoint) {
+      range = document.caretRangeFromPoint(event.clientX, event.clientY);
+    }
+
+    if (range) {
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    }
+
+    this.editorCanvas?.nativeElement.focus();
+
+    if (this.draggedPaletteItem.type === 'text') {
+      document.execCommand('insertText', false, 'Custom Text');
+    } else if (this.draggedPaletteItem.type === 'table') {
+      const tableHtml = `
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 10px;" border="1">
+          <tbody>
+            <tr><td style="padding: 4px;">&nbsp;</td><td style="padding: 4px;">&nbsp;</td><td style="padding: 4px;">&nbsp;</td></tr>
+            <tr><td style="padding: 4px;">&nbsp;</td><td style="padding: 4px;">&nbsp;</td><td style="padding: 4px;">&nbsp;</td></tr>
+            <tr><td style="padding: 4px;">&nbsp;</td><td style="padding: 4px;">&nbsp;</td><td style="padding: 4px;">&nbsp;</td></tr>
+          </tbody>
+        </table><p>&nbsp;</p>
+      `;
+      document.execCommand('insertHTML', false, tableHtml);
+    } else if (this.draggedPaletteItem.type === 'image') {
+      const label = this.draggedPaletteItem.imageKind === 'signature' ? 'Signature' : 'Photo';
+      const width = this.draggedPaletteItem.imageKind === 'signature' ? '160px' : '105px';
+      const height = this.draggedPaletteItem.imageKind === 'signature' ? '55px' : '130px';
+      const imageHtml = `<div contenteditable="false" class="attribute-pill image-pill" data-kind="${this.draggedPaletteItem.imageKind}" data-type="image" style="display: inline-block; width: ${width}; height: ${height}; border: 1px dashed #cbd5e1; background: #f8fafc; text-align: center; line-height: ${height}; font-size: 12px; color: #64748b;">[${label}]</div>&nbsp;`;
+      document.execCommand('insertHTML', false, imageHtml);
+    } else {
+      const fieldHtml = `<span contenteditable="false" class="attribute-pill" data-key="${this.draggedPaletteItem.key}" data-type="field" style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; display: inline-block; margin: 0 2px;">[${this.draggedPaletteItem.label}]</span>&nbsp;`;
+      document.execCommand('insertHTML', false, fieldHtml);
+    }
+
+    this.onCanvasInput();
     this.draggedPaletteItem = null;
-  }
-
-  addTextBlock(): void {
-    this.addVisualBlock({ type: 'text', label: 'Custom Text' }, 60, 60);
-  }
-
-  addImageBlock(imageKind: VisualReportImageKind): void {
-    this.addVisualBlock({ type: 'image', imageKind, label: imageKind === 'photo' ? 'Photo' : 'Signature' }, 620, 70);
   }
 
   applyTextStyle(style: string): void {
     this.selectedTextStyle = style;
-    const block = this.selectedBlock;
-    if (!block || block.type === 'image') {
-      return;
-    }
-
+    let size = 3;
     if (style === 'Title') {
-      block.fontSize = 24;
-      block.bold = true;
+      size = 6;
+      document.execCommand('bold', false, 'true');
     } else if (style === 'Heading') {
-      block.fontSize = 18;
-      block.bold = true;
+      size = 5;
+      document.execCommand('bold', false, 'true');
     } else if (style === 'Subtitle') {
-      block.fontSize = 14;
-      block.bold = false;
+      size = 4;
     } else {
-      block.fontSize = 11;
-      block.bold = false;
+      size = 3;
     }
+    document.execCommand('fontSize', false, size.toString());
+    this.onCanvasInput();
   }
 
   applyFontFamily(fontFamily: string): void {
     this.selectedFontFamily = fontFamily;
-    const block = this.selectedBlock;
-    if (block && block.type !== 'image') {
-      block.fontFamily = fontFamily;
-    }
-  }
-
-  changeSelectedFontSize(delta: number): void {
-    const block = this.selectedBlock;
-    if (!block || block.type === 'image') {
-      return;
-    }
-
-    block.fontSize = this.clamp(Math.round(block.fontSize + delta), 6, 72);
-  }
-
-  setSelectedFontSize(value: number): void {
-    const block = this.selectedBlock;
-    if (!block || block.type === 'image') {
-      return;
-    }
-
-    block.fontSize = this.clamp(Math.round(Number(value) || 11), 6, 72);
+    document.execCommand('fontName', false, fontFamily);
+    this.onCanvasInput();
   }
 
   toggleSelectedFormat(format: 'bold' | 'italic' | 'underline' | 'border'): void {
-    const block = this.selectedBlock;
-    if (!block || (block.type === 'image' && format !== 'border')) {
-      return;
+    if (format === 'border') {
+      return; 
     }
-
-    block[format] = !block[format];
+    document.execCommand(format, false, '');
+    this.onCanvasInput();
   }
 
   setSelectedColor(color: string): void {
-    const block = this.selectedBlock;
-    if (block && block.type !== 'image') {
-      block.textColor = color;
-    }
+    document.execCommand('foreColor', false, color);
+    this.onCanvasInput();
   }
 
   setSelectedAlign(align: 'left' | 'center' | 'right'): void {
-    const block = this.selectedBlock;
-    if (block) {
-      block.align = align;
-    }
-  }
-
-  selectBlock(block: VisualReportBlock, event?: MouseEvent): void {
-    event?.stopPropagation();
-    this.selectedBlockId = block.id;
-  }
-
-  clearBlockSelection(): void {
-    this.selectedBlockId = null;
-  }
-
-  startBlockMove(block: VisualReportBlock, event: MouseEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    const position = this.getCanvasPosition(event);
-    this.activeDrag = {
-      blockId: block.id,
-      offsetX: position.x - block.x,
-      offsetY: position.y - block.y
-    };
-    this.selectedBlockId = block.id;
-  }
-
-  onCanvasMouseMove(event: MouseEvent): void {
-    if (!this.activeDrag) {
-      return;
-    }
-
-    const block = this.employeeTemplate.visualBlocks.find((item) => item.id === this.activeDrag?.blockId);
-    if (!block) {
-      return;
-    }
-
-    const position = this.getCanvasPosition(event);
-    block.x = this.clamp(Math.round(position.x - this.activeDrag.offsetX), 0, this.pageWidth - block.width);
-    block.y = this.clamp(Math.round(position.y - this.activeDrag.offsetY), 0, this.pageHeight - block.height);
-  }
-
-  stopBlockMove(): void {
-    this.activeDrag = null;
-  }
-
-  @HostListener('document:mouseup')
-  onDocumentMouseUp(): void {
-    this.stopBlockMove();
-  }
-
-  deleteSelectedBlock(): void {
-    if (!this.selectedBlockId) {
-      return;
-    }
-
-    this.employeeTemplate.visualBlocks = this.employeeTemplate.visualBlocks.filter((block) => block.id !== this.selectedBlockId);
-    this.selectedBlockId = null;
-  }
-
-  getBlockStyle(block: VisualReportBlock): Record<string, string> {
-    return {
-      left: `${(block.x / this.pageWidth) * 100}%`,
-      top: `${(block.y / this.pageHeight) * 100}%`,
-      width: `${(block.width / this.pageWidth) * 100}%`,
-      height: `${(block.height / this.pageHeight) * 100}%`,
-      fontSize: `${block.fontSize}px`,
-      fontFamily: block.fontFamily ?? 'Arial',
-      fontWeight: block.bold ? '800' : '500',
-      fontStyle: block.italic ? 'italic' : 'normal',
-      textDecoration: block.underline ? 'underline' : 'none',
-      textAlign: block.align,
-      borderStyle: block.border ? 'solid' : 'dashed',
-      color: block.textColor ?? '#0f172a'
-    };
-  }
-
-  getBlockPreviewText(block: VisualReportBlock): string {
-    if (block.type === 'text') {
-      return block.text || 'Custom Text';
-    }
-
-    if (block.type === 'image') {
-      return block.imageKind === 'signature' ? 'Signature' : 'Photo';
-    }
-
-    if (block.type === 'table') {
-      return `${block.tableRows ?? 3} x ${block.tableColumns ?? 3} Table`;
-    }
-
-    return `${block.label}: ${this.getSampleValue(block.fieldKey ?? '')}`;
-  }
-
-  getTableCells(block: VisualReportBlock): number[] {
-    const rows = this.clamp(Math.round(block.tableRows ?? 3), 1, 20);
-    const columns = this.clamp(Math.round(block.tableColumns ?? 3), 1, 12);
-    return Array.from({ length: rows * columns }, (_, index) => index);
-  }
-
-  getSampleValue(fieldKey: string): string {
-    if (fieldKey.startsWith('dynamic:')) {
-      return 'Custom value';
-    }
-
-    return this.fieldDefinitions.find((field) => field.key === fieldKey)?.sample ?? '-';
-  }
-
-  private addVisualBlock(
-    item: { type: VisualReportBlockType; key?: string; label: string; imageKind?: VisualReportImageKind },
-    x: number,
-    y: number
-  ): void {
-    const isImage = item.type === 'image';
-    const isTable = item.type === 'table';
-    const block: VisualReportBlock = {
-      id: `block-${Date.now()}-${Math.round(Math.random() * 1000)}`,
-      type: item.type,
-      fieldKey: item.key,
-      label: item.label,
-      text: item.type === 'text' ? 'Custom Text' : '',
-      imageKind: item.imageKind,
-      x: this.clamp(Math.round(x), 0, this.pageWidth - (isImage ? 110 : isTable ? 360 : 180)),
-      y: this.clamp(Math.round(y), 0, this.pageHeight - (isImage ? 120 : isTable ? 130 : 34)),
-      width: isImage ? (item.imageKind === 'signature' ? 160 : 110) : isTable ? 360 : 190,
-      height: isImage ? (item.imageKind === 'signature' ? 55 : 135) : isTable ? 130 : 34,
-      fontSize: item.type === 'text' ? 16 : 11,
-      fontFamily: this.selectedFontFamily,
-      bold: item.type === 'text',
-      italic: false,
-      underline: false,
-      align: item.type === 'image' ? 'center' : 'left',
-      border: item.type === 'image' || item.type === 'table',
-      textColor: '#0f172a',
-      tableRows: isTable ? 3 : undefined,
-      tableColumns: isTable ? 3 : undefined
-    };
-
-    this.employeeTemplate.visualBlocks = [...this.employeeTemplate.visualBlocks, block];
-    this.selectedBlockId = block.id;
-  }
-
-  private getCanvasPosition(event: MouseEvent | DragEvent): { x: number; y: number } {
-    const canvas = (event.currentTarget as HTMLElement).closest('.visual-canvas') as HTMLElement | null
-      ?? document.querySelector('.visual-canvas') as HTMLElement | null;
-    const rect = canvas?.getBoundingClientRect();
-    if (!rect) {
-      return { x: 0, y: 0 };
-    }
-
-    return {
-      x: this.clamp(((event.clientX - rect.left) / rect.width) * this.pageWidth, 0, this.pageWidth),
-      y: this.clamp(((event.clientY - rect.top) / rect.height) * this.pageHeight, 0, this.pageHeight)
-    };
-  }
-
-  private clamp(value: number, min: number, max: number): number {
-    return Math.min(Math.max(value, min), max);
+    if (align === 'left') document.execCommand('justifyLeft', false, '');
+    else if (align === 'center') document.execCommand('justifyCenter', false, '');
+    else if (align === 'right') document.execCommand('justifyRight', false, '');
+    this.onCanvasInput();
   }
 }
