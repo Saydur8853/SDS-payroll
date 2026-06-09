@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 
 export type ReportOrientation = 'landscape' | 'portrait';
 export type ReportPageSize = 'A4';
-export type VisualReportBlockType = 'field' | 'text' | 'image';
+export type VisualReportBlockType = 'field' | 'text' | 'image' | 'table';
 export type VisualReportImageKind = 'photo' | 'signature';
 export type VisualReportTextAlign = 'left' | 'center' | 'right';
 
@@ -44,9 +44,15 @@ export interface VisualReportBlock {
   width: number;
   height: number;
   fontSize: number;
+  fontFamily?: string;
   bold: boolean;
+  italic?: boolean;
+  underline?: boolean;
   align: VisualReportTextAlign;
   border: boolean;
+  textColor?: string;
+  tableRows?: number;
+  tableColumns?: number;
 }
 
 @Injectable({
@@ -56,12 +62,16 @@ export class ReportTemplateService {
   private readonly employeeTemplateStorageKey = 'sds-payroll-report-template-employee-info';
 
   readonly employeeFieldDefinitions: ReportFieldDefinition[] = [
+    { key: 'id', label: 'Employee ID', sample: 'EMP-UUID' },
     { key: 'employeeCode', label: 'Employee Code', sample: '101' },
     { key: 'fullName', label: 'Full Name', sample: 'John Smith' },
     { key: 'phone', label: 'Phone', sample: '017XXXXXXXX' },
     { key: 'email', label: 'Email', sample: 'john@company.com' },
+    { key: 'companyId', label: 'Company ID', sample: 'COMP-UUID' },
     { key: 'company', label: 'Company', sample: 'Talha Group' },
+    { key: 'departmentId', label: 'Department ID', sample: 'DEPT-UUID' },
     { key: 'department', label: 'Department', sample: 'HR' },
+    { key: 'designationId', label: 'Designation ID', sample: 'DESIG-UUID' },
     { key: 'designation', label: 'Designation', sample: 'Officer' },
     { key: 'employmentStatus', label: 'Status', sample: 'Active' },
     { key: 'joiningDate', label: 'Joining Date', sample: '01 Jan 2026' },
@@ -78,12 +88,15 @@ export class ReportTemplateService {
     { key: 'motherPhone', label: "Mother's Phone", sample: '017XXXXXXXX' },
     { key: 'spouseName', label: 'Spouse Name', sample: 'Spouse Name' },
     { key: 'spousePhone', label: 'Spouse Phone', sample: '017XXXXXXXX' },
+    { key: 'shiftId', label: 'Shift ID', sample: 'SHIFT-UUID' },
     { key: 'workingTime', label: 'Working Time', sample: 'General' },
     { key: 'salaryRule', label: 'Salary Rule', sample: 'Monthly' },
     { key: 'grossSalary', label: 'Gross Salary', sample: '25000' },
     { key: 'basicSalary', label: 'Basic Salary', sample: '15000' },
     { key: 'weekend', label: 'Weekend', sample: 'Friday' },
-    { key: 'salaryAccount', label: 'Salary Account', sample: '123456789' }
+    { key: 'salaryAccount', label: 'Salary Account', sample: '123456789' },
+    { key: 'createdAtUtc', label: 'Created At', sample: '01 Jan 2026' },
+    { key: 'updatedAtUtc', label: 'Updated At', sample: '02 Jan 2026' }
   ];
 
   getEmployeeTemplate(): ReportTemplate {
@@ -157,9 +170,13 @@ export class ReportTemplateService {
           width: 420,
           height: 42,
           fontSize: 22,
+          fontFamily: 'Arial',
           bold: true,
+          italic: false,
+          underline: false,
           align: 'left',
-          border: false
+          border: false,
+          textColor: '#0f172a'
         },
         {
           id: 'employee-name',
@@ -171,9 +188,13 @@ export class ReportTemplateService {
           width: 310,
           height: 34,
           fontSize: 14,
+          fontFamily: 'Arial',
           bold: true,
+          italic: false,
+          underline: false,
           align: 'left',
-          border: false
+          border: false,
+          textColor: '#0f172a'
         },
         {
           id: 'employee-code',
@@ -185,9 +206,13 @@ export class ReportTemplateService {
           width: 190,
           height: 28,
           fontSize: 11,
+          fontFamily: 'Arial',
           bold: false,
+          italic: false,
+          underline: false,
           align: 'left',
-          border: false
+          border: false,
+          textColor: '#0f172a'
         },
         {
           id: 'employee-photo',
@@ -199,9 +224,13 @@ export class ReportTemplateService {
           width: 105,
           height: 130,
           fontSize: 10,
+          fontFamily: 'Arial',
           bold: false,
+          italic: false,
+          underline: false,
           align: 'center',
-          border: true
+          border: true,
+          textColor: '#64748b'
         }
       ],
       updatedAtUtc: new Date().toISOString()
@@ -255,7 +284,7 @@ export class ReportTemplateService {
       .filter((block) => block && block.id && block.type)
       .map((block) => ({
         id: block.id,
-        type: block.type === 'image' || block.type === 'text' ? block.type : 'field',
+        type: block.type === 'image' || block.type === 'text' || block.type === 'table' ? block.type : 'field',
         fieldKey: block.fieldKey,
         label: block.label?.trim() || block.fieldKey || block.text || 'Block',
         text: block.text ?? '',
@@ -265,9 +294,15 @@ export class ReportTemplateService {
         width: Number.isFinite(block.width) && block.width > 0 ? block.width : 160,
         height: Number.isFinite(block.height) && block.height > 0 ? block.height : 32,
         fontSize: Number.isFinite(block.fontSize) && block.fontSize > 0 ? block.fontSize : 11,
+        fontFamily: block.fontFamily?.trim() || 'Arial',
         bold: !!block.bold,
+        italic: !!block.italic,
+        underline: !!block.underline,
         align: block.align === 'center' || block.align === 'right' ? block.align : 'left',
-        border: !!block.border
+        border: !!block.border,
+        textColor: block.textColor?.trim() || '#0f172a',
+        tableRows: Number.isFinite(block.tableRows) && Number(block.tableRows) > 0 ? Math.round(Number(block.tableRows)) : 3,
+        tableColumns: Number.isFinite(block.tableColumns) && Number(block.tableColumns) > 0 ? Math.round(Number(block.tableColumns)) : 3
       }));
   }
 }

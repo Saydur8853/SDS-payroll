@@ -6,6 +6,7 @@ import {
   ReportTemplate,
   ReportTemplateService,
   VisualReportBlock,
+  VisualReportBlockType,
   VisualReportImageKind
 } from '../../services/report-template.service';
 
@@ -20,10 +21,24 @@ export class ReportTemplatesComponent implements OnInit {
   message = '';
   selectedBlockId: string | null = null;
   activeInsertTab: 'attributes' | 'tools' = 'attributes';
-  private draggedPaletteItem: { type: 'field' | 'text' | 'image'; key?: string; label: string; imageKind?: VisualReportImageKind } | null = null;
+  selectedTextStyle = 'Normal text';
+  selectedFontFamily = 'Arial';
+  private draggedPaletteItem: { type: VisualReportBlockType; key?: string; label: string; imageKind?: VisualReportImageKind } | null = null;
   private activeDrag: { blockId: string; offsetX: number; offsetY: number } | null = null;
 
   readonly fieldDefinitions: ReportFieldDefinition[];
+  readonly textStyleOptions = ['Normal text', 'Title', 'Heading', 'Subtitle'];
+  readonly fontFamilyOptions = [
+    'Arial',
+    'Calibri',
+    'Roboto',
+    'Times New Roman',
+    'SutonnyMJ',
+    'Nikosh Bangla',
+    'Tiro Bangla',
+    'Hind Siliguri',
+    'Anek Bangla'
+  ];
 
   constructor(private readonly reportTemplateService: ReportTemplateService) {
     this.fieldDefinitions = this.reportTemplateService.employeeFieldDefinitions;
@@ -45,6 +60,23 @@ export class ReportTemplatesComponent implements OnInit {
     return this.employeeTemplate.visualBlocks.find((block) => block.id === this.selectedBlockId) ?? null;
   }
 
+  get currentTextStyle(): string {
+    const block = this.selectedBlock;
+    if (!block || block.type === 'image') {
+      return this.selectedTextStyle;
+    }
+
+    if (block.fontSize === 24 && block.bold) {
+      return 'Title';
+    } else if (block.fontSize === 18 && block.bold) {
+      return 'Heading';
+    } else if (block.fontSize === 14 && !block.bold) {
+      return 'Subtitle';
+    } else {
+      return 'Normal text';
+    }
+  }
+
   saveTemplate(): void {
     this.employeeTemplate = this.reportTemplateService.saveEmployeeTemplate(this.employeeTemplate);
     this.message = 'Employee Info report template saved.';
@@ -59,7 +91,7 @@ export class ReportTemplatesComponent implements OnInit {
     this.message = 'Employee Info report template reset.';
   }
 
-  onPaletteDragStart(event: DragEvent, item: { type: 'field' | 'text' | 'image'; key?: string; label: string; imageKind?: VisualReportImageKind }): void {
+  onPaletteDragStart(event: DragEvent, item: { type: VisualReportBlockType; key?: string; label: string; imageKind?: VisualReportImageKind }): void {
     this.draggedPaletteItem = item;
     event.dataTransfer?.setData('text/plain', item.label);
   }
@@ -85,6 +117,77 @@ export class ReportTemplatesComponent implements OnInit {
 
   addImageBlock(imageKind: VisualReportImageKind): void {
     this.addVisualBlock({ type: 'image', imageKind, label: imageKind === 'photo' ? 'Photo' : 'Signature' }, 620, 70);
+  }
+
+  applyTextStyle(style: string): void {
+    this.selectedTextStyle = style;
+    const block = this.selectedBlock;
+    if (!block || block.type === 'image') {
+      return;
+    }
+
+    if (style === 'Title') {
+      block.fontSize = 24;
+      block.bold = true;
+    } else if (style === 'Heading') {
+      block.fontSize = 18;
+      block.bold = true;
+    } else if (style === 'Subtitle') {
+      block.fontSize = 14;
+      block.bold = false;
+    } else {
+      block.fontSize = 11;
+      block.bold = false;
+    }
+  }
+
+  applyFontFamily(fontFamily: string): void {
+    this.selectedFontFamily = fontFamily;
+    const block = this.selectedBlock;
+    if (block && block.type !== 'image') {
+      block.fontFamily = fontFamily;
+    }
+  }
+
+  changeSelectedFontSize(delta: number): void {
+    const block = this.selectedBlock;
+    if (!block || block.type === 'image') {
+      return;
+    }
+
+    block.fontSize = this.clamp(Math.round(block.fontSize + delta), 6, 72);
+  }
+
+  setSelectedFontSize(value: number): void {
+    const block = this.selectedBlock;
+    if (!block || block.type === 'image') {
+      return;
+    }
+
+    block.fontSize = this.clamp(Math.round(Number(value) || 11), 6, 72);
+  }
+
+  toggleSelectedFormat(format: 'bold' | 'italic' | 'underline' | 'border'): void {
+    const block = this.selectedBlock;
+    if (!block || (block.type === 'image' && format !== 'border')) {
+      return;
+    }
+
+    block[format] = !block[format];
+  }
+
+  setSelectedColor(color: string): void {
+    const block = this.selectedBlock;
+    if (block && block.type !== 'image') {
+      block.textColor = color;
+    }
+  }
+
+  setSelectedAlign(align: 'left' | 'center' | 'right'): void {
+    const block = this.selectedBlock;
+    if (block) {
+      block.align = align;
+    }
   }
 
   selectBlock(block: VisualReportBlock, event?: MouseEvent): void {
@@ -148,9 +251,13 @@ export class ReportTemplatesComponent implements OnInit {
       width: `${(block.width / this.pageWidth) * 100}%`,
       height: `${(block.height / this.pageHeight) * 100}%`,
       fontSize: `${block.fontSize}px`,
+      fontFamily: block.fontFamily ?? 'Arial',
       fontWeight: block.bold ? '800' : '500',
+      fontStyle: block.italic ? 'italic' : 'normal',
+      textDecoration: block.underline ? 'underline' : 'none',
       textAlign: block.align,
-      borderStyle: block.border ? 'solid' : 'dashed'
+      borderStyle: block.border ? 'solid' : 'dashed',
+      color: block.textColor ?? '#0f172a'
     };
   }
 
@@ -163,7 +270,17 @@ export class ReportTemplatesComponent implements OnInit {
       return block.imageKind === 'signature' ? 'Signature' : 'Photo';
     }
 
+    if (block.type === 'table') {
+      return `${block.tableRows ?? 3} x ${block.tableColumns ?? 3} Table`;
+    }
+
     return `${block.label}: ${this.getSampleValue(block.fieldKey ?? '')}`;
+  }
+
+  getTableCells(block: VisualReportBlock): number[] {
+    const rows = this.clamp(Math.round(block.tableRows ?? 3), 1, 20);
+    const columns = this.clamp(Math.round(block.tableColumns ?? 3), 1, 12);
+    return Array.from({ length: rows * columns }, (_, index) => index);
   }
 
   getSampleValue(fieldKey: string): string {
@@ -175,11 +292,12 @@ export class ReportTemplatesComponent implements OnInit {
   }
 
   private addVisualBlock(
-    item: { type: 'field' | 'text' | 'image'; key?: string; label: string; imageKind?: VisualReportImageKind },
+    item: { type: VisualReportBlockType; key?: string; label: string; imageKind?: VisualReportImageKind },
     x: number,
     y: number
   ): void {
     const isImage = item.type === 'image';
+    const isTable = item.type === 'table';
     const block: VisualReportBlock = {
       id: `block-${Date.now()}-${Math.round(Math.random() * 1000)}`,
       type: item.type,
@@ -187,14 +305,20 @@ export class ReportTemplatesComponent implements OnInit {
       label: item.label,
       text: item.type === 'text' ? 'Custom Text' : '',
       imageKind: item.imageKind,
-      x: this.clamp(Math.round(x), 0, this.pageWidth - (isImage ? 110 : 180)),
-      y: this.clamp(Math.round(y), 0, this.pageHeight - (isImage ? 120 : 34)),
-      width: isImage ? (item.imageKind === 'signature' ? 160 : 110) : 190,
-      height: isImage ? (item.imageKind === 'signature' ? 55 : 135) : 34,
+      x: this.clamp(Math.round(x), 0, this.pageWidth - (isImage ? 110 : isTable ? 360 : 180)),
+      y: this.clamp(Math.round(y), 0, this.pageHeight - (isImage ? 120 : isTable ? 130 : 34)),
+      width: isImage ? (item.imageKind === 'signature' ? 160 : 110) : isTable ? 360 : 190,
+      height: isImage ? (item.imageKind === 'signature' ? 55 : 135) : isTable ? 130 : 34,
       fontSize: item.type === 'text' ? 16 : 11,
+      fontFamily: this.selectedFontFamily,
       bold: item.type === 'text',
+      italic: false,
+      underline: false,
       align: item.type === 'image' ? 'center' : 'left',
-      border: item.type === 'image'
+      border: item.type === 'image' || item.type === 'table',
+      textColor: '#0f172a',
+      tableRows: isTable ? 3 : undefined,
+      tableColumns: isTable ? 3 : undefined
     };
 
     this.employeeTemplate.visualBlocks = [...this.employeeTemplate.visualBlocks, block];

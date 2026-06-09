@@ -459,11 +459,18 @@
             *ngFor="let block of employeePrintTemplate.visualBlocks"
             [class.image-block]="block.type === 'image'"
             [ngStyle]="getVisualBlockStyle(block)">
-            <ng-container *ngIf="block.type !== 'image'; else visualImageBlock">
+            <ng-container *ngIf="block.type !== 'image' && block.type !== 'table'; else visualSpecialBlock">
               {{ getVisualBlockText(employee, block) }}
             </ng-container>
-            <ng-template #visualImageBlock>
-              <img *ngIf="getVisualBlockImageSrc(employee, block) as imageSrc" [src]="imageSrc" [alt]="block.label" />
+            <ng-template #visualSpecialBlock>
+              <ng-container *ngIf="block.type === 'image'; else visualTableBlock">
+                <img *ngIf="getVisualBlockImageSrc(employee, block) as imageSrc" [src]="imageSrc" [alt]="block.label" />
+              </ng-container>
+              <ng-template #visualTableBlock>
+                <span class="employee-visual-table-grid" [style.grid-template-columns]="'repeat(' + (block.tableColumns ?? 3) + ', 1fr)'">
+                  <span *ngFor="let cell of getVisualTableCells(block)"></span>
+                </span>
+              </ng-template>
             </ng-template>
           </div>
         </section>

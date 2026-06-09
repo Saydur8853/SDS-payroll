@@ -1237,7 +1237,7 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
       return entry?.[1]?.toString().trim() || '-';
     }
 
-    if (field.key === 'joiningDate' || field.key === 'dateOfBirth') {
+    if (field.key === 'joiningDate' || field.key === 'dateOfBirth' || field.key === 'createdAtUtc' || field.key === 'updatedAtUtc') {
       const value = employee[field.key as keyof Employee];
       return typeof value === 'string' && value ? this.formatDisplayDate(value) : '-';
     }
@@ -1260,9 +1260,13 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
       width: `${(block.width / pageWidth) * 100}%`,
       height: `${(block.height / pageHeight) * 100}%`,
       fontSize: `${block.fontSize}pt`,
+      fontFamily: block.fontFamily ?? 'Arial',
       fontWeight: block.bold ? '800' : '500',
+      fontStyle: block.italic ? 'italic' : 'normal',
+      textDecoration: block.underline ? 'underline' : 'none',
       textAlign: block.align,
-      borderStyle: block.border ? 'solid' : 'none'
+      borderStyle: block.border ? 'solid' : 'none',
+      color: block.textColor ?? '#0f172a'
     };
   }
 
@@ -1282,6 +1286,12 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
     }
 
     return '';
+  }
+
+  getVisualTableCells(block: VisualReportBlock): number[] {
+    const rows = Math.min(Math.max(Math.round(block.tableRows ?? 3), 1), 20);
+    const columns = Math.min(Math.max(Math.round(block.tableColumns ?? 3), 1), 12);
+    return Array.from({ length: rows * columns }, (_, index) => index);
   }
 
   getVisualBlockImageSrc(employee: Employee, block: VisualReportBlock): string | null {

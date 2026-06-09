@@ -69,6 +69,16 @@
                     <span class="material-symbols-rounded">drag_indicator</span>
                     {{ field.label }}
                   </button>
+                  <button type="button" class="palette-item" draggable="true" (dragstart)="onPaletteDragStart($event, { type: 'image', imageKind: 'photo', label: 'Photo' })">
+                    <span class="material-symbols-rounded">drag_indicator</span>
+                    <span class="material-symbols-rounded">image</span>
+                    Photo
+                  </button>
+                  <button type="button" class="palette-item" draggable="true" (dragstart)="onPaletteDragStart($event, { type: 'image', imageKind: 'signature', label: 'Signature' })">
+                    <span class="material-symbols-rounded">drag_indicator</span>
+                    <span class="material-symbols-rounded">draw</span>
+                    Signature
+                  </button>
                 </div>
               </div>
 
@@ -79,18 +89,47 @@
                     <p>Use these blocks to build the report document.</p>
                   </div>
                 </div>
+                <div class="doc-builder-toolbar" aria-label="Document builder toolbar">
+                  <select class="toolbar-select wide" [ngModel]="currentTextStyle" (ngModelChange)="applyTextStyle($event)" aria-label="Text style">
+                    <option *ngFor="let option of textStyleOptions" [value]="option">{{ option }}</option>
+                  </select>
+                  <select class="toolbar-select" [ngModel]="selectedBlock?.fontFamily ?? selectedFontFamily" (ngModelChange)="applyFontFamily($event)" aria-label="Font family">
+                    <option *ngFor="let option of fontFamilyOptions" [value]="option">{{ option }}</option>
+                  </select>
+                  <span class="toolbar-separator"></span>
+                  <button type="button" class="toolbar-btn" (click)="changeSelectedFontSize(-1)" aria-label="Decrease font size">
+                    <span class="material-symbols-rounded">remove</span>
+                  </button>
+                  <input class="toolbar-size" type="number" min="6" max="72" [ngModel]="selectedBlock?.fontSize ?? 11" (ngModelChange)="setSelectedFontSize($event)" aria-label="Font size" />
+                  <button type="button" class="toolbar-btn" (click)="changeSelectedFontSize(1)" aria-label="Increase font size">
+                    <span class="material-symbols-rounded">add</span>
+                  </button>
+                  <button type="button" class="toolbar-btn text-btn" [class.active]="selectedBlock?.bold" (click)="toggleSelectedFormat('bold')" aria-label="Bold">B</button>
+                  <button type="button" class="toolbar-btn text-btn italic" [class.active]="selectedBlock?.italic" (click)="toggleSelectedFormat('italic')" aria-label="Italic">I</button>
+                  <button type="button" class="toolbar-btn text-btn underline" [class.active]="selectedBlock?.underline" (click)="toggleSelectedFormat('underline')" aria-label="Underline">U</button>
+                  <label class="toolbar-color" aria-label="Text color">
+                    <span class="material-symbols-rounded">format_color_text</span>
+                    <input type="color" [ngModel]="selectedBlock?.textColor ?? '#0f172a'" (ngModelChange)="setSelectedColor($event)" />
+                  </label>
+                  <span class="toolbar-separator"></span>
+                  <button type="button" class="toolbar-btn" [class.active]="selectedBlock?.align === 'left'" (click)="setSelectedAlign('left')" aria-label="Align left">
+                    <span class="material-symbols-rounded">format_align_left</span>
+                  </button>
+                  <button type="button" class="toolbar-btn" [class.active]="selectedBlock?.align === 'center'" (click)="setSelectedAlign('center')" aria-label="Align center">
+                    <span class="material-symbols-rounded">format_align_center</span>
+                  </button>
+                  <button type="button" class="toolbar-btn" [class.active]="selectedBlock?.align === 'right'" (click)="setSelectedAlign('right')" aria-label="Align right">
+                    <span class="material-symbols-rounded">format_align_right</span>
+                  </button>
+                </div>
                 <div class="tool-grid">
                   <button type="button" class="palette-item" draggable="true" (dragstart)="onPaletteDragStart($event, { type: 'text', label: 'Custom Text' })">
                     <span class="material-symbols-rounded">title</span>
                     Custom Text
                   </button>
-                  <button type="button" class="palette-item" draggable="true" (dragstart)="onPaletteDragStart($event, { type: 'image', imageKind: 'photo', label: 'Photo' })">
-                    <span class="material-symbols-rounded">image</span>
-                    Photo
-                  </button>
-                  <button type="button" class="palette-item" draggable="true" (dragstart)="onPaletteDragStart($event, { type: 'image', imageKind: 'signature', label: 'Signature' })">
-                    <span class="material-symbols-rounded">draw</span>
-                    Signature
+                  <button type="button" class="palette-item" draggable="true" (dragstart)="onPaletteDragStart($event, { type: 'table', label: 'Table' })">
+                    <span class="material-symbols-rounded">table</span>
+                    Table
                   </button>
                 </div>
               </div>
@@ -115,7 +154,14 @@
                   [ngStyle]="getBlockStyle(block)"
                   (mousedown)="startBlockMove(block, $event)"
                   (click)="selectBlock(block, $event)">
-                  {{ getBlockPreviewText(block) }}
+                  <ng-container *ngIf="block.type !== 'table'; else designerTableBlock">
+                    {{ getBlockPreviewText(block) }}
+                  </ng-container>
+                  <ng-template #designerTableBlock>
+                    <span class="designer-table-grid" [style.grid-template-columns]="'repeat(' + (block.tableColumns ?? 3) + ', 1fr)'">
+                      <span *ngFor="let cell of getTableCells(block)"></span>
+                    </span>
+                  </ng-template>
                 </div>
               </div>
             </div>
@@ -131,6 +177,16 @@
                   Text
                   <textarea rows="3" [(ngModel)]="block.text"></textarea>
                 </label>
+                <div class="property-grid" *ngIf="block.type === 'table'">
+                  <label>
+                    Rows
+                    <input type="number" min="1" max="20" [(ngModel)]="block.tableRows" />
+                  </label>
+                  <label>
+                    Columns
+                    <input type="number" min="1" max="12" [(ngModel)]="block.tableColumns" />
+                  </label>
+                </div>
                 <div class="property-grid">
                   <label>
                     X
@@ -155,12 +211,24 @@
                     <input type="number" [(ngModel)]="block.fontSize" />
                   </label>
                   <label>
+                    Family
+                    <select [(ngModel)]="block.fontFamily">
+                      <option *ngFor="let option of fontFamilyOptions" [value]="option">{{ option }}</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="property-grid">
+                  <label>
                     Align
                     <select [(ngModel)]="block.align">
                       <option value="left">Left</option>
                       <option value="center">Center</option>
                       <option value="right">Right</option>
                     </select>
+                  </label>
+                  <label>
+                    Color
+                    <input type="color" [(ngModel)]="block.textColor" />
                   </label>
                 </div>
                 <label class="check-option block-check">
@@ -217,7 +285,14 @@
             *ngFor="let block of employeeTemplate.visualBlocks"
             [class.image-block]="block.type === 'image'"
             [ngStyle]="getBlockStyle(block)">
-            {{ getBlockPreviewText(block) }}
+            <ng-container *ngIf="block.type !== 'table'; else previewTableBlock">
+              {{ getBlockPreviewText(block) }}
+            </ng-container>
+            <ng-template #previewTableBlock>
+              <span class="designer-table-grid" [style.grid-template-columns]="'repeat(' + (block.tableColumns ?? 3) + ', 1fr)'">
+                <span *ngFor="let cell of getTableCells(block)"></span>
+              </span>
+            </ng-template>
           </div>
         </div>
       </div>
