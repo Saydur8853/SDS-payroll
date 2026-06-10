@@ -299,15 +299,199 @@
 
 .doc-builder-toolbar {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: 0.4rem;
   margin-bottom: 0.65rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  padding: 0.45rem;
+  padding: 0.5rem 0.55rem;
   background: rgba(15, 23, 42, 0.2);
 }
+
+/* Each logical row inside the toolbar */
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+/* Thin divider between the side-by-side toolbar groups */
+.toolbar-row + .toolbar-row {
+  padding-left: 0.4rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.toolbar-margin-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.toolbar-margin-group > .material-symbols-rounded {
+  color: #a78bfa;
+  font-size: 18px;
+}
+
+.toolbar-margin-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.toolbar-margin-input input {
+  width: 46px;
+  min-height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  padding: 0 0.25rem;
+  color: #dbeafe;
+  background: rgba(255, 255, 255, 0.055);
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.toolbar-margin-input input:focus {
+  outline: none;
+  border-color: rgba(167, 139, 250, 0.5);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.14);
+}
+
+/* Custom Orientation Dropdown Container */
+.custom-dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Custom Dropdown Trigger */
+.custom-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 34px;
+  padding: 0 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  color: #dbeafe;
+  background: rgba(255, 255, 255, 0.055);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .material-symbols-rounded {
+    font-size: 16px;
+    color: #a78bfa;
+  }
+
+  .trigger-text {
+    min-width: 60px;
+    text-align: left;
+  }
+
+  .chevron {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-left: 0.2rem;
+    transition: transform 0.2s ease;
+  }
+
+  &[aria-expanded="true"] {
+    border-color: rgba(167, 139, 250, 0.4);
+    background: rgba(255, 255, 255, 0.08);
+
+    .chevron {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+/* Options dropdown list */
+.custom-dropdown-options {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 50;
+  min-width: 130px;
+  background: #0f172a; /* Dark navy backdrop */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  padding: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  animation: dropdownFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Single Dropdown Option button */
+.dropdown-option {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.4rem 0.55rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #94a3b8; /* slate-400 */
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #f1f5f9;
+  }
+
+  &.active {
+    background: rgba(124, 58, 237, 0.2);
+    color: #c084fc;
+    font-weight: 800;
+
+    .material-symbols-rounded {
+      color: #c084fc;
+    }
+  }
+
+  .material-symbols-rounded {
+    font-size: 15px;
+    color: #64748b;
+  }
+}
+
+/* Wider font-family select on the first row */
+.toolbar-select.font-select {
+  flex: 1 1 120px;
+  max-width: 170px;
+}
+
 
 .toolbar-select,
 .toolbar-size,
@@ -465,7 +649,32 @@
     0 0 0 10px rgba(15, 23, 42, 0.12),
     0 24px 50px rgba(0, 0, 0, 0.28);
   overflow: hidden;
+
+  /**
+   * Margin guide — visible in the editor only, never printed.
+   * Drawn via ::before using CSS custom properties set from [style.--mg-*] bindings.
+   */
+  &::before {
+    content: '';
+    position: absolute;
+    inset:
+      var(--mg-top,  40px)
+      var(--mg-right, 40px)
+      var(--mg-bottom, 40px)
+      var(--mg-left,  40px);
+    border: 1.5px dashed rgba(139, 92, 246, 0.45);
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 10;
+  }
 }
+
+@media print {
+  .visual-canvas::before {
+    display: none !important;
+  }
+}
+
 
 .visual-canvas.portrait {
   width: 794px;
@@ -761,14 +970,59 @@
   .check-option,
   .insert-panel,
   .doc-builder-toolbar,
+  .custom-dropdown-trigger,
   .toolbar-select,
   .toolbar-size,
   .toolbar-btn,
   .toolbar-color,
+  .toolbar-margin-input input,
   .palette-item {
     color: #334155;
     background: rgba(248, 250, 252, 0.92);
     border-color: rgba(15, 23, 42, 0.09);
+  }
+
+  .toolbar-margin-input {
+    color: #64748b;
+  }
+
+  .custom-dropdown-trigger {
+    &:hover {
+      background: #f1f5f9;
+      border-color: rgba(15, 23, 42, 0.15);
+    }
+
+    .chevron {
+      color: #64748b;
+    }
+  }
+
+  .custom-dropdown-options {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.1);
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+  }
+
+  .dropdown-option {
+    color: #64748b;
+
+    &:hover {
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+
+    &.active {
+      background: rgba(124, 58, 237, 0.08);
+      color: #7c3aed;
+
+      .material-symbols-rounded {
+        color: #7c3aed;
+      }
+    }
+
+    .material-symbols-rounded {
+      color: #94a3b8;
+    }
   }
 
   .insert-tabs {
@@ -840,6 +1094,18 @@
 @media (max-width: 760px) {
   .preview-card-fields {
     grid-template-columns: 1fr;
+  }
+
+  .doc-builder-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .toolbar-row + .toolbar-row {
+    padding-top: 0.38rem;
+    padding-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 0;
   }
 
   .insert-tabs {

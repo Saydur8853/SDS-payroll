@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, HostListener, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
+  PageMargins,
   ReportFieldDefinition,
   ReportTemplate,
   ReportTemplateService,
@@ -24,7 +25,48 @@ export class ReportTemplatesComponent implements OnInit, AfterViewInit {
   message = '';
   activeInsertTab: 'attributes' | 'tools' = 'attributes';
   selectedTextStyle = 'Normal text';
+  /** Alias used in the template for the current text style select. */
+  get currentTextStyle(): string { return this.selectedTextStyle; }
   selectedFontFamily = 'Arial';
+
+  /** Page dimensions (mm) used for aspect-ratio styling on the canvas. */
+  get pageWidth(): number {
+    return this.employeeTemplate?.orientation === 'portrait' ? 210 : 297;
+  }
+  get pageHeight(): number {
+    return this.employeeTemplate?.orientation === 'portrait' ? 297 : 210;
+  }
+
+  /**
+   * Converts the stored mm margins to a CSS padding string for the canvas.
+   * 1 mm ≈ 3.7795 px at 96 dpi.
+   */
+  get canvasPaddingStyle(): string {
+    const m = this.employeeTemplate?.pageMargins;
+    if (!m) { return '40px'; }
+    const toPx = (mm: number) => Math.round(mm * 3.7795) + 'px';
+    return `${toPx(m.top)} ${toPx(m.right)} ${toPx(m.bottom)} ${toPx(m.left)}`;
+  }
+
+  /** Individual margin px values for CSS custom property bindings (margin guide). */
+  get marginPx(): { top: string; right: string; bottom: string; left: string } {
+    const m = this.employeeTemplate?.pageMargins;
+    const toPx = (mm: number) => Math.round(mm * 3.7795) + 'px';
+    if (!m) { return { top: '40px', right: '40px', bottom: '40px', left: '40px' }; }
+    return {
+      top:    toPx(m.top),
+      right:  toPx(m.right),
+      bottom: toPx(m.bottom),
+      left:   toPx(m.left)
+    };
+  }
+
+  /**
+   * selectedBlock is kept as null in this contenteditable-canvas approach.
+   * It is declared so the template bindings compile without errors.
+   * The properties panel's "no block selected" placeholder will always show.
+   */
+  selectedBlock: VisualReportBlock | null = null;
   private draggedPaletteItem: { type: VisualReportBlockType; key?: string; label: string; imageKind?: VisualReportImageKind } | null = null;
 
   readonly fieldDefinitions: ReportFieldDefinition[];
@@ -161,6 +203,73 @@ export class ReportTemplatesComponent implements OnInit, AfterViewInit {
     }
     document.execCommand(format, false, '');
     this.onCanvasInput();
+  }
+
+  changeSelectedFontSize(delta: number): void {
+    // In the contenteditable canvas, font-size changes operate on the selection.
+    // We read the current computed size from the selection and adjust it.
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) { return; }
+    const range = selection.getRangeAt(0);
+    const el = range.commonAncestorContainer instanceof Element
+      ? range.commonAncestorContainer
+      : range.commonAncestorContainer.parentElement;
+    const currentSize = el ? parseInt(window.getComputedStyle(el).fontSize, 10) : 11;
+    const newSize = Math.min(72, Math.max(6, (isNaN(currentSize) ? 11 : currentSize) + delta));
+    document.execCommand('fontSize', false, '7'); // placeholder size
+    // Replace font-size on the newly created <font> elements
+    const fonts = this.editorCanvas?.nativeElement.querySelectorAll('font[size="7"]');
+    fonts?.forEach((f: Element) => {
+      (f as HTMLElement).removeAttribute('size');
+      (f as HTMLElement).style.fontSize = newSize + 'px';
+    });
+    this.onCanvasInput();
+  }
+
+  setSelectedFontSize(size: number): void {
+    if (!size || size < 6 || size > 72) { return; }
+    document.execCommand('fontSize', false, '7');
+    const fonts = this.editorCanvas?.nativeElement.querySelectorAll('font[size="7"]');
+    fonts?.forEach((f: Element) => {
+      (f as HTMLElement).removeAttribute('size');
+      (f as HTMLElement).style.fontSize = size + 'px';
+    });
+    this.onCanvasInput();
+  }
+
+  deleteSelectedBlock(): void {
+    // No-op in canvas mode; selectedBlock is always null.
+  }
+
+  isOrientationDropdownOpen = false;
+
+  toggleOrientationDropdown(event: MouseEvent): void {
+    event.stopPropagation();
+    this.isOrientationDropdownOpen = !this.isOrientationDropdownOpen;
+  }
+
+  selectOrientation(orientation: 'portrait' | 'landscape'): void {
+    this.setOrientation(orientation);
+    this.isOrientationDropdownOpen = false;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    this.isOrientationDropdownOpen = false;
+  }
+
+  setOrientation(orientation: 'portrait' | 'landscape'): void {
+    if (!this.employeeTemplate) { return; }
+    this.employeeTemplate = { ...this.employeeTemplate, orientation };
+  }
+
+  updateMargin(side: keyof PageMargins, value: number): void {
+    if (!this.employeeTemplate) { return; }
+    const clamped = Math.max(0, Math.min(100, isNaN(value) ? 20 : value));
+    this.employeeTemplate = {
+      ...this.employeeTemplate,
+      pageMargins: { ...this.employeeTemplate.pageMargins, [side]: clamped }
+    };
   }
 
   setSelectedColor(color: string): void {

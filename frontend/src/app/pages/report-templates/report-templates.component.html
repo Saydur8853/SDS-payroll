@@ -86,51 +86,128 @@
                 <div class="insert-panel-header">
                   <div>
                     <h3>Document Tools</h3>
-                    <p>Use these blocks to build the report document.</p>
                   </div>
                 </div>
+
                 <div class="doc-builder-toolbar" aria-label="Document builder toolbar">
-                  <select class="toolbar-select wide" [ngModel]="currentTextStyle" (ngModelChange)="applyTextStyle($event)" aria-label="Text style">
-                    <option *ngFor="let option of textStyleOptions" [value]="option">{{ option }}</option>
-                  </select>
-                  <select class="toolbar-select" [ngModel]="selectedBlock?.fontFamily ?? selectedFontFamily" (ngModelChange)="applyFontFamily($event)" aria-label="Font family">
-                    <option *ngFor="let option of fontFamilyOptions" [value]="option">{{ option }}</option>
-                  </select>
-                  <span class="toolbar-separator"></span>
-                  <button type="button" class="toolbar-btn" (click)="changeSelectedFontSize(-1)" aria-label="Decrease font size">
-                    <span class="material-symbols-rounded">remove</span>
-                  </button>
-                  <input class="toolbar-size" type="number" min="6" max="72" [ngModel]="selectedBlock?.fontSize ?? 11" (ngModelChange)="setSelectedFontSize($event)" aria-label="Font size" />
-                  <button type="button" class="toolbar-btn" (click)="changeSelectedFontSize(1)" aria-label="Increase font size">
-                    <span class="material-symbols-rounded">add</span>
-                  </button>
-                  <button type="button" class="toolbar-btn text-btn" [class.active]="selectedBlock?.bold" (click)="toggleSelectedFormat('bold')" aria-label="Bold">B</button>
-                  <button type="button" class="toolbar-btn text-btn italic" [class.active]="selectedBlock?.italic" (click)="toggleSelectedFormat('italic')" aria-label="Italic">I</button>
-                  <button type="button" class="toolbar-btn text-btn underline" [class.active]="selectedBlock?.underline" (click)="toggleSelectedFormat('underline')" aria-label="Underline">U</button>
-                  <label class="toolbar-color" aria-label="Text color">
-                    <span class="material-symbols-rounded">format_color_text</span>
-                    <input type="color" [ngModel]="selectedBlock?.textColor ?? '#0f172a'" (ngModelChange)="setSelectedColor($event)" />
-                  </label>
-                  <span class="toolbar-separator"></span>
-                  <button type="button" class="toolbar-btn" [class.active]="selectedBlock?.align === 'left'" (click)="setSelectedAlign('left')" aria-label="Align left">
-                    <span class="material-symbols-rounded">format_align_left</span>
-                  </button>
-                  <button type="button" class="toolbar-btn" [class.active]="selectedBlock?.align === 'center'" (click)="setSelectedAlign('center')" aria-label="Align center">
-                    <span class="material-symbols-rounded">format_align_center</span>
-                  </button>
-                  <button type="button" class="toolbar-btn" [class.active]="selectedBlock?.align === 'right'" (click)="setSelectedAlign('right')" aria-label="Align right">
-                    <span class="material-symbols-rounded">format_align_right</span>
-                  </button>
-                </div>
-                <div class="tool-grid">
-                  <button type="button" class="palette-item" draggable="true" (dragstart)="onPaletteDragStart($event, { type: 'text', label: 'Custom Text' })">
-                    <span class="material-symbols-rounded">title</span>
-                    Custom Text
-                  </button>
-                  <button type="button" class="palette-item" draggable="true" (dragstart)="onPaletteDragStart($event, { type: 'table', label: 'Table' })">
-                    <span class="material-symbols-rounded">table</span>
-                    Table
-                  </button>
+
+                  <!-- Row 1: Page & Text style -->
+                  <div class="toolbar-row">
+                    <div class="toolbar-margin-group" aria-label="Page margins">
+                      <span class="material-symbols-rounded">margin</span>
+                      <label class="toolbar-margin-input">
+                        <span>Top</span>
+                        <input
+                          type="number" min="0" max="100"
+                          [ngModel]="employeeTemplate.pageMargins.top"
+                          (ngModelChange)="updateMargin('top', $event)"
+                          aria-label="Top margin" />
+                      </label>
+                      <label class="toolbar-margin-input">
+                        <span>Bottom</span>
+                        <input
+                          type="number" min="0" max="100"
+                          [ngModel]="employeeTemplate.pageMargins.bottom"
+                          (ngModelChange)="updateMargin('bottom', $event)"
+                          aria-label="Bottom margin" />
+                      </label>
+                      <label class="toolbar-margin-input">
+                        <span>Left</span>
+                        <input
+                          type="number" min="0" max="100"
+                          [ngModel]="employeeTemplate.pageMargins.left"
+                          (ngModelChange)="updateMargin('left', $event)"
+                          aria-label="Left margin" />
+                      </label>
+                      <label class="toolbar-margin-input">
+                        <span>Right</span>
+                        <input
+                          type="number" min="0" max="100"
+                          [ngModel]="employeeTemplate.pageMargins.right"
+                          (ngModelChange)="updateMargin('right', $event)"
+                          aria-label="Right margin" />
+                      </label>
+                    </div>
+                    <span class="toolbar-separator"></span>
+                    <!-- Custom Orientation Dropdown -->
+                    <div class="custom-dropdown-container">
+                      <button
+                        type="button"
+                        class="custom-dropdown-trigger"
+                        (click)="toggleOrientationDropdown($event)"
+                        [attr.aria-expanded]="isOrientationDropdownOpen"
+                        aria-haspopup="listbox"
+                        aria-label="Page orientation">
+                        <span class="material-symbols-rounded">
+                          {{ employeeTemplate.orientation === 'portrait' ? 'crop_portrait' : 'crop_landscape' }}
+                        </span>
+                        <span class="trigger-text">
+                          {{ employeeTemplate.orientation === 'portrait' ? 'Portrait' : 'Landscape' }}
+                        </span>
+                        <span class="material-symbols-rounded chevron">expand_more</span>
+                      </button>
+
+                      <div class="custom-dropdown-options" *ngIf="isOrientationDropdownOpen" role="listbox">
+                        <button
+                          type="button"
+                          class="dropdown-option"
+                          [class.active]="employeeTemplate.orientation === 'portrait'"
+                          (click)="selectOrientation('portrait')"
+                          role="option"
+                          [attr.aria-selected]="employeeTemplate.orientation === 'portrait'">
+                          <span class="material-symbols-rounded">crop_portrait</span>
+                          <span>Portrait</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="dropdown-option"
+                          [class.active]="employeeTemplate.orientation === 'landscape'"
+                          (click)="selectOrientation('landscape')"
+                          role="option"
+                          [attr.aria-selected]="employeeTemplate.orientation === 'landscape'">
+                          <span class="material-symbols-rounded">crop_landscape</span>
+                          <span>Landscape</span>
+                        </button>
+                      </div>
+                    </div>
+                    <span class="toolbar-separator"></span>
+                    <select class="toolbar-select wide" [ngModel]="currentTextStyle" (ngModelChange)="applyTextStyle($event)" aria-label="Text style">
+                      <option *ngFor="let option of textStyleOptions" [value]="option">{{ option }}</option>
+                    </select>
+                    <select class="toolbar-select font-select" [ngModel]="selectedBlock?.fontFamily ?? selectedFontFamily" (ngModelChange)="applyFontFamily($event)" aria-label="Font family">
+                      <option *ngFor="let option of fontFamilyOptions" [value]="option">{{ option }}</option>
+                    </select>
+                  </div>
+
+                  <!-- Row 2: Formatting -->
+                  <div class="toolbar-row">
+                    <button type="button" class="toolbar-btn" (click)="changeSelectedFontSize(-1)" aria-label="Decrease font size">
+                      <span class="material-symbols-rounded">remove</span>
+                    </button>
+                    <input class="toolbar-size" type="number" min="6" max="72" [ngModel]="selectedBlock?.fontSize ?? 11" (ngModelChange)="setSelectedFontSize($event)" aria-label="Font size" />
+                    <button type="button" class="toolbar-btn" (click)="changeSelectedFontSize(1)" aria-label="Increase font size">
+                      <span class="material-symbols-rounded">add</span>
+                    </button>
+                    <span class="toolbar-separator"></span>
+                    <button type="button" class="toolbar-btn text-btn" [class.active]="selectedBlock?.bold" (click)="toggleSelectedFormat('bold')" aria-label="Bold">B</button>
+                    <button type="button" class="toolbar-btn text-btn italic" [class.active]="selectedBlock?.italic" (click)="toggleSelectedFormat('italic')" aria-label="Italic">I</button>
+                    <button type="button" class="toolbar-btn text-btn underline" [class.active]="selectedBlock?.underline" (click)="toggleSelectedFormat('underline')" aria-label="Underline">U</button>
+                    <label class="toolbar-color" aria-label="Text color">
+                      <span class="material-symbols-rounded">format_color_text</span>
+                      <input type="color" [ngModel]="selectedBlock?.textColor ?? '#0f172a'" (ngModelChange)="setSelectedColor($event)" />
+                    </label>
+                    <span class="toolbar-separator"></span>
+                    <button type="button" class="toolbar-btn" [class.active]="selectedBlock?.align === 'left'" (click)="setSelectedAlign('left')" aria-label="Align left">
+                      <span class="material-symbols-rounded">format_align_left</span>
+                    </button>
+                    <button type="button" class="toolbar-btn" [class.active]="selectedBlock?.align === 'center'" (click)="setSelectedAlign('center')" aria-label="Align center">
+                      <span class="material-symbols-rounded">format_align_center</span>
+                    </button>
+                    <button type="button" class="toolbar-btn" [class.active]="selectedBlock?.align === 'right'" (click)="setSelectedAlign('right')" aria-label="Align right">
+                      <span class="material-symbols-rounded">format_align_right</span>
+                    </button>
+                  </div>
+
                 </div>
               </div>
             </aside>
@@ -142,6 +219,11 @@
                 contenteditable="true"
                 [class.portrait]="employeeTemplate.orientation === 'portrait'"
                 [style.aspect-ratio]="pageWidth + ' / ' + pageHeight"
+                [style.padding]="canvasPaddingStyle"
+                [style.--mg-top]="marginPx.top"
+                [style.--mg-right]="marginPx.right"
+                [style.--mg-bottom]="marginPx.bottom"
+                [style.--mg-left]="marginPx.left"
                 (dragover)="onCanvasDragOver($event)"
                 (drop)="onCanvasDrop($event)"
                 (input)="onCanvasInput()">

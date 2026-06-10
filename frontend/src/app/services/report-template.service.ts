@@ -6,6 +6,13 @@ export type VisualReportBlockType = 'field' | 'text' | 'image' | 'table';
 export type VisualReportImageKind = 'photo' | 'signature';
 export type VisualReportTextAlign = 'left' | 'center' | 'right';
 
+export interface PageMargins {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+}
+
 export interface ReportFieldDefinition {
   key: string;
   label: string;
@@ -27,6 +34,8 @@ export interface ReportTemplate {
   subtitle: string;
   pageSize: ReportPageSize;
   orientation: ReportOrientation;
+  /** Page margins in millimetres */
+  pageMargins: PageMargins;
   fields: ReportTemplateField[];
   visualBlocks: VisualReportBlock[];
   htmlContent?: string;
@@ -154,6 +163,7 @@ export class ReportTemplateService {
       subtitle: 'Employee information report',
       pageSize: 'A4',
       orientation: 'landscape',
+      pageMargins: { top: 20, bottom: 20, left: 20, right: 20 },
       fields: this.employeeFieldDefinitions.map((field, index) => ({
         key: field.key,
         label: field.label,
@@ -208,6 +218,7 @@ export class ReportTemplateService {
       .sort((first, second) => first.order - second.order)
       .map((field, index) => ({ ...field, order: index }));
 
+    const margins = template.pageMargins ?? { top: 20, bottom: 20, left: 20, right: 20 };
     return {
       id: template.id || 'employee-info-default',
       reportType: 'employee-info',
@@ -215,6 +226,12 @@ export class ReportTemplateService {
       subtitle: template.subtitle?.trim() || 'Employee information report',
       pageSize: 'A4',
       orientation: template.orientation === 'portrait' ? 'portrait' : 'landscape',
+      pageMargins: {
+        top:    Number.isFinite(margins.top)    ? margins.top    : 20,
+        bottom: Number.isFinite(margins.bottom) ? margins.bottom : 20,
+        left:   Number.isFinite(margins.left)   ? margins.left   : 20,
+        right:  Number.isFinite(margins.right)  ? margins.right  : 20
+      },
       fields,
       visualBlocks: this.normalizeVisualBlocks(template.visualBlocks ?? []),
       htmlContent: template.htmlContent || '',
