@@ -93,40 +93,53 @@
 
                   <!-- Row 1: Page & Text style -->
                   <div class="toolbar-row">
-                    <div class="toolbar-margin-group" aria-label="Page margins">
-                      <span class="material-symbols-rounded">margin</span>
-                      <label class="toolbar-margin-input">
-                        <span>Top</span>
-                        <input
-                          type="number" min="0" max="100"
-                          [ngModel]="employeeTemplate.pageMargins.top"
-                          (ngModelChange)="updateMargin('top', $event)"
-                          aria-label="Top margin" />
-                      </label>
-                      <label class="toolbar-margin-input">
-                        <span>Bottom</span>
-                        <input
-                          type="number" min="0" max="100"
-                          [ngModel]="employeeTemplate.pageMargins.bottom"
-                          (ngModelChange)="updateMargin('bottom', $event)"
-                          aria-label="Bottom margin" />
-                      </label>
-                      <label class="toolbar-margin-input">
-                        <span>Left</span>
-                        <input
-                          type="number" min="0" max="100"
-                          [ngModel]="employeeTemplate.pageMargins.left"
-                          (ngModelChange)="updateMargin('left', $event)"
-                          aria-label="Left margin" />
-                      </label>
-                      <label class="toolbar-margin-input">
-                        <span>Right</span>
-                        <input
-                          type="number" min="0" max="100"
-                          [ngModel]="employeeTemplate.pageMargins.right"
-                          (ngModelChange)="updateMargin('right', $event)"
-                          aria-label="Right margin" />
-                      </label>
+                    <div class="toolbar-margin-dropdown">
+                      <button
+                        type="button"
+                        class="custom-dropdown-trigger margin-trigger"
+                        (click)="toggleMarginDropdown($event)"
+                        [attr.aria-expanded]="isMarginDropdownOpen"
+                        aria-haspopup="true"
+                        aria-label="Page margins">
+                        <span class="margin-tool-icon" aria-hidden="true"></span>
+                        <span class="trigger-text">Margin</span>
+                        <span class="material-symbols-rounded chevron">expand_more</span>
+                      </button>
+
+                      <div class="margin-reveal-panel" *ngIf="isMarginDropdownOpen" (click)="$event.stopPropagation()">
+                        <label class="toolbar-margin-input">
+                          <span>Top</span>
+                          <input
+                            type="number" min="0" max="100"
+                            [ngModel]="employeeTemplate.pageMargins.top"
+                            (ngModelChange)="updateMargin('top', $event)"
+                            aria-label="Top margin" />
+                        </label>
+                        <label class="toolbar-margin-input">
+                          <span>Bottom</span>
+                          <input
+                            type="number" min="0" max="100"
+                            [ngModel]="employeeTemplate.pageMargins.bottom"
+                            (ngModelChange)="updateMargin('bottom', $event)"
+                            aria-label="Bottom margin" />
+                        </label>
+                        <label class="toolbar-margin-input">
+                          <span>Left</span>
+                          <input
+                            type="number" min="0" max="100"
+                            [ngModel]="employeeTemplate.pageMargins.left"
+                            (ngModelChange)="updateMargin('left', $event)"
+                            aria-label="Left margin" />
+                        </label>
+                        <label class="toolbar-margin-input">
+                          <span>Right</span>
+                          <input
+                            type="number" min="0" max="100"
+                            [ngModel]="employeeTemplate.pageMargins.right"
+                            (ngModelChange)="updateMargin('right', $event)"
+                            aria-label="Right margin" />
+                        </label>
+                      </div>
                     </div>
                     <span class="toolbar-separator"></span>
                     <!-- Custom Orientation Dropdown -->
@@ -320,33 +333,10 @@
             <span class="material-symbols-rounded">save</span>
             Save Template
           </button>
-          <button type="button" class="btn secondary" (click)="resetTemplate()">
-            <span class="material-symbols-rounded">restart_alt</span>
-            Reset Default
-          </button>
           <p class="message" *ngIf="message">{{ message }}</p>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="panel preview-panel">
-    <div class="panel-header compact">
-      <div>
-        <h2>Live Preview</h2>
-        <p class="panel-subtitle">Employee Info PDF/print will follow this saved structure.</p>
-      </div>
-    </div>
-
-    <div class="report-preview visual-live-preview">
-      <div class="visual-preview-frame">
-        <div
-          class="visual-preview-page google-doc-canvas"
-          [class.portrait]="employeeTemplate.orientation === 'portrait'"
-          [style.aspect-ratio]="pageWidth + ' / ' + pageHeight"
-          [innerHTML]="employeeTemplate.htmlContent">
-        </div>
-      </div>
-    </div>
-  </section>
 </main>

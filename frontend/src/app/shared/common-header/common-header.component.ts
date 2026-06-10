@@ -711,6 +711,12 @@ export class CommonHeaderComponent implements OnInit, OnDestroy {
       .join('   |   ');
   }
 
+  get bulletinAnimationDuration(): string {
+    const textLength = this.bulletinText.length;
+    const seconds = Math.min(180, Math.max(55, Math.round(textLength / 5)));
+    return `${seconds}s`;
+  }
+
   get menuAnnouncements(): Announcement[] {
     return this.isAnnouncementListExpanded ? this.announcements : this.announcements.slice(0, 10);
   }

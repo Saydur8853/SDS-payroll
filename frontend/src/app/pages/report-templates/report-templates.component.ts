@@ -108,15 +108,6 @@ export class ReportTemplatesComponent implements OnInit, AfterViewInit {
     this.message = 'Employee Info report template saved.';
   }
 
-  resetTemplate(): void {
-    if (!window.confirm('Reset Employee Info report template to default?')) {
-      return;
-    }
-
-    this.employeeTemplate = this.reportTemplateService.resetEmployeeTemplate();
-    this.message = 'Employee Info report template reset.';
-  }
-
   onPaletteDragStart(event: DragEvent, item: { type: VisualReportBlockType; key?: string; label: string; imageKind?: VisualReportImageKind }): void {
     this.draggedPaletteItem = item;
     event.dataTransfer?.setData('text/plain', item.label);
@@ -242,10 +233,18 @@ export class ReportTemplatesComponent implements OnInit, AfterViewInit {
   }
 
   isOrientationDropdownOpen = false;
+  isMarginDropdownOpen = false;
+
+  toggleMarginDropdown(event: MouseEvent): void {
+    event.stopPropagation();
+    this.isMarginDropdownOpen = !this.isMarginDropdownOpen;
+    this.isOrientationDropdownOpen = false;
+  }
 
   toggleOrientationDropdown(event: MouseEvent): void {
     event.stopPropagation();
     this.isOrientationDropdownOpen = !this.isOrientationDropdownOpen;
+    this.isMarginDropdownOpen = false;
   }
 
   selectOrientation(orientation: 'portrait' | 'landscape'): void {
@@ -256,6 +255,7 @@ export class ReportTemplatesComponent implements OnInit, AfterViewInit {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     this.isOrientationDropdownOpen = false;
+    this.isMarginDropdownOpen = false;
   }
 
   setOrientation(orientation: 'portrait' | 'landscape'): void {

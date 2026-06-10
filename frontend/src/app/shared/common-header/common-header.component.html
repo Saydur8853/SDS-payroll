@@ -7,7 +7,7 @@
         <span class="material-symbols-rounded">campaign</span>
       </span>
       <div class="bulletin-track">
-        <div class="bulletin-text">
+        <div class="bulletin-text" [style.--bulletin-duration]="bulletinAnimationDuration">
           <span>{{ bulletinText }}</span>
           <span aria-hidden="true">{{ bulletinText }}</span>
         </div>

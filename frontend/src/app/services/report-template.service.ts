@@ -70,6 +70,20 @@ export interface VisualReportBlock {
 })
 export class ReportTemplateService {
   private readonly employeeTemplateStorageKey = 'sds-payroll-report-template-employee-info';
+  private readonly legacyDefaultEmployeeHtmlContent = `
+        <div style="font-family: Arial; color: #0f172a;">
+          <h1 style="font-size: 22px; margin-bottom: 20px;">Employee Information</h1>
+          <p style="font-size: 14px; margin-bottom: 10px; font-weight: bold;">
+            <span contenteditable="false" class="attribute-pill" data-key="fullName" data-type="field">[Full Name]</span>
+          </p>
+          <p style="font-size: 11px;">
+            <span contenteditable="false" class="attribute-pill" data-key="employeeCode" data-type="field">[Employee Code]</span>
+          </p>
+          <div style="text-align: right; margin-top: -60px;">
+            <div contenteditable="false" class="attribute-pill image-pill" data-kind="photo" data-type="image" style="display: inline-block; width: 105px; height: 130px; border: 1px dashed #cbd5e1; background: #f8fafc; text-align: center; line-height: 130px; font-size: 12px; color: #64748b;">[Photo]</div>
+          </div>
+        </div>
+      `;
 
   readonly employeeFieldDefinitions: ReportFieldDefinition[] = [
     { key: 'id', label: 'Employee ID', sample: 'EMP-UUID' },
@@ -125,12 +139,6 @@ export class ReportTemplateService {
     return normalizedTemplate;
   }
 
-  resetEmployeeTemplate(): ReportTemplate {
-    const template = this.createDefaultEmployeeTemplate();
-    localStorage.setItem(this.employeeTemplateStorageKey, JSON.stringify(template));
-    return template;
-  }
-
   private readSavedEmployeeTemplate(): ReportTemplate | null {
     const rawTemplate = localStorage.getItem(this.employeeTemplateStorageKey);
     if (!rawTemplate) {
@@ -171,20 +179,7 @@ export class ReportTemplateService {
         order: index
       })),
       visualBlocks: [],
-      htmlContent: `
-        <div style="font-family: Arial; color: #0f172a;">
-          <h1 style="font-size: 22px; margin-bottom: 20px;">Employee Information</h1>
-          <p style="font-size: 14px; margin-bottom: 10px; font-weight: bold;">
-            <span contenteditable="false" class="attribute-pill" data-key="fullName" data-type="field">[Full Name]</span>
-          </p>
-          <p style="font-size: 11px;">
-            <span contenteditable="false" class="attribute-pill" data-key="employeeCode" data-type="field">[Employee Code]</span>
-          </p>
-          <div style="text-align: right; margin-top: -60px;">
-            <div contenteditable="false" class="attribute-pill image-pill" data-kind="photo" data-type="image" style="display: inline-block; width: 105px; height: 130px; border: 1px dashed #cbd5e1; background: #f8fafc; text-align: center; line-height: 130px; font-size: 12px; color: #64748b;">[Photo]</div>
-          </div>
-        </div>
-      `,
+      htmlContent: '',
       updatedAtUtc: new Date().toISOString()
     };
   }
@@ -219,6 +214,7 @@ export class ReportTemplateService {
       .map((field, index) => ({ ...field, order: index }));
 
     const margins = template.pageMargins ?? { top: 20, bottom: 20, left: 20, right: 20 };
+    const htmlContent = this.isLegacyDefaultHtmlContent(template.htmlContent) ? '' : template.htmlContent || '';
     return {
       id: template.id || 'employee-info-default',
       reportType: 'employee-info',
@@ -234,9 +230,18 @@ export class ReportTemplateService {
       },
       fields,
       visualBlocks: this.normalizeVisualBlocks(template.visualBlocks ?? []),
-      htmlContent: template.htmlContent || '',
+      htmlContent,
       updatedAtUtc: template.updatedAtUtc || new Date().toISOString()
     };
+  }
+
+  private isLegacyDefaultHtmlContent(htmlContent?: string): boolean {
+    if (!htmlContent) {
+      return false;
+    }
+
+    const normalize = (html: string) => html.replace(/\s+/g, ' ').trim();
+    return normalize(htmlContent) === normalize(this.legacyDefaultEmployeeHtmlContent);
   }
 
   private normalizeVisualBlocks(blocks: VisualReportBlock[]): VisualReportBlock[] {
