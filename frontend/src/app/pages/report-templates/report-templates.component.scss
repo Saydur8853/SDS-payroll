@@ -297,6 +297,78 @@
   gap: 0.5rem;
 }
 
+.doc-tool-grid {
+  margin-top: 0.55rem;
+}
+
+.table-picker-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.table-picker-trigger {
+  min-width: 112px;
+}
+
+.table-picker-trigger .chevron {
+  margin-left: 0.1rem;
+}
+
+.table-picker-trigger[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
+.table-picker-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 80;
+  width: 238px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 10px;
+  padding: 0.7rem;
+  background: #ffffff;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.2);
+  animation: dropdownFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.table-picker-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+  color: #334155;
+  font-size: 0.76rem;
+  font-weight: 900;
+
+  span {
+    color: #7c3aed;
+  }
+}
+
+.table-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 20px);
+  gap: 5px;
+}
+
+.table-picker-cell {
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.75);
+  border-radius: 2px;
+  background: #ffffff;
+  cursor: pointer;
+  outline: none;
+  transition: background 0.08s ease, border-color 0.08s ease, box-shadow 0.08s ease;
+}
+
+.table-picker-cell.active {
+  border-color: #7c3aed;
+  background: rgba(124, 58, 237, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.18);
+}
+
 .doc-builder-toolbar {
   position: relative;
   z-index: 30;
@@ -377,6 +449,44 @@
   background: #0f172a;
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.36);
   animation: dropdownFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.margin-link-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.1rem;
+  color: #dbeafe;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.margin-link-button {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 0 0.6rem;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.055);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.margin-link-button.active {
+  color: #fff;
+  border-color: rgba(167, 139, 250, 0.5);
+  background: rgba(124, 58, 237, 0.32);
+}
+
+.margin-link-button .material-symbols-rounded {
+  font-size: 16px;
 }
 
 .toolbar-margin-input {
@@ -482,6 +592,43 @@
   animation: dropdownFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.text-style-trigger {
+  min-width: 150px;
+}
+
+.font-family-trigger {
+  min-width: 170px;
+}
+
+.page-break-trigger {
+  min-width: 170px;
+}
+
+.text-style-options {
+  min-width: 150px;
+}
+
+.font-family-options {
+  min-width: 170px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.page-break-options {
+  min-width: 220px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.text-style-trigger .trigger-text,
+.font-family-trigger .trigger-text,
+.page-break-trigger .trigger-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @keyframes dropdownFadeIn {
   from {
     opacity: 0;
@@ -532,14 +679,6 @@
   }
 }
 
-/* Wider font-family select on the first row */
-.toolbar-select.font-select {
-  flex: 1 1 120px;
-  max-width: 170px;
-}
-
-
-.toolbar-select,
 .toolbar-size,
 .toolbar-btn,
 .toolbar-color {
@@ -553,19 +692,18 @@
   font-weight: 800;
 }
 
-.toolbar-select {
-  width: 128px;
-  padding: 0 0.5rem;
-}
-
-.toolbar-select.wide {
-  width: 142px;
-}
-
 .toolbar-size {
   width: 52px;
   padding: 0 0.35rem;
   text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.toolbar-size::-webkit-outer-spin-button,
+.toolbar-size::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
 }
 
 .toolbar-btn {
@@ -743,7 +881,18 @@
 }
 
 .google-doc-canvas table {
+  width: 100%;
+  border-collapse: collapse;
   table-layout: fixed;
+}
+
+.google-doc-canvas td,
+.google-doc-canvas th {
+  min-width: 48px;
+  height: 28px;
+  border: 1px solid #94a3b8;
+  padding: 6px 8px;
+  vertical-align: top;
 }
 
 .canvas-ruler {
@@ -872,7 +1021,6 @@
   .insert-panel,
   .doc-builder-toolbar,
   .custom-dropdown-trigger,
-  .toolbar-select,
   .toolbar-size,
   .toolbar-btn,
   .toolbar-color,
@@ -885,6 +1033,22 @@
 
   .toolbar-margin-input {
     color: #64748b;
+  }
+
+  .margin-link-row {
+    color: #334155;
+  }
+
+  .margin-link-button {
+    color: #64748b;
+    background: rgba(248, 250, 252, 0.92);
+    border-color: rgba(15, 23, 42, 0.09);
+  }
+
+  .margin-link-button.active {
+    color: #4c1d95;
+    background: rgba(124, 58, 237, 0.14);
+    border-color: rgba(124, 58, 237, 0.24);
   }
 
   .margin-reveal-panel {

@@ -36,6 +36,8 @@ export interface ReportTemplate {
   orientation: ReportOrientation;
   /** Page margins in millimetres */
   pageMargins: PageMargins;
+  /** Field key that starts a new printed page when its value changes. Null disables forced page breaks. */
+  pageBreakFieldKey?: string | null;
   fields: ReportTemplateField[];
   visualBlocks: VisualReportBlock[];
   htmlContent?: string;
@@ -172,6 +174,7 @@ export class ReportTemplateService {
       pageSize: 'A4',
       orientation: 'landscape',
       pageMargins: { top: 20, bottom: 20, left: 20, right: 20 },
+      pageBreakFieldKey: 'employeeCode',
       fields: this.employeeFieldDefinitions.map((field, index) => ({
         key: field.key,
         label: field.label,
@@ -215,6 +218,9 @@ export class ReportTemplateService {
 
     const margins = template.pageMargins ?? { top: 20, bottom: 20, left: 20, right: 20 };
     const htmlContent = this.isLegacyDefaultHtmlContent(template.htmlContent) ? '' : template.htmlContent || '';
+    const pageBreakFieldKey = template.pageBreakFieldKey === null
+      ? null
+      : this.normalizePageBreakFieldKey(template.pageBreakFieldKey, fields);
     return {
       id: template.id || 'employee-info-default',
       reportType: 'employee-info',
@@ -228,11 +234,28 @@ export class ReportTemplateService {
         left:   Number.isFinite(margins.left)   ? margins.left   : 20,
         right:  Number.isFinite(margins.right)  ? margins.right  : 20
       },
+      pageBreakFieldKey,
       fields,
       visualBlocks: this.normalizeVisualBlocks(template.visualBlocks ?? []),
       htmlContent,
       updatedAtUtc: template.updatedAtUtc || new Date().toISOString()
     };
+  }
+
+  private normalizePageBreakFieldKey(fieldKey: string | null | undefined, fields: ReportTemplateField[]): string | null {
+    if (fieldKey === null) {
+      return null;
+    }
+
+    const trimmedKey = fieldKey?.trim();
+    if (!trimmedKey) {
+      return 'employeeCode';
+    }
+
+    const templateFieldKeys = new Set(fields.map((field) => field.key));
+    return templateFieldKeys.has(trimmedKey) || trimmedKey.startsWith('dynamic:')
+      ? trimmedKey
+      : 'employeeCode';
   }
 
   private isLegacyDefaultHtmlContent(htmlContent?: string): boolean {

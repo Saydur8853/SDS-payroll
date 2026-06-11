@@ -107,6 +107,19 @@
                       </button>
 
                       <div class="margin-reveal-panel" *ngIf="isMarginDropdownOpen" (click)="$event.stopPropagation()">
+                        <div class="margin-link-row">
+                          <span>Margins</span>
+                          <button
+                            type="button"
+                            class="margin-link-button"
+                            [class.active]="isMarginLinked"
+                            (click)="toggleMarginLinked()"
+                            [attr.aria-pressed]="isMarginLinked"
+                            [attr.aria-label]="isMarginLinked ? 'Unlink margins' : 'Link margins'">
+                            <span class="material-symbols-rounded">{{ isMarginLinked ? 'link' : 'link_off' }}</span>
+                            {{ isMarginLinked ? 'Linked' : 'Individual' }}
+                          </button>
+                        </div>
                         <label class="toolbar-margin-input">
                           <span>Top</span>
                           <input
@@ -184,21 +197,104 @@
                       </div>
                     </div>
                     <span class="toolbar-separator"></span>
-                    <select class="toolbar-select wide" [ngModel]="currentTextStyle" (ngModelChange)="applyTextStyle($event)" aria-label="Text style">
-                      <option *ngFor="let option of textStyleOptions" [value]="option">{{ option }}</option>
-                    </select>
-                    <select class="toolbar-select font-select" [ngModel]="selectedBlock?.fontFamily ?? selectedFontFamily" (ngModelChange)="applyFontFamily($event)" aria-label="Font family">
-                      <option *ngFor="let option of fontFamilyOptions" [value]="option">{{ option }}</option>
-                    </select>
+                    <div class="custom-dropdown-container">
+                      <button
+                        type="button"
+                        class="custom-dropdown-trigger page-break-trigger"
+                        (click)="togglePageBreakDropdown($event)"
+                        [attr.aria-expanded]="isPageBreakDropdownOpen"
+                        aria-haspopup="listbox"
+                        aria-label="Page break field">
+                        <span class="material-symbols-rounded">vertical_split</span>
+                        <span class="trigger-text">{{ currentPageBreakLabel }}</span>
+                        <span class="material-symbols-rounded chevron">expand_more</span>
+                      </button>
+
+                      <div class="custom-dropdown-options page-break-options" *ngIf="isPageBreakDropdownOpen" role="listbox">
+                        <button
+                          type="button"
+                          class="dropdown-option"
+                          [class.active]="!employeeTemplate.pageBreakFieldKey"
+                          (click)="selectPageBreakField(null)"
+                          role="option"
+                          [attr.aria-selected]="!employeeTemplate.pageBreakFieldKey">
+                          <span class="material-symbols-rounded">block</span>
+                          <span>No page break</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="dropdown-option"
+                          *ngFor="let field of employeeTemplate.fields"
+                          [class.active]="employeeTemplate.pageBreakFieldKey === field.key"
+                          (click)="selectPageBreakField(field.key)"
+                          role="option"
+                          [attr.aria-selected]="employeeTemplate.pageBreakFieldKey === field.key">
+                          <span class="material-symbols-rounded">label</span>
+                          <span>{{ field.label }}</span>
+                        </button>
+                      </div>
+                    </div>
+                    <span class="toolbar-separator"></span>
+                    <div class="custom-dropdown-container">
+                      <button
+                        type="button"
+                        class="custom-dropdown-trigger text-style-trigger"
+                        (click)="toggleTextStyleDropdown($event)"
+                        [attr.aria-expanded]="isTextStyleDropdownOpen"
+                        aria-haspopup="listbox"
+                        aria-label="Text style">
+                        <span class="trigger-text">{{ currentTextStyle }}</span>
+                        <span class="material-symbols-rounded chevron">expand_more</span>
+                      </button>
+
+                      <div class="custom-dropdown-options text-style-options" *ngIf="isTextStyleDropdownOpen" role="listbox">
+                        <button
+                          type="button"
+                          class="dropdown-option"
+                          *ngFor="let option of textStyleOptions"
+                          [class.active]="currentTextStyle === option"
+                          (click)="selectTextStyle(option)"
+                          role="option"
+                          [attr.aria-selected]="currentTextStyle === option">
+                          <span>{{ option }}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="custom-dropdown-container">
+                      <button
+                        type="button"
+                        class="custom-dropdown-trigger font-family-trigger"
+                        (click)="toggleFontFamilyDropdown($event)"
+                        [attr.aria-expanded]="isFontFamilyDropdownOpen"
+                        aria-haspopup="listbox"
+                        aria-label="Font family">
+                        <span class="trigger-text">{{ selectedBlock?.fontFamily ?? selectedFontFamily }}</span>
+                        <span class="material-symbols-rounded chevron">expand_more</span>
+                      </button>
+
+                      <div class="custom-dropdown-options font-family-options" *ngIf="isFontFamilyDropdownOpen" role="listbox">
+                        <button
+                          type="button"
+                          class="dropdown-option"
+                          *ngFor="let option of fontFamilyOptions"
+                          [class.active]="(selectedBlock?.fontFamily ?? selectedFontFamily) === option"
+                          (click)="selectFontFamily(option)"
+                          role="option"
+                          [attr.aria-selected]="(selectedBlock?.fontFamily ?? selectedFontFamily) === option">
+                          <span>{{ option }}</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
                   <!-- Row 2: Formatting -->
                   <div class="toolbar-row">
-                    <button type="button" class="toolbar-btn" (click)="changeSelectedFontSize(-1)" aria-label="Decrease font size">
+                    <button type="button" class="toolbar-btn" (mousedown)="$event.preventDefault()" (click)="changeSelectedFontSize(-1)" aria-label="Decrease font size">
                       <span class="material-symbols-rounded">remove</span>
                     </button>
-                    <input class="toolbar-size" type="number" min="6" max="72" [ngModel]="selectedBlock?.fontSize ?? 11" (ngModelChange)="setSelectedFontSize($event)" aria-label="Font size" />
-                    <button type="button" class="toolbar-btn" (click)="changeSelectedFontSize(1)" aria-label="Increase font size">
+                    <input class="toolbar-size" type="number" min="6" max="72" [ngModel]="currentFontSize" (focus)="rememberCanvasSelection()" (ngModelChange)="setSelectedFontSize($event)" aria-label="Font size" />
+                    <button type="button" class="toolbar-btn" (mousedown)="$event.preventDefault()" (click)="changeSelectedFontSize(1)" aria-label="Increase font size">
                       <span class="material-symbols-rounded">add</span>
                     </button>
                     <span class="toolbar-separator"></span>
@@ -222,6 +318,49 @@
                   </div>
 
                 </div>
+
+                <div class="tool-grid doc-tool-grid" aria-label="Insert document blocks">
+                  <div class="table-picker-dropdown">
+                    <button
+                      type="button"
+                      class="custom-dropdown-trigger table-picker-trigger"
+                      (mousedown)="$event.preventDefault()"
+                      (click)="toggleTablePicker($event)"
+                      [attr.aria-expanded]="isTablePickerOpen"
+                      aria-haspopup="true"
+                      aria-label="Insert table">
+                      <span class="material-symbols-rounded">table</span>
+                      <span class="trigger-text">Table</span>
+                      <span class="material-symbols-rounded chevron">expand_more</span>
+                    </button>
+
+                    <div
+                      class="table-picker-panel"
+                      *ngIf="isTablePickerOpen"
+                      (mousedown)="$event.preventDefault()"
+                      (click)="$event.stopPropagation()">
+                      <div class="table-picker-title">
+                        Insert table
+                        <span>{{ tablePickerRowsSelected }} x {{ tablePickerColumnsSelected }}</span>
+                      </div>
+                      <div class="table-picker-grid" role="grid" aria-label="Choose table size">
+                        <ng-container *ngFor="let row of tablePickerRows">
+                          <button
+                            type="button"
+                            class="table-picker-cell"
+                            *ngFor="let column of tablePickerColumns"
+                            [class.active]="row <= tablePickerRowsSelected && column <= tablePickerColumnsSelected"
+                            (mouseenter)="setTablePickerSize(row, column)"
+                            (focus)="setTablePickerSize(row, column)"
+                            (mousedown)="$event.preventDefault()"
+                            (click)="insertPickedTable(row, column)"
+                            [attr.aria-label]="'Insert ' + row + ' by ' + column + ' table'">
+                          </button>
+                        </ng-container>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </aside>
 
@@ -239,7 +378,10 @@
                 [style.--mg-left]="marginPx.left"
                 (dragover)="onCanvasDragOver($event)"
                 (drop)="onCanvasDrop($event)"
-                (input)="onCanvasInput()">
+                (input)="onCanvasInput()"
+                (mouseup)="rememberCanvasSelection()"
+                (keyup)="rememberCanvasSelection()"
+                (focus)="rememberCanvasSelection()">
               </div>
             </div>
             

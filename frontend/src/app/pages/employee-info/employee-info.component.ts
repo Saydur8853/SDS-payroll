@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { finalize, firstValueFrom, interval, startWith, Subscription, switchMap, takeWhile } from 'rxjs';
 import { ImageCropperComponent, ImageCroppedEvent, LoadedImage } from 'ngx-image-cropper';
@@ -1229,6 +1230,103 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
     }, 0);
   }
 
+  get employeePrintPagePaddingStyle(): string {
+    const margins = this.employeePrintTemplate?.pageMargins ?? { top: 20, right: 20, bottom: 20, left: 20 };
+    const toPx = (mm: number) => `${Math.round(mm * 3.7795)}px`;
+    return `${toPx(margins.top)} ${toPx(margins.right)} ${toPx(margins.bottom)} ${toPx(margins.left)}`;
+  }
+
+  get isGroupedEmployeePrintMode(): boolean {
+    const fieldKey = this.employeePrintTemplate?.pageBreakFieldKey;
+    return !!fieldKey && fieldKey !== 'employeeCode';
+  }
+
+  get printEmployeesForTemplate(): Employee[] {
+    const fieldKey = this.employeePrintTemplate?.pageBreakFieldKey;
+    if (!fieldKey || fieldKey === 'employeeCode') {
+      return this.employees;
+    }
+
+    return [...this.employees].sort((first, second) => {
+      const firstValue = this.getEmployeePrintBreakValue(first, fieldKey);
+      const secondValue = this.getEmployeePrintBreakValue(second, fieldKey);
+      return firstValue.localeCompare(secondValue) || String(first.employeeCode ?? '').localeCompare(String(second.employeeCode ?? ''));
+    });
+  }
+
+  getEmployeePrintHtml(employee: Employee): SafeHtml | string {
+    const htmlContent = this.employeePrintTemplate?.htmlContent ?? '';
+    if (!htmlContent.trim()) {
+      return '';
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = htmlContent;
+
+    wrapper.querySelectorAll<HTMLElement>('[data-type="field"][data-key]').forEach((element) => {
+      const key = element.dataset['key'] ?? '';
+      element.textContent = this.getEmployeePrintFieldValue(employee, {
+        key,
+        label: element.textContent?.replace(/^\[|\]$/g, '') || key,
+        enabled: true,
+        order: 0,
+        isCustom: key.startsWith('dynamic:')
+      });
+    });
+
+    wrapper.querySelectorAll<HTMLElement>('[data-type="image"]').forEach((element) => {
+      const imageKind = element.dataset['kind'] === 'signature' ? 'signature' : 'photo';
+      const src = imageKind === 'signature'
+        ? this.getEmployeeSignatureSrc(employee)
+        : this.getEmployeePhotoSrc(employee);
+
+      element.innerHTML = '';
+      element.style.lineHeight = 'normal';
+      element.style.display = element.style.display || 'inline-flex';
+      element.style.alignItems = 'center';
+      element.style.justifyContent = 'center';
+
+      if (src) {
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = imageKind === 'signature' ? `${employee.fullName} signature` : `${employee.fullName} photo`;
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '100%';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'contain';
+        element.appendChild(img);
+      }
+    });
+
+    return this.sanitizer.bypassSecurityTrustHtml(wrapper.innerHTML);
+  }
+
+  shouldStartEmployeePrintPage(index: number): boolean {
+    const fieldKey = this.employeePrintTemplate?.pageBreakFieldKey;
+    if (!fieldKey || index <= 0) {
+      return false;
+    }
+
+    const printEmployees = this.printEmployeesForTemplate;
+    return this.getEmployeePrintBreakValue(printEmployees[index], fieldKey) !==
+      this.getEmployeePrintBreakValue(printEmployees[index - 1], fieldKey);
+  }
+
+  private getEmployeePrintBreakValue(employee: Employee | undefined, fieldKey: string): string {
+    if (!employee) {
+      return '';
+    }
+
+    return this.getEmployeePrintFieldValue(employee, {
+      key: fieldKey,
+      label: fieldKey,
+      enabled: true,
+      order: 0,
+      isCustom: fieldKey.startsWith('dynamic:')
+    }).trim().toLowerCase();
+  }
+
   getEmployeePrintFieldValue(employee: Employee, field: ReportTemplateField): string {
     if (field.key.startsWith('dynamic:')) {
       const dynamicKey = field.key.replace(/^dynamic:/, '').trim().toLowerCase();
@@ -1310,7 +1408,7 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
 
     const style = document.createElement('style');
     style.id = 'employee-print-page-style';
-    style.textContent = `@media print { @page { size: A4 ${this.employeePrintTemplate.orientation}; margin: 10mm; } }`;
+    style.textContent = `@media print { @page { size: A4 ${this.employeePrintTemplate.orientation}; margin: 0; } }`;
     document.head.appendChild(style);
   }
 
@@ -1730,7 +1828,8 @@ export class EmployeeInfoComponent implements OnInit, OnDestroy {
     private readonly shiftService: ShiftService,
     private readonly companyService: CompanyService,
     private readonly salaryRuleService: SalaryRuleService,
-    private readonly reportTemplateService: ReportTemplateService
+    private readonly reportTemplateService: ReportTemplateService,
+    private readonly sanitizer: DomSanitizer
   ) {
     this.employeePrintTemplate = this.reportTemplateService.getEmployeeTemplate();
   }

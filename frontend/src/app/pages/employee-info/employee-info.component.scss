@@ -1108,14 +1108,27 @@ input[type=number] {
   position: relative;
   width: 100%;
   aspect-ratio: 1123 / 794;
+  box-sizing: border-box;
   background: #fff;
   color: #0f172a;
   overflow: hidden;
-  break-after: page;
+  break-after: auto;
 }
 
 .employee-visual-print-page.portrait {
   aspect-ratio: 794 / 1123;
+}
+
+.employee-visual-print-html {
+  width: 100%;
+  height: 100%;
+  color: #0f172a;
+}
+
+.employee-visual-print-html img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .employee-visual-print-block {
@@ -1204,15 +1217,52 @@ input[type=number] {
   }
 
   .employee-visual-print-page {
-    width: 100%;
+    width: 297mm;
+    height: 210mm;
+    max-width: 297mm;
+    max-height: 210mm;
+    aspect-ratio: auto;
     margin: 0;
-    page-break-after: always;
-    break-after: page;
-  }
-
-  .employee-visual-print-page:last-child {
     page-break-after: auto;
     break-after: auto;
+  }
+
+  .employee-visual-print-page.portrait {
+    width: 210mm;
+    height: 297mm;
+    max-width: 210mm;
+    max-height: 297mm;
+  }
+
+  .employee-visual-print-page.page-break-before {
+    page-break-before: always;
+    break-before: page;
+  }
+
+  .employee-visual-print-pages.no-forced-page-break .employee-visual-print-page {
+    width: 100%;
+    height: auto;
+    max-width: none;
+    max-height: none;
+    aspect-ratio: auto;
+    break-before: auto;
+    page-break-before: auto;
+  }
+
+  .employee-visual-print-pages.grouped-page-break .employee-visual-print-page {
+    width: 100%;
+    height: auto;
+    min-height: auto;
+    max-width: none;
+    max-height: none;
+    aspect-ratio: auto;
+  }
+
+  .employee-visual-print-pages.grouped-page-break .employee-visual-print-page.portrait {
+    width: 100%;
+    height: auto;
+    max-width: none;
+    max-height: none;
   }
 }
 

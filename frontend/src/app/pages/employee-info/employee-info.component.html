@@ -449,30 +449,17 @@
 
     <!-- ── Loading / Empty ─────────────────────────────── -->
     <div class="employee-print-sheet print-only">
-      <div class="employee-visual-print-pages">
+      <div
+        class="employee-visual-print-pages"
+        [class.no-forced-page-break]="!employeePrintTemplate.pageBreakFieldKey"
+        [class.grouped-page-break]="isGroupedEmployeePrintMode">
         <section
           class="employee-visual-print-page"
           [class.portrait]="employeePrintTemplate.orientation === 'portrait'"
-          *ngFor="let employee of employees">
-          <div
-            class="employee-visual-print-block"
-            *ngFor="let block of employeePrintTemplate.visualBlocks"
-            [class.image-block]="block.type === 'image'"
-            [ngStyle]="getVisualBlockStyle(block)">
-            <ng-container *ngIf="block.type !== 'image' && block.type !== 'table'; else visualSpecialBlock">
-              {{ getVisualBlockText(employee, block) }}
-            </ng-container>
-            <ng-template #visualSpecialBlock>
-              <ng-container *ngIf="block.type === 'image'; else visualTableBlock">
-                <img *ngIf="getVisualBlockImageSrc(employee, block) as imageSrc" [src]="imageSrc" [alt]="block.label" />
-              </ng-container>
-              <ng-template #visualTableBlock>
-                <span class="employee-visual-table-grid" [style.grid-template-columns]="'repeat(' + (block.tableColumns ?? 3) + ', 1fr)'">
-                  <span *ngFor="let cell of getVisualTableCells(block)"></span>
-                </span>
-              </ng-template>
-            </ng-template>
-          </div>
+          [class.page-break-before]="shouldStartEmployeePrintPage(pageIndex)"
+          [style.padding]="employeePrintPagePaddingStyle"
+          *ngFor="let employee of printEmployeesForTemplate; let pageIndex = index">
+          <div class="employee-visual-print-html" [innerHTML]="getEmployeePrintHtml(employee)"></div>
         </section>
       </div>
     </div>
